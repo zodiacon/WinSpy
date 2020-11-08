@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{f871bb5c-f151-4e10-8bbb-10019ddd6a72}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{47fb17d7-d54c-4fc7-85b2-7c653d04b30a}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{9c7daf0d-2916-49f7-872d-30cf5e95725d}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;jpg;jpeg;jpe;manifest</Extensions>
+    </Filter>
+    <Filter Include="Resource Files\Icons">
+      <UniqueIdentifier>{ff137a25-faa3-4d88-af38-5c1bc296546b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="WinSpy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MainFrm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AboutDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ClipboardHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SortHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ColumnManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FormatHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="MainFrm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AboutDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ClipboardHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SortHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VirtualListView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ColumnManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ViewBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FormatHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="WinSpy.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\window.ico">
+      <Filter>Resource Files\Icons</Filter>
+    </Image>
+    <Image Include="res\window-hidden.ico">
+      <Filter>Resource Files\Icons</Filter>
+    </Image>
+    <Image Include="res\WinSpy.ico">
+      <Filter>Resource Files\Icons</Filter>
+    </Image>
+    <Image Include="res\window_delete.ico">
+      <Filter>Resource Files\Icons</Filter>
+    </Image>
+    <Image Include="res\window_new.ico">
+      <Filter>Resource Files\Icons</Filter>
+    </Image>
+    <Image Include="res\windows.ico">
+      <Filter>Resource Files\Icons</Filter>
+    </Image>
+    <Image Include="res\refresh.ico">
+      <Filter>Resource Files\Icons</Filter>
+    </Image>
+  </ItemGroup>
+</Project>
