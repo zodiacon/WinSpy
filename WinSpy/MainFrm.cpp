@@ -8,6 +8,8 @@
 #include "WindowsView.h"
 #include "MainFrm.h"
 
+const int WINDOW_MENU_POSITION = 5;
+
 BOOL CMainFrame::PreTranslateMessage(MSG* pMsg) {
 	if (CFrameWindowImpl<CMainFrame>::PreTranslateMessage(pMsg))
 		return TRUE;
@@ -49,8 +51,10 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 
 	CreateSimpleStatusBar();
 
-	m_hWndClient = m_view.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_CLIENTEDGE);
+	m_hWndClient = m_view.Create(m_hWnd, rcDefault, nullptr,
+		WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_CLIENTEDGE);
 
+	UIAddMenu(m_CmdBar.GetMenu());
 	UIAddToolBar(hWndToolBar);
 	UISetCheck(ID_VIEW_TOOLBAR, 1);
 	UISetCheck(ID_VIEW_STATUS_BAR, 1);
@@ -69,7 +73,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 
 	m_view.SetWindowMenu(menuMain.GetSubMenu(WINDOW_MENU_POSITION));
 
-	PostMessage(WM_COMMAND, ID_FILE_NEW);
+	PostMessage(WM_COMMAND, ID_VIEW_ALLWINDOWS);
 
 	return 0;
 }
@@ -90,10 +94,11 @@ LRESULT CMainFrame::OnFileExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 	return 0;
 }
 
-LRESULT CMainFrame::OnFileNew(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	auto pView = new CWindowsView;
+LRESULT CMainFrame::OnViewAllWindows(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	auto pView = new CWindowsView(this);
 	pView->Create(m_view, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
-	m_view.AddPage(pView->m_hWnd, _T("All Windows"), 0);
+	m_view.AddPage(pView->m_hWnd, _T("All Windows"), 0, pView);
+	pView->OnActivate(true);
 
 	return 0;
 }
@@ -146,6 +151,22 @@ LRESULT CMainFrame::OnWindowActivate(WORD /*wNotifyCode*/, WORD wID, HWND /*hWnd
 	return 0;
 }
 
+LRESULT CMainFrame::OnCommandToActiveView(WORD code, WORD id, HWND h, BOOL&) {
+	auto page = m_view.GetActivePage();
+	if (page < 0)
+		return 0;
+
+	return ::SendMessage(m_view.GetPageHWND(page), WM_COMMAND, MAKELONG(id, code), reinterpret_cast<LPARAM>(h));
+}
+
+CUpdateUIBase& CMainFrame::GetUIUpdate() {
+	return *this;
+}
+
+UINT CMainFrame::ShowContextMenu(HMENU hMenu, const POINT& pt, DWORD flags) {
+	return (UINT)m_CmdBar.TrackPopupMenu(hMenu, flags, pt.x, pt.y);
+}
+
 void CMainFrame::InitToolBar(CToolBarCtrl& tb) {
 	CImageList tbImages;
 	tbImages.Create(24, 24, ILC_COLOR32, 8, 4);
@@ -160,6 +181,9 @@ void CMainFrame::InitToolBar(CToolBarCtrl& tb) {
 		{ ID_VIEW_REFRESH, IDI_REFRESH },
 		{ 0 },
 		{ ID_VIEW_ALLWINDOWS, IDI_WINDOWS },
+		{ 0 },
+		{ ID_VIEW_HIDDENWINDOWS, IDI_WINDOW_HIDDEN },
+		{ ID_VIEW_EMPTYTITLEWINDOWS, IDI_WINDOW_NOTEXT },
 	};
 	for (auto& b : buttons) {
 		if (b.id == 0)
@@ -178,9 +202,22 @@ void CMainFrame::InitCommandBar() {
 	} cmds[] = {
 		{ ID_VIEW_REFRESH, IDI_REFRESH },
 		{ ID_VIEW_ALLWINDOWS, IDI_WINDOWS },
-//		{ ID_WINDOW_CLOSE, IDI_WINDOW_CLOSE },
+		{ ID_VIEW_HIDDENWINDOWS, IDI_WINDOW_HIDDEN },
+		{ ID_VIEW_EMPTYTITLEWINDOWS, IDI_WINDOW_NOTEXT },
+		{ ID_WINDOW_CLOSE, IDI_WINDOW_CLOSE },
 	};
 	for (auto& cmd : cmds) {
 		m_CmdBar.AddIcon(cmd.icon ? AtlLoadIconImage(cmd.icon, 0, 16, 16) : cmd.hIcon, cmd.id);
 	}
+}
+
+LRESULT CMainFrame::OnTabActivated(UINT uMsg, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+	if (m_ActivePage >= 0)
+		::SendMessage(m_view.GetPageHWND(m_ActivePage), uMsg, 0, 0);
+
+	m_ActivePage = m_view.GetActivePage();
+	if (m_ActivePage < 0)
+		return 0;
+
+	return ::SendMessage(m_view.GetPageHWND(m_ActivePage), uMsg, 1, 0);
 }

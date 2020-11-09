@@ -53,14 +53,6 @@ IDR_MAINFRAME MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN
-        MENUITEM "&Save\tCtrl+S",               ID_FILE_SAVE
-        MENUITEM "Save &As...",                 ID_FILE_SAVE_AS
-        MENUITEM SEPARATOR
-        MENUITEM "&Print...\tCtrl+P",           ID_FILE_PRINT
-        MENUITEM "Print Pre&view",              ID_FILE_PRINT_PREVIEW
-        MENUITEM "P&rint Setup...",             ID_FILE_PRINT_SETUP
-        MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_APP_EXIT
     END
     POPUP "&Edit"
@@ -80,15 +72,62 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&All Windows",                ID_VIEW_ALLWINDOWS
         MENUITEM "&All Processes",              ID_VIEW_ALLPROCESSES
+        MENUITEM SEPARATOR
+        MENUITEM "&Hidden Windows",             ID_VIEW_HIDDENWINDOWS
+        MENUITEM "EmptyTitle Windows",          ID_VIEW_EMPTYTITLEWINDOWS
     END
     POPUP "&Window"
+    BEGIN
+        MENUITEM "&Find...\tCtrl+W",            ID_WINDOW_FIND
+        MENUITEM SEPARATOR
+        POPUP "&State"
+        BEGIN
+            MENUITEM "&Show",                       ID_WINDOW_SHOW
+            MENUITEM "&Hide",                       ID_WINDOW_HIDE
+            MENUITEM "&Highlight",                  ID_WINDOW_HIGHLIGHT
+            MENUITEM "&Minimize",                   ID_WINDOW_MINIMIZE
+            MENUITEM "Ma&ximize",                   ID_WINDOW_MAXIMIZE
+            MENUITEM "&Restore",                    ID_WINDOW_RESTORE
+            MENUITEM "&Bring To Front",             ID_WINDOW_BRINGTOFRONT
+            MENUITEM "&Close",                      ID_STATE_CLOSE
+            MENUITEM "&Flash",                      ID_STATE_FLASH
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Properties...",              ID_WINDOW_PROPERTIES
+    END
+    POPUP "&Options"
+    BEGIN
+        MENUITEM "&Always On Top",              ID_OPTIONS_ALWAYSONTOP
+    END
+    POPUP "&Tab"
     BEGIN
         MENUITEM "&Close\tCtrl+F4",             ID_WINDOW_CLOSE
         MENUITEM "Close &All",                  ID_WINDOW_CLOSE_ALL
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&About WinSpy",               ID_APP_ABOUT
+        MENUITEM "&About WinSpy...",            ID_APP_ABOUT
+    END
+END
+
+IDR_CONTEXT MENU
+BEGIN
+    POPUP "tree"
+    BEGIN
+        POPUP "&State"
+        BEGIN
+            MENUITEM "&Show",                       ID_WINDOW_SHOW
+            MENUITEM "&Hide",                       ID_WINDOW_HIDE
+            MENUITEM "&Highlight",                  ID_WINDOW_HIGHLIGHT
+            MENUITEM "&Minimize",                   ID_WINDOW_MINIMIZE
+            MENUITEM "Ma&ximize",                   ID_WINDOW_MAXIMIZE
+            MENUITEM "&Restore",                    ID_WINDOW_RESTORE
+            MENUITEM "&Bring To Front",             ID_WINDOW_BRINGTOFRONT
+            MENUITEM "&Close",                      ID_STATE_CLOSE
+            MENUITEM "&Flash",                      ID_STATE_FLASH
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Properties...",              ID_WINDOW_PROPERTIES
     END
 END
 
@@ -113,6 +152,10 @@ IDI_WINDOW_NEW          ICON                    "res\\window_new.ico"
 IDI_WINDOWS             ICON                    "res\\windows.ico"
 
 IDI_REFRESH             ICON                    "res\\refresh.ico"
+
+IDI_WINDOW_CLOSE        ICON                    "res\\window-close.ico"
+
+IDI_WINDOW_NOTEXT       ICON                    "res\\window-notext.ico"
 
 
 /////////////////////////////////////////////////////////////////////////////

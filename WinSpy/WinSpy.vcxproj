@@ -214,6 +214,7 @@
     <ClCompile Include="ClipboardHelper.cpp" />
     <ClCompile Include="ColumnManager.cpp" />
     <ClCompile Include="FormatHelper.cpp" />
+    <ClCompile Include="HookManager.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -221,7 +222,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="ProcessHelper.cpp" />
     <ClCompile Include="SortHelper.cpp" />
+    <ClCompile Include="WindowHelper.cpp" />
     <ClCompile Include="WindowsView.cpp" />
     <ClCompile Include="WinSpy.cpp" />
   </ItemGroup>
@@ -230,12 +233,16 @@
     <ClInclude Include="ClipboardHelper.h" />
     <ClInclude Include="ColumnManager.h" />
     <ClInclude Include="FormatHelper.h" />
+    <ClInclude Include="HookManager.h" />
+    <ClInclude Include="Interfaces.h" />
     <ClInclude Include="MainFrm.h" />
+    <ClInclude Include="ProcessHelper.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="SortHelper.h" />
     <ClInclude Include="ViewBase.h" />
     <ClInclude Include="VirtualListView.h" />
+    <ClInclude Include="WindowHelper.h" />
     <ClInclude Include="WindowsView.h" />
   </ItemGroup>
   <ItemGroup>
@@ -243,12 +250,19 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\refresh.ico" />
+    <Image Include="res\window-close.ico" />
     <Image Include="res\window-hidden.ico" />
+    <Image Include="res\window-notext.ico" />
     <Image Include="res\window.ico" />
     <Image Include="res\windows.ico" />
     <Image Include="res\window_delete.ico" />
     <Image Include="res\window_new.ico" />
     <Image Include="res\WinSpy.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\WinSpyHook\WinSpyHook.vcxproj">
+      <Project>{1ca31fee-1f81-4c94-9205-d908841958dd}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

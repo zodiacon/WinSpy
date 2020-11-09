@@ -1,6 +1,6 @@
 #pragma once
 
-#include <atlframe.h>
+#include "Interfaces.h"
 
 template<typename T, typename TBase = CFrameWindowImpl<T, CWindow, CControlWinTraits>>
 class CViewBase abstract :
@@ -8,17 +8,31 @@ class CViewBase abstract :
 	public CAutoUpdateUI<T>,
 	public CIdleHandler {
 public:
+	CViewBase(IMainFrame* frame) : m_pFrame(frame) {}
 
 protected:
 	BEGIN_MSG_MAP(CViewBase)
 		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
+		MESSAGE_HANDLER(TBVN_PAGEACTIVATED, OnTabActivated)
 		CHAIN_MSG_MAP(TBase)
 	END_MSG_MAP()
+
+	IMainFrame* GetFrame() {
+		return m_pFrame;
+	}
 
 	BOOL OnIdle() override {
 		CAutoUpdateUI<T>::UIUpdateToolBar();
 		return FALSE;
 	}
+
+	LRESULT OnTabActivated(UINT /*uMsg*/, WPARAM wParam, LPARAM, BOOL& bHandled) {
+		auto pT = static_cast<T*>(this);
+		pT->OnActivate(wParam ? true : false);
+		return 0;
+	}
+
+	void OnActivate(bool activate) {}
 
 	LRESULT OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled) {
 		auto pT = static_cast<T*>(this);
@@ -65,4 +79,6 @@ protected:
 
 		return hWndToolBar;
 	}
+
+	IMainFrame* m_pFrame;
 };
