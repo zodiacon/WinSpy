@@ -17,6 +17,8 @@ public:
 
 	CString GetColumnText(HWND, int row, int col) const;
 	void OnActivate(bool activate);
+	void DoSort(const SortInfo* si);
+	bool IsSortable(int col) const;
 
 	virtual void OnFinalMessage(HWND /*hWnd*/);
 
@@ -26,6 +28,7 @@ public:
 		MESSAGE_HANDLER(WM_TIMER, OnTimer)
 		MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		NOTIFY_CODE_HANDLER(TVN_ITEMEXPANDING, OnNodeExpanding)
+		NOTIFY_CODE_HANDLER(TVN_DELETEITEM, OnNodeDeleted)
 		NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnNodeSelected)
 		NOTIFY_HANDLER(IDC_TREE, NM_RCLICK, OnTreeNodeRightClick)
 		COMMAND_ID_HANDLER(ID_VIEW_REFRESH, OnRefresh)
@@ -48,6 +51,7 @@ private:
 		Handle, ClassName, Text, Style, ExtendedStyle,
 		ProcessId, ThreadId, ParentWindow, FirstChildWindow, NextWindow, PrevWindow, OwnerWindow, 
 		WindowProc, UserData, ID, Rectangle,
+		ClassAtom, ClassStyle, ClassExtra, WindowExtra,
 	};
 	struct WindowDataItem {
 		CString Property;
@@ -71,6 +75,7 @@ private:
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnTimer(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnNodeExpanding(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
+	LRESULT OnNodeDeleted(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
 	LRESULT OnNodeSelected(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
 	LRESULT OnWindowShow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnWindowHide(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -94,7 +99,11 @@ private:
 	CTreeItem m_Selected;
 	CWindow m_SelectedHwnd;
 	std::vector<WindowDataItem> m_Items;
+	std::unordered_map<HWND, HTREEITEM> m_WindowMap;
+	DWORD m_TotalWindows, m_TotalVisibleWindows, m_TopLevelWindows;
+
 	bool m_ShowHiddenWindows : 1 { false };
 	bool m_ShowNoTitleWindows : 1 { true };
 	bool m_ShowChildWindows : 1 { true };
+	bool m_Deleting{ false };
 };

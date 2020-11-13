@@ -12,8 +12,13 @@
 #define IDI_REFRESH                     207
 #define IDR_CONTEXT                     208
 #define IDI_WINDOW_CLOSE                209
-#define IDI_ICON2                       210
 #define IDI_WINDOW_NOTEXT               210
+#define IDD_FINDWINDOW                  211
+#define IDC_HANDLE                      1000
+#define IDC_CLASSNAME                   1001
+#define IDC_CLASSNAME2                  1002
+#define IDC_BUTTON1                     1003
+#define IDC_SEARCH                      1003
 #define ID_WINDOW_CLOSE                 32772
 #define ID_WINDOW_CLOSE_ALL             32773
 #define ID_VIEW_ALLWINDOWS              32775
@@ -41,9 +46,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        211
+#define _APS_NEXT_RESOURCE_VALUE        213
 #define _APS_NEXT_COMMAND_VALUE         32795
-#define _APS_NEXT_CONTROL_VALUE         1000
+#define _APS_NEXT_CONTROL_VALUE         1004
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

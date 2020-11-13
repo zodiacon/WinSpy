@@ -8,6 +8,7 @@
 #include "WindowsView.h"
 #include "ProcessHelper.h"
 #include "WindowHelper.h"
+#include "SortHelper.h"
 
 BOOL CWindowsView::PreTranslateMessage(MSG* pMsg) {
 	pMsg;
@@ -24,7 +25,7 @@ CString CWindowsView::GetColumnText(HWND, int row, int col) const {
 	CString text;
 	switch (item.Type) {
 		case DataItemType::Handle:
-			text.Format(L"0x%zX", m_SelectedHwnd.m_hWnd);
+			text.Format(L"0x%zX", (ULONG_PTR)m_SelectedHwnd.m_hWnd);
 			break;
 
 		case DataItemType::Style:
@@ -80,6 +81,21 @@ CString CWindowsView::GetColumnText(HWND, int row, int col) const {
 		case DataItemType::OwnerWindow: return FormatHelper::FormatHWndOrNone(m_SelectedHwnd.GetWindow(GW_OWNER));
 		case DataItemType::FirstChildWindow: return FormatHelper::FormatHWndOrNone(m_SelectedHwnd.GetWindow(GW_CHILD));
 
+		case DataItemType::ClassAtom:
+			text.Format(L"0x%04X", ::GetClassLongPtr(m_SelectedHwnd, GCW_ATOM));
+			break;
+
+		case DataItemType::ClassStyle:
+			text.Format(L"0x%04X", ::GetClassLongPtr(m_SelectedHwnd, GCL_STYLE));
+			break;
+
+		case DataItemType::ClassExtra:
+			text.Format(L"%u", (ULONG)::GetClassLongPtr(m_SelectedHwnd, GCL_CBCLSEXTRA));
+			break;
+
+		case DataItemType::WindowExtra:
+			text.Format(L"%u", (ULONG)::GetClassLongPtr(m_SelectedHwnd, GCL_CBWNDEXTRA));
+			break;
 	}
 	return text;
 }
@@ -92,6 +108,19 @@ void CWindowsView::OnActivate(bool activate) {
 	else {
 		KillTimer(1);
 	}
+}
+
+void CWindowsView::DoSort(const SortInfo* si) {
+	if (si == nullptr)
+		return;
+
+	std::sort(m_Items.begin(), m_Items.end(), [&](const auto& item1, const auto& item2) -> bool {
+		return SortHelper::SortStrings(item1.Property, item2.Property, si->SortAscending);
+		});
+}
+
+bool CWindowsView::IsSortable(int col) const {
+	return col == 0;
 }
 
 void CWindowsView::OnFinalMessage(HWND /*hWnd*/) {
@@ -114,14 +143,26 @@ void CWindowsView::Refresh() {
 }
 
 void CWindowsView::InitTree() {
+	m_TotalVisibleWindows = m_TotalWindows = m_TopLevelWindows = 0;
 	m_DesktopNode = nullptr;
 	HWND hDesktop = ::GetDesktopWindow();
 	if (!hDesktop)
 		return;
+
+	//EnumChildWindows(hDesktop, [](auto h, auto) {
+	//	static int z = 0;
+	//	ATLTRACE(L"HWND: 0x%p (%d)\n", h, ++z);
+	//	return TRUE;
+	//	}, 0);
+
 	CWaitCursor wait;
 
 	m_Tree.LockWindowUpdate(TRUE);
+	m_Deleting = true;
 	m_Tree.DeleteAllItems();
+	m_WindowMap.clear();
+	m_Deleting = false;
+
 	m_Images.RemoveAll();
 	m_Images.AddIcon(AtlLoadIconImage(IDI_WINDOW, 0, 16, 16));
 	m_DesktopNode = AddNode(hDesktop, TVI_ROOT);
@@ -152,7 +193,15 @@ void CWindowsView::AddChildWindows(HTREEITEM hParent) {
 CTreeItem CWindowsView::AddNode(HWND hWnd, HTREEITEM hParent) {
 	CString text, name;
 	CWindow win(hWnd);
+	m_TotalWindows++;
+	if (win.IsWindowVisible())
+		m_TotalVisibleWindows++;
+
+
 	if (m_DesktopNode) {
+		if (::GetAncestor(hWnd, GA_PARENT) == (HWND)m_DesktopNode.GetData())
+			m_TopLevelWindows++;
+
 		if (!m_ShowHiddenWindows && !win.IsWindowVisible())
 			return nullptr;
 		win.GetWindowText(name);
@@ -177,6 +226,8 @@ CTreeItem CWindowsView::AddNode(HWND hWnd, HTREEITEM hParent) {
 		image = m_Images.AddIcon(hIcon);
 	auto node = m_Tree.InsertItem(text, image, image, hParent, TVI_LAST);
 	node.SetData((DWORD_PTR)hWnd);
+	m_WindowMap.insert({ hWnd, node });
+
 	if (!win.IsWindowVisible())
 		node.SetState(TVIS_CUT, TVIS_CUT);
 
@@ -188,14 +239,15 @@ CTreeItem CWindowsView::AddNode(HWND hWnd, HTREEITEM hParent) {
 }
 
 BOOL CWindowsView::AddChildNode(HWND hChild) {
-	if (::GetAncestor(hChild, GA_PARENT) == (HWND)m_Tree.GetItemData(m_hCurrentNode))
+	if (::GetAncestor(hChild, GA_PARENT) == (HWND)m_Tree.GetItemData(m_hCurrentNode)) {
 		AddNode(hChild, m_hCurrentNode);
-
+	}
 	return TRUE;
 }
 
 void CWindowsView::UpdateList() {
 	m_List.SetItemCountEx((int)m_Items.size(), LVSICF_NOSCROLL);
+	DoSort(GetSortInfo(m_List));
 }
 
 CString CWindowsView::GetDetails(const WindowDataItem& item) const {
@@ -245,8 +297,8 @@ LRESULT CWindowsView::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 
 	auto cm = GetColumnManager(m_List);
 	cm->AddColumn(L"Property", LVCFMT_LEFT, 150);
-	cm->AddColumn(L"Value", LVCFMT_LEFT, 220);
-	cm->AddColumn(L"Details", LVCFMT_LEFT, 420);
+	cm->AddColumn(L"Value", LVCFMT_LEFT, 250);
+	cm->AddColumn(L"Details", LVCFMT_LEFT, 500);
 	cm->UpdateColumns();
 
 	m_Items = std::vector<WindowDataItem>{
@@ -266,8 +318,13 @@ LRESULT CWindowsView::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 		{ L"Window Procedure", DataItemType::WindowProc },
 		{ L"User Data", DataItemType::UserData },
 		{ L"ID", DataItemType::ID },
+		{ L"Class Atom", DataItemType::ClassAtom },
+		{ L"Class Style", DataItemType::ClassStyle },
+		{ L"Class Extra Bytes", DataItemType::ClassExtra },
+		{ L"Window Extra Bytes", DataItemType::WindowExtra },
 	};
 
+	m_WindowMap.reserve(256);
 	InitTree();
 
 	SetTimer(1, 2000, nullptr);
@@ -278,6 +335,18 @@ LRESULT CWindowsView::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 LRESULT CWindowsView::OnTimer(UINT, WPARAM id, LPARAM, BOOL&) {
 	if (id == 1)
 		Refresh();
+	else if (id == 3) {
+		KillTimer(3);
+		m_Selected = m_Tree.GetSelectedItem();
+		m_SelectedHwnd.Detach();
+		auto hWnd = (HWND)m_Selected.GetData();
+		if (!::IsWindow(hWnd))	// window is probably destroyed
+			m_Selected.Delete();
+		else {
+			m_SelectedHwnd.Attach(hWnd);
+			UpdateList();
+		}
+	}
 	return 0;
 }
 
@@ -295,16 +364,17 @@ LRESULT CWindowsView::OnNodeExpanding(int, LPNMHDR hdr, BOOL&) {
 	return 0;
 }
 
-LRESULT CWindowsView::OnNodeSelected(int, LPNMHDR, BOOL&) {
-	m_Selected = m_Tree.GetSelectedItem();
-	m_SelectedHwnd.Detach();
-	auto hWnd = (HWND)m_Selected.GetData();
-	if (!::IsWindow(hWnd))	// window is probably destroyed
-		m_Selected.Delete();
-	else {
-		m_SelectedHwnd.Attach(hWnd);
-		UpdateList();
+LRESULT CWindowsView::OnNodeDeleted(int, LPNMHDR hdr, BOOL&) {
+	if (!m_Deleting) {
+		auto tv = (NMTREEVIEW*)hdr;
+		m_WindowMap.erase((HWND)tv->itemOld.lParam);
 	}
+	return 0;
+}
+
+LRESULT CWindowsView::OnNodeSelected(int, LPNMHDR, BOOL&) {
+	// short delay before update in case the user moves quickly through the tree
+	SetTimer(3, 250, nullptr);
 	return 0;
 }
 
