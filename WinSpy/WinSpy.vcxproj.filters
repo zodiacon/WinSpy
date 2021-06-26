@@ -101,6 +101,9 @@
     <ClInclude Include="Interfaces.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TreeViewManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WinSpy.rc">

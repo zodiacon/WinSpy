@@ -94,44 +94,11 @@ bool ColumnManager::IsConst(int column) const {
 	return (m_Columns[column].Flags & ColumnFlags::Const) == ColumnFlags::Const;
 }
 
-int ColumnManager::AddColumn(PCWSTR name, int format, int width, ColumnFlags flags) {
-	auto category = ::wcschr(name, L'\\');
-	CString categoryName;
-	if (category) {
-		categoryName = CString(name, static_cast<int>(category - name));
-		name = category + 1;
-	}
-	else {
-		categoryName = L"General";
-	}
-	ColumnInfo info;
-	info.Format = format;
-	info.DefaultWidth = width;
-	info.Flags = flags;
-	info.Name = name;
-	info.Category = categoryName;
-
-	if (m_ListView && ((flags & ColumnFlags::Visible) == ColumnFlags::Visible)) {
-		auto header = m_ListView.GetHeader();
-		int i = m_ListView.InsertColumn(header.GetItemCount(), name, format, width);
-		HDITEM hdi;
-		hdi.mask = HDI_LPARAM;
-		hdi.lParam = m_Columns.size();
-		header.SetItem(i, &hdi);
-	}
-
-	m_Columns.push_back(info);
-	if (!categoryName.IsEmpty()) {
-		if (std::find(m_Categories.begin(), m_Categories.end(), categoryName) == m_Categories.end())
-			m_Categories.push_back(categoryName);
-		m_ColumnsByCategory[categoryName].push_back(static_cast<int>(m_Columns.size() - 1));
-	}
-
-	return static_cast<int>(m_Columns.size());
-}
-
 void ColumnManager::Clear() {
 	m_Columns.clear();
+	if (m_ListView)
+		while (m_ListView.DeleteColumn(0))
+			;
 }
 
 void ColumnManager::UpdateColumns() {

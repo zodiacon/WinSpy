@@ -32,7 +32,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	// attach menu
 	m_CmdBar.AttachMenu(GetMenu());
 	// remove old menu
-	SetMenu(NULL);
+	SetMenu(nullptr);
 
 	m_CmdBar.SetAlphaImages(true);
 	InitCommandBar();
@@ -52,7 +52,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	CreateSimpleStatusBar();
 
 	m_hWndClient = m_view.Create(m_hWnd, rcDefault, nullptr,
-		WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_CLIENTEDGE);
+		WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
 
 	UIAddMenu(m_CmdBar.GetMenu());
 	UIAddToolBar(hWndToolBar);
@@ -97,7 +97,7 @@ LRESULT CMainFrame::OnFileExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 LRESULT CMainFrame::OnViewAllWindows(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	auto pView = new CWindowsView(this);
 	pView->Create(m_view, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
-	m_view.AddPage(pView->m_hWnd, _T("All Windows"), 0, pView);
+	m_view.AddPage(pView->m_hWnd, _T("Windows Tree"), 0, pView);
 	pView->OnActivate(true);
 
 	return 0;

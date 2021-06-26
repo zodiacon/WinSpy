@@ -5,20 +5,28 @@
 #pragma once
 
 #include "VirtualListView.h"
+#include "TreeViewManager.h"
 #include "ViewBase.h"
 
 class CWindowsView : 
 	public CViewBase<CWindowsView>,
-	public CVirtualListView<CWindowsView> {
+	public CVirtualListView<CWindowsView>,
+	public CCustomDraw<CWindowsView>,
+	public CTreeViewManager<CWindowsView> {
 public:
 	CWindowsView(IMainFrame* frame) : CViewBase(frame) {}
 
 	BOOL PreTranslateMessage(MSG* pMsg);
 
 	CString GetColumnText(HWND, int row, int col) const;
+	int GetRowImage(HWND, int row) const;
+
 	void OnActivate(bool activate);
 	void DoSort(const SortInfo* si);
 	bool IsSortable(int col) const;
+
+	DWORD OnPrePaint(int, LPNMCUSTOMDRAW cd);
+	DWORD OnItemPrePaint(int, LPNMCUSTOMDRAW cd);
 
 	virtual void OnFinalMessage(HWND /*hWnd*/);
 
@@ -43,17 +51,25 @@ public:
 		COMMAND_ID_HANDLER(ID_VIEW_EMPTYTITLEWINDOWS, OnToggleEmptyTitleWindows)
 		COMMAND_ID_HANDLER(ID_VIEW_CHILDWINDOWS, OnToggleChildWindows)
 		CHAIN_MSG_MAP(CVirtualListView<CWindowsView>)
+		CHAIN_MSG_MAP(CCustomDraw<CWindowsView>)
+		CHAIN_MSG_MAP(CTreeViewManager<CWindowsView>)
 		CHAIN_MSG_MAP(CViewBase<CWindowsView>)
 	END_MSG_MAP()
 
 private:
+	enum class WindowListType {
+		Parent = 1,
+		AllChildren = 2,
+		DirectChildren = 4,
+	};
+
 	enum class DataItemType {
-		Handle, ClassName, Text, Style, ExtendedStyle,
+		Handle, ClassName, Text, Style, ExtendedStyle, ProcessName,
 		ProcessId, ThreadId, ParentWindow, FirstChildWindow, NextWindow, PrevWindow, OwnerWindow, 
 		WindowProc, UserData, ID, Rectangle,
 		ClassAtom, ClassStyle, ClassExtra, WindowExtra,
 	};
-	struct WindowDataItem {
+	struct DataItem {
 		CString Property;
 		DataItemType Type;
 	};
@@ -64,8 +80,11 @@ private:
 	void AddChildWindows(HTREEITEM hParent);
 	CTreeItem AddNode(HWND hWnd, HTREEITEM hParent);
 	BOOL AddChildNode(HWND hChild);
+	void AddChildWindows(std::vector<HWND>& v, HWND hParent, bool directOnly = false);
+
 	void UpdateList();
-	CString GetDetails(const WindowDataItem& item) const;
+	CString GetDetails(const DataItem& item) const;
+	static CString GetWindowClassAndTitle(HWND);
 
 	// Handler prototypes (uncomment arguments if needed):
 	//	LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -93,13 +112,14 @@ private:
 	CSplitterWindow m_Splitter;
 	CListViewCtrl m_List;
 	CTreeViewCtrlEx m_Tree;
-	CImageList m_Images;
+	inline static CImageList s_Images;
 	CTreeItem m_hCurrentNode;
 	CTreeItem m_DesktopNode;
 	CTreeItem m_Selected;
 	CWindow m_SelectedHwnd;
-	std::vector<WindowDataItem> m_Items;
 	std::unordered_map<HWND, HTREEITEM> m_WindowMap;
+	inline static std::unordered_map<HWND, int> s_IconMap;
+	std::vector<HWND> m_Items;
 	DWORD m_TotalWindows, m_TotalVisibleWindows, m_TopLevelWindows;
 
 	bool m_ShowHiddenWindows : 1 { false };

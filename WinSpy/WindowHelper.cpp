@@ -38,6 +38,36 @@ CString WindowHelper::WindowStyleToString(HWND hWnd) {
 	return L"(WS_) " + text.Left(text.GetLength() - 2);
 }
 
+CString WindowHelper::ClassStyleToString(HWND hWnd) {
+	auto style = ::GetClassLongPtr(hWnd, GCL_STYLE);
+	CString text;
+
+	static struct {
+		DWORD style;
+		PCWSTR text;
+	} styles[] = {
+		{ CS_HREDRAW			, L"HREDRAW" },
+		{ CS_VREDRAW			, L"VREDRAW" },
+		{ CS_DBLCLKS			, L"DBLCLKS" },
+		{ CS_OWNDC				, L"OWNDC" },
+		{ CS_CLASSDC			, L"CLASSDC" },
+		{ CS_PARENTDC			, L"PARENTDC" },
+		{ CS_SAVEBITS			, L"SAVEBITS" },
+		{ CS_GLOBALCLASS		, L"GLOBALCLASS" },
+		{ CS_BYTEALIGNCLIENT	, L"BYTEALIGNCLIENT" },
+		{ CS_BYTEALIGNWINDOW	, L"BYTEALIGWINDOW" },
+	};
+
+	for (auto& item : styles) {
+		if (style & item.style)
+			text += CString(item.text) += L", ";
+	}
+	if (text.IsEmpty())
+		return L"";
+
+	return L"(CS_) " + text.Left(text.GetLength() - 2);
+}
+
 CString WindowHelper::WindowExtendedStyleToString(HWND hWnd) {
 	auto style = CWindow(hWnd).GetExStyle();
 	CString text;
@@ -92,12 +122,14 @@ CString WindowHelper::WindowRectToString(HWND hWnd) {
 	return text;
 }
 
+CString WindowHelper::GetWindowClassName(HWND hWnd) {
+	WCHAR name[128];
+	::GetClassName(hWnd, name, _countof(name));
+	return name;
+}
+
 HICON WindowHelper::GetWindowOrProcessIcon(HWND hWnd) {
-	HICON hIcon{ nullptr };
-	::SendMessageTimeout(hWnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG | SMTO_ERRORONEXIT, 100, (DWORD_PTR*)&hIcon);
-	if (!hIcon) {
-		hIcon = (HICON)::GetClassLongPtr(hWnd, GCLP_HICONSM);
-	}
+	auto hIcon = GetWindowIcon(hWnd);
 	if (!hIcon) {
 		DWORD pid = 0;
 		::GetWindowThreadProcessId(hWnd, &pid);
@@ -108,3 +140,13 @@ HICON WindowHelper::GetWindowOrProcessIcon(HWND hWnd) {
 
 	return hIcon;
 }
+
+HICON WindowHelper::GetWindowIcon(HWND hWnd) {
+	HICON hIcon{ nullptr };
+	::SendMessageTimeout(hWnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG | SMTO_ERRORONEXIT, 100, (DWORD_PTR*)&hIcon);
+	if (!hIcon) {
+		hIcon = (HICON)::GetClassLongPtr(hWnd, GCLP_HICONSM);
+	}
+	return hIcon;
+}
+

@@ -22,6 +22,7 @@ public:
 		CString Name;
 		ColumnFlags Flags;
 		CString Category;
+		int Tag;
 
 		bool IsVisible() const;
 		bool IsMandatory() const;
@@ -44,7 +45,14 @@ public:
 	bool IsModified(int column) const;
 	void SetModified(int column, bool modified);
 	bool IsConst(int column) const;
-	int AddColumn(PCWSTR name, int format, int width, ColumnFlags flags = ColumnFlags::Visible);
+
+	template<typename T = int>
+	int AddColumn(PCWSTR name, int format, int width, T tag = T(), ColumnFlags flags = ColumnFlags::Visible);
+	template<typename T = int>
+	T GetColumnTag(int index) const {
+		return static_cast<T>(m_Columns[index].Tag);
+	}
+
 	void Clear();
 	const ColumnInfo& GetColumn(int index) const;
 	const std::vector<int>& GetColumnsByCategory(PCWSTR category) const;
@@ -87,3 +95,40 @@ inline void ColumnManager::ColumnInfo::SetVisible(bool visible) {
 	Flags |= ColumnFlags::Modified;
 }
 
+template<typename T>
+int ColumnManager::AddColumn(PCWSTR name, int format, int width, T tag, ColumnFlags flags) {
+	auto category = ::wcschr(name, L'\\');
+	CString categoryName;
+	if (category) {
+		categoryName = CString(name, static_cast<int>(category - name));
+		name = category + 1;
+	}
+	else {
+		categoryName = L"General";
+	}
+	ColumnInfo info;
+	info.Format = format;
+	info.DefaultWidth = width;
+	info.Flags = flags;
+	info.Name = name;
+	info.Category = categoryName;
+	info.Tag = static_cast<int>(tag);
+
+	if (m_ListView && ((flags & ColumnFlags::Visible) == ColumnFlags::Visible)) {
+		auto header = m_ListView.GetHeader();
+		int i = m_ListView.InsertColumn(header.GetItemCount(), name, format, width);
+		HDITEM hdi;
+		hdi.mask = HDI_LPARAM;
+		hdi.lParam = m_Columns.size();
+		header.SetItem(i, &hdi);
+	}
+
+	m_Columns.push_back(info);
+	if (!categoryName.IsEmpty()) {
+		if (std::find(m_Categories.begin(), m_Categories.end(), categoryName) == m_Categories.end())
+			m_Categories.push_back(categoryName);
+		m_ColumnsByCategory[categoryName].push_back(static_cast<int>(m_Columns.size() - 1));
+	}
+
+	return static_cast<int>(m_Columns.size());
+}

@@ -70,8 +70,9 @@ BEGIN
         MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
         MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
         MENUITEM SEPARATOR
-        MENUITEM "&All Windows",                ID_VIEW_ALLWINDOWS
-        MENUITEM "&All Processes",              ID_VIEW_ALLPROCESSES
+        MENUITEM "&Windows Tree",               ID_VIEW_ALLWINDOWS
+        MENUITEM "&Processes Tree",             ID_VIEW_ALLPROCESSES
+        MENUITEM "Windows &List",               ID_VIEW_WINDOWSLIST
         MENUITEM SEPARATOR
         MENUITEM "&Hidden Windows",             ID_VIEW_HIDDENWINDOWS
         MENUITEM "EmptyTitle Windows",          ID_VIEW_EMPTYTITLEWINDOWS
