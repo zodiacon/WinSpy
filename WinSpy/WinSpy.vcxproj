@@ -213,6 +213,8 @@
     <ClCompile Include="AboutDlg.cpp" />
     <ClCompile Include="ClipboardHelper.cpp" />
     <ClCompile Include="ColumnManager.cpp" />
+    <ClCompile Include="WindowsListView.cpp" />
+    <ClCompile Include="FindWindowDlg.cpp" />
     <ClCompile Include="FormatHelper.cpp" />
     <ClCompile Include="HookManager.cpp" />
     <ClCompile Include="MainFrm.cpp" />
@@ -232,10 +234,13 @@
     <ClInclude Include="AboutDlg.h" />
     <ClInclude Include="ClipboardHelper.h" />
     <ClInclude Include="ColumnManager.h" />
+    <ClInclude Include="WindowsListView.h" />
+    <ClInclude Include="FindWindowDlg.h" />
     <ClInclude Include="FormatHelper.h" />
     <ClInclude Include="HookManager.h" />
     <ClInclude Include="Interfaces.h" />
     <ClInclude Include="MainFrm.h" />
+    <ClInclude Include="ProcessesView.h" />
     <ClInclude Include="ProcessHelper.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
@@ -250,12 +255,17 @@
     <ResourceCompile Include="WinSpy.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="res\close-window.ico" />
+    <Image Include="res\maximize.ico" />
+    <Image Include="res\Minimize.ico" />
     <Image Include="res\refresh.ico" />
+    <Image Include="res\Target.ico" />
     <Image Include="res\window-close.ico" />
     <Image Include="res\window-hidden.ico" />
     <Image Include="res\window-notext.ico" />
     <Image Include="res\window.ico" />
     <Image Include="res\windows.ico" />
+    <Image Include="res\WindowSendToBack.ico" />
     <Image Include="res\window_delete.ico" />
     <Image Include="res\window_new.ico" />
     <Image Include="res\WinSpy.ico" />

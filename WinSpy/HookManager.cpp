@@ -4,7 +4,15 @@
 __declspec(dllimport) HHOOK g_hooks[WH_MAX + 1];
 
 bool HookManager::InstallHooks(HWND hWnd) {
-    auto hLib = ::LoadLibrary(L"WinSpyHook.Dll");
+    WCHAR path[MAX_PATH];
+    if (0 == ::GetModuleFileName(nullptr, path, _countof(path)))
+        return false;
+
+    auto bs = wcsrchr(path, L'\\');
+    ATLASSERT(bs);
+    *bs = 0;
+    wcscat_s(path, L"\\WinSpyHook.Dll");
+    auto hLib = ::LoadLibrary(path);
     if (!hLib)
         return false;
 

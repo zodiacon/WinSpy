@@ -14,10 +14,18 @@
 #define IDI_WINDOW_CLOSE                209
 #define IDI_WINDOW_NOTEXT               210
 #define IDD_FINDWINDOW                  211
+#define IDI_WINDOW_MINIMIZE             213
+#define IDI_WINDOW_SENDTOBACK           214
+#define IDI_WINDOW_MAXIMIZE             215
+#define IDI_TARGET                      216
 #define IDC_HANDLE                      1000
 #define IDC_CLASSNAME                   1001
 #define IDC_CLASSNAME2                  1002
+#define IDC_TEXT                        1002
 #define IDC_SEARCH                      1003
+#define IDC_TARGET                      1004
+#define IDC_CHECK1                      1005
+#define IDC_HIDE                        1005
 #define ID_WINDOW_CLOSE                 32772
 #define ID_WINDOW_CLOSE_ALL             32773
 #define ID_VIEW_ALLWINDOWS              32775
@@ -41,14 +49,19 @@
 #define ID_STATE_FLASH                  32793
 #define ID_VIEW_CHILDWINDOWS            32794
 #define ID_VIEW_WINDOWSLIST             32795
+#define ID_LIST_LOCATEINTREE            32796
+#define ID_WINDOW_LOCATEINTREE          32797
+#define ID_TREE_SENDTOBACK              32798
+#define ID_FILE_RUNASADMINISTRATOR      32799
+#define ID_OPTIONS_FONTS                32800
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        213
-#define _APS_NEXT_COMMAND_VALUE         32796
-#define _APS_NEXT_CONTROL_VALUE         1004
+#define _APS_NEXT_RESOURCE_VALUE        217
+#define _APS_NEXT_COMMAND_VALUE         32801
+#define _APS_NEXT_CONTROL_VALUE         1006
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

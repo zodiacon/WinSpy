@@ -7,16 +7,13 @@
 #include "aboutdlg.h"
 #include "WindowsView.h"
 #include "MainFrm.h"
+#include "FindWindowDlg.h"
 
 const int WINDOW_MENU_POSITION = 5;
 
 BOOL CMainFrame::PreTranslateMessage(MSG* pMsg) {
 	if (CFrameWindowImpl<CMainFrame>::PreTranslateMessage(pMsg))
 		return TRUE;
-
-	//int page = m_view.GetActivePage();
-	//if (page >= 0)
-	//	 m_view.GetPageHWND(page);
 
 	return m_view.PreTranslateMessage(pMsg);
 }
@@ -51,6 +48,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 
 	CreateSimpleStatusBar();
 
+	m_view.m_bTabCloseButton = false;
 	m_hWndClient = m_view.Create(m_hWnd, rcDefault, nullptr,
 		WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
 
@@ -159,6 +157,14 @@ LRESULT CMainFrame::OnCommandToActiveView(WORD code, WORD id, HWND h, BOOL&) {
 	return ::SendMessage(m_view.GetPageHWND(page), WM_COMMAND, MAKELONG(id, code), reinterpret_cast<LPARAM>(h));
 }
 
+LRESULT CMainFrame::OnFindWindow(WORD, WORD, HWND, BOOL&) {
+	CFindWindowDlg dlg(this);
+	if (IDOK == dlg.DoModal()) {
+	}
+
+	return 0;
+}
+
 CUpdateUIBase& CMainFrame::GetUIUpdate() {
 	return *this;
 }
@@ -205,19 +211,23 @@ void CMainFrame::InitCommandBar() {
 		{ ID_VIEW_HIDDENWINDOWS, IDI_WINDOW_HIDDEN },
 		{ ID_VIEW_EMPTYTITLEWINDOWS, IDI_WINDOW_NOTEXT },
 		{ ID_WINDOW_CLOSE, IDI_WINDOW_CLOSE },
+		{ ID_STATE_CLOSE, IDI_WINDOW_CLOSE },
+		{ ID_WINDOW_MINIMIZE, IDI_WINDOW_MINIMIZE },
+		{ ID_WINDOW_CLOSE, IDI_WINDOW_CLOSE },
+		{ ID_WINDOW_MAXIMIZE, IDI_WINDOW_MAXIMIZE },
 	};
 	for (auto& cmd : cmds) {
 		m_CmdBar.AddIcon(cmd.icon ? AtlLoadIconImage(cmd.icon, 0, 16, 16) : cmd.hIcon, cmd.id);
 	}
 }
 
-LRESULT CMainFrame::OnTabActivated(UINT uMsg, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+LRESULT CMainFrame::OnTabActivated(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/) {
 	if (m_ActivePage >= 0)
-		::SendMessage(m_view.GetPageHWND(m_ActivePage), uMsg, 0, 0);
+		::SendMessage(m_view.GetPageHWND(m_ActivePage), TBVN_PAGEACTIVATED, 0, 0);
 
 	m_ActivePage = m_view.GetActivePage();
 	if (m_ActivePage < 0)
 		return 0;
 
-	return ::SendMessage(m_view.GetPageHWND(m_ActivePage), uMsg, 1, 0);
+	return ::SendMessage(m_view.GetPageHWND(m_ActivePage), TBVN_PAGEACTIVATED, 1, 0);
 }

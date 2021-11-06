@@ -16,6 +16,15 @@
     <Filter Include="Resource Files\Icons">
       <UniqueIdentifier>{ff137a25-faa3-4d88-af38-5c1bc296546b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Dialogs">
+      <UniqueIdentifier>{96be1941-f83d-4366-ad55-930da999a2eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Views">
+      <UniqueIdentifier>{9a542756-dfdb-4a47-b231-2b2ae2aef120}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Helpers">
+      <UniqueIdentifier>{3b473b33-73a4-4bd6-a469-d86318a53f81}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WinSpy.cpp">
@@ -30,29 +39,35 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="WindowsView.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ClipboardHelper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SortHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ColumnManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FormatHelper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ProcessHelper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WindowHelper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="HookManager.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FindWindowDlg.cpp">
+      <Filter>Dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsView.cpp">
+      <Filter>Views</Filter>
+    </ClCompile>
+    <ClCompile Include="SortHelper.cpp">
+      <Filter>Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessHelper.cpp">
+      <Filter>Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="FormatHelper.cpp">
+      <Filter>Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowHelper.cpp">
+      <Filter>Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsListView.cpp">
+      <Filter>Views</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -62,19 +77,10 @@
     <ClInclude Include="AboutDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WindowsView.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ClipboardHelper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SortHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VirtualListView.h">
@@ -86,15 +92,6 @@
     <ClInclude Include="ViewBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FormatHelper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ProcessHelper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WindowHelper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="HookManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -103,6 +100,33 @@
     </ClInclude>
     <ClInclude Include="TreeViewManager.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FindWindowDlg.h">
+      <Filter>Dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsView.h">
+      <Filter>Views</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessesView.h">
+      <Filter>Views</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowHelper.h">
+      <Filter>Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="SortHelper.h">
+      <Filter>Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessHelper.h">
+      <Filter>Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FormatHelper.h">
+      <Filter>Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsListView.h">
+      <Filter>Views</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -136,6 +160,21 @@
       <Filter>Resource Files\Icons</Filter>
     </Image>
     <Image Include="res\window-notext.ico">
+      <Filter>Resource Files\Icons</Filter>
+    </Image>
+    <Image Include="res\WindowSendToBack.ico">
+      <Filter>Resource Files\Icons</Filter>
+    </Image>
+    <Image Include="res\Minimize.ico">
+      <Filter>Resource Files\Icons</Filter>
+    </Image>
+    <Image Include="res\maximize.ico">
+      <Filter>Resource Files\Icons</Filter>
+    </Image>
+    <Image Include="res\close-window.ico">
+      <Filter>Resource Files\Icons</Filter>
+    </Image>
+    <Image Include="res\Target.ico">
       <Filter>Resource Files\Icons</Filter>
     </Image>
   </ItemGroup>

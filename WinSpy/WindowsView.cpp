@@ -15,110 +15,6 @@ BOOL CWindowsView::PreTranslateMessage(MSG* pMsg) {
 	return FALSE;
 }
 
-CString CWindowsView::GetColumnText(HWND, int row, int col) const {
-	const auto h = m_Items[row];
-	if (!::IsWindow(h)) {
-		return L"";
-	}
-
-	CWindow win(h);
-
-	CString text;
-	switch (GetColumnManager(m_List)->GetColumnTag<DataItemType>(col)) {
-		case DataItemType::Handle:
-			text.Format(L"0x%zX", (ULONG_PTR)h);
-			break;
-
-		case DataItemType::Style:
-			text.Format(L"0x%08X", win.GetStyle());
-			break;
-
-		case DataItemType::ProcessId:
-		{
-			DWORD pid;
-			::GetWindowThreadProcessId(win, &pid);
-			text.Format(L"%u", pid);
-			break;
-		}
-
-		case DataItemType::ProcessName:
-		{
-			DWORD pid;
-			::GetWindowThreadProcessId(win, &pid);
-			return ProcessHelper::GetProcessImageName(pid);
-		}
-
-		case DataItemType::ThreadId:
-		{
-			auto tid = ::GetWindowThreadProcessId(win, nullptr);
-			text.Format(L"%u", tid);
-			break;
-		}
-
-		case DataItemType::Rectangle:
-			return WindowHelper::WindowRectToString(h);
-
-		case DataItemType::ExtendedStyle:
-			text.Format(L"0x%08X", win.GetExStyle());
-			break;
-
-		case DataItemType::ClassName:
-			return WindowHelper::GetWindowClassName(h);
-
-		case DataItemType::Text:
-			win.GetWindowText(text);
-			break;
-
-		case DataItemType::WindowProc:
-			text.Format(L"0x%zX", win.GetWindowLongPtr(GWLP_WNDPROC));
-			break;
-
-		case DataItemType::UserData:
-			text.Format(L"0x%zX", win.GetWindowLongPtr(GWLP_USERDATA));
-			break;
-
-		case DataItemType::ID:
-			text.Format(L"0x%zX", win.GetWindowLongPtr(GWLP_ID));
-			break;
-
-		case DataItemType::ParentWindow: return FormatHelper::FormatHWndOrNone(::GetAncestor(win, GA_PARENT));
-		case DataItemType::NextWindow: return FormatHelper::FormatHWndOrNone(win.GetWindow(GW_HWNDNEXT));
-		case DataItemType::PrevWindow: return FormatHelper::FormatHWndOrNone(win.GetWindow(GW_HWNDPREV));
-		case DataItemType::OwnerWindow: return FormatHelper::FormatHWndOrNone(win.GetWindow(GW_OWNER));
-		case DataItemType::FirstChildWindow: return FormatHelper::FormatHWndOrNone(win.GetWindow(GW_CHILD));
-
-		case DataItemType::ClassAtom:
-			text.Format(L"0x%04X", (DWORD)::GetClassLongPtr(win, GCW_ATOM));
-			break;
-
-		case DataItemType::ClassStyle:
-			text.Format(L"0x%04X", (DWORD)::GetClassLongPtr(win, GCL_STYLE));
-			break;
-
-		case DataItemType::ClassExtra:
-			text.Format(L"%u", (ULONG)::GetClassLongPtr(win, GCL_CBCLSEXTRA));
-			break;
-
-		case DataItemType::WindowExtra:
-			text.Format(L"%u", (ULONG)::GetClassLongPtr(win, GCL_CBWNDEXTRA));
-			break;
-	}
-	return text;
-}
-
-int CWindowsView::GetRowImage(HWND, int row) const {
-	auto h = m_Items[row];
-	if (auto it = s_IconMap.find(h); it != s_IconMap.end()) {
-		return it->second;
-	}
-	auto hIcon = WindowHelper::GetWindowIcon(h);
-	if (hIcon) {
-		int image = s_Images.AddIcon(hIcon);
-		s_IconMap.insert({ h, image });
-		return image;
-	}
-	return 0;
-}
 
 void CWindowsView::OnActivate(bool activate) {
 	if (activate) {
@@ -128,40 +24,6 @@ void CWindowsView::OnActivate(bool activate) {
 	else {
 		KillTimer(1);
 	}
-}
-
-void CWindowsView::DoSort(const SortInfo* si) {
-	if (si == nullptr)
-		return;
-
-	std::sort(m_Items.begin(), m_Items.end(), [&](const auto& h1, const auto& h2) -> bool {
-		switch (GetColumnManager(m_List)->GetColumnTag<DataItemType>(si->SortColumn)) {
-			case DataItemType::ClassName:
-				return SortHelper::SortStrings(WindowHelper::GetWindowClassName(h1), WindowHelper::GetWindowClassName(h2), si->SortAscending);
-		}
-		return false;
-		});
-}
-
-bool CWindowsView::IsSortable(int col) const {
-	return col == 0;
-}
-
-DWORD CWindowsView::OnPrePaint(int, LPNMCUSTOMDRAW cd) {
-	if (cd->hdr.hwndFrom == m_List)
-		return CDRF_NOTIFYITEMDRAW;
-
-	return CDRF_DODEFAULT;
-}
-
-DWORD CWindowsView::OnItemPrePaint(int, LPNMCUSTOMDRAW cd) {
-	ATLASSERT(cd->hdr.hwndFrom == m_List);
-
-	auto h = m_Items[(int)cd->dwItemSpec];
-	auto lv = (LPNMLVCUSTOMDRAW)cd;
-	lv->clrTextBk = ::IsWindowVisible(h) ? CLR_INVALID : RGB(192, 192, 192);
-
-	return CDRF_DODEFAULT;
 }
 
 void CWindowsView::OnFinalMessage(HWND /*hWnd*/) {
@@ -180,8 +42,7 @@ void CWindowsView::Refresh() {
 		m_Tree.DeleteItem(m_Selected);
 		return;
 	}
-	UpdateList();
-	m_List.RedrawItems(m_List.GetTopIndex(), m_List.GetCountPerPage() + m_List.GetTopIndex());
+	m_WindowsView.UpdateList(m_SelectedHwnd);
 }
 
 void CWindowsView::InitTree() {
@@ -254,10 +115,11 @@ CTreeItem CWindowsView::AddNode(HWND hWnd, HTREEITEM hParent) {
 	HICON hIcon{ nullptr };
 	int image = 0;
 	if ((win.GetStyle() & WS_CHILD) == 0) {
-		if (auto it = s_IconMap.find(hWnd); it == s_IconMap.end()) {
+		auto& icons = WindowHelper::GetIconMap();
+		if (auto it = icons.find(hWnd); it == icons.end()) {
 			hIcon = WindowHelper::GetWindowOrProcessIcon(hWnd);
 			if (hIcon) {
-				s_IconMap.insert({ hWnd, image = s_Images.AddIcon(hIcon) });
+				icons.insert({ hWnd, image = WindowHelper::GetImageList().AddIcon(hIcon) });
 			}
 		}
 		else {
@@ -286,146 +148,23 @@ BOOL CWindowsView::AddChildNode(HWND hChild) {
 	return TRUE;
 }
 
-void CWindowsView::AddChildWindows(std::vector<HWND>& v, HWND hParent, bool directOnly) {
-	struct LocalInfo {
-		std::vector<HWND>& v;
-		CWindowsView* pThis;
-		bool directOnly;
-	};
-
-	LocalInfo info{ v, this, directOnly };
-
-	::EnumChildWindows(hParent, [](auto hWnd, auto param) {
-		auto info = reinterpret_cast<LocalInfo*>(param);
-		if (info->pThis->m_ShowHiddenWindows || ::IsWindowVisible(hWnd)) {
-			info->v.push_back(hWnd);
-			if (!info->directOnly)
-				info->pThis->AddChildWindows(info->v, hWnd, false);
-		}
-		return TRUE;
-		}, reinterpret_cast<LPARAM>(&info));
-
-}
-
-void CWindowsView::UpdateList() {
-	m_Items.clear();
-	m_Items.push_back(m_SelectedHwnd);
-	AddChildWindows(m_Items, m_SelectedHwnd, true);
-
-	m_List.SetItemCountEx((int)m_Items.size(), LVSICF_NOSCROLL);
-	DoSort(GetSortInfo(m_List));
-}
-
-CString CWindowsView::GetDetails(const DataItem& item) const {
-	CString text;
-	switch (item.Type) {
-		case DataItemType::ProcessId:
-		{
-			DWORD pid = 0;
-			::GetWindowThreadProcessId(m_SelectedHwnd, &pid);
-			return ProcessHelper::GetProcessImageName(pid);
-		}
-
-		case DataItemType::Text:
-			text.Format(L"Length: %d", m_SelectedHwnd.GetWindowTextLength());
-			break;
-
-			return WindowHelper::WindowStyleToString(m_SelectedHwnd);
-		case DataItemType::Style: return WindowHelper::WindowStyleToString(m_SelectedHwnd);
-		case DataItemType::ClassStyle: return WindowHelper::ClassStyleToString(m_SelectedHwnd);
-		case DataItemType::ExtendedStyle: return WindowHelper::WindowExtendedStyleToString(m_SelectedHwnd);
-		case DataItemType::Rectangle:
-			if (m_SelectedHwnd.IsZoomed())
-				return L"Maximized";
-			if (m_SelectedHwnd.IsIconic())
-				return L"Minimized";
-			break;
-		case DataItemType::NextWindow: return GetWindowClassAndTitle(m_SelectedHwnd.GetWindow(GW_HWNDNEXT));
-		case DataItemType::PrevWindow: return GetWindowClassAndTitle(m_SelectedHwnd.GetWindow(GW_HWNDPREV));
-		case DataItemType::OwnerWindow: return GetWindowClassAndTitle(m_SelectedHwnd.GetWindow(GW_OWNER));
-		case DataItemType::ParentWindow: return GetWindowClassAndTitle(::GetAncestor(m_SelectedHwnd, GA_PARENT));
-		case DataItemType::FirstChildWindow: return GetWindowClassAndTitle(m_SelectedHwnd.GetWindow(GW_CHILD));
-	}
-	return text;
-}
-
-CString CWindowsView::GetWindowClassAndTitle(HWND hWnd) {
-	if (hWnd == nullptr || !::IsWindow(hWnd))
-		return L"";
-
-	WCHAR className[64];
-	CString text;
-	if (::GetClassName(hWnd, className, _countof(className)))
-		text.Format(L"[%s]", className);
-	CString title;
-	CWindow(hWnd).GetWindowText(title);
-	if (!title.IsEmpty())
-		text.Format(L"%s (%s)", text, title);
-	return text;
-}
-
 LRESULT CWindowsView::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 	m_Splitter.SetSplitterExtendedStyle(SPLIT_FLATBAR | SPLIT_PROPORTIONAL);
 	m_hWndClient = m_Splitter.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
 
 	m_Tree.Create(m_Splitter, rcDefault, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
 		TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS | TVS_SHOWSELALWAYS, WS_EX_CLIENTEDGE, IDC_TREE);
-	m_List.Create(m_Splitter, rcDefault, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
-		| LVS_REPORT | LVS_OWNERDATA | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, WS_EX_CLIENTEDGE);
-	m_List.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER | LVS_EX_INFOTIP);
+	m_WindowsView.Create(m_Splitter, rcDefault, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
 	m_Tree.SetExtendedStyle(TVS_EX_DOUBLEBUFFER, TVS_EX_DOUBLEBUFFER);
 
-	if (s_Images == nullptr) {
-		s_Images.Create(16, 16, ILC_COLOR32, 32, 32);
-		s_Images.AddIcon(AtlLoadIconImage(IDI_WINDOW, 0, 16, 16));
-	}
-	m_Tree.SetImageList(s_Images, TVSIL_NORMAL);
-	m_List.SetImageList(s_Images, LVSIL_SMALL);
+	m_Tree.SetImageList(WindowHelper::GetImageList(), TVSIL_NORMAL);
 
-	m_Splitter.SetSplitterPanes(m_Tree, m_List);
+	m_Splitter.SetSplitterPanes(m_Tree, m_WindowsView);
 	UpdateLayout();
 	m_Splitter.SetSplitterPosPct(35);
 
-	auto cm = GetColumnManager(m_List);
-
-	struct {
-		PCWSTR text;
-		DataItemType type;
-		int width = 100;
-		int format = LVCFMT_LEFT;
-		ColumnFlags flags = ColumnFlags::Visible;
-	} columns[] = {
-		{ L"Class Name", DataItemType::ClassName, 140 },
-		{ L"Handle", DataItemType::Handle, 80, LVCFMT_RIGHT },
-		{ L"Text", DataItemType::Text, 150 },
-		{ L"Style", DataItemType::Style, 80, LVCFMT_RIGHT },
-		{ L"Ex Style", DataItemType::ExtendedStyle, 80, LVCFMT_RIGHT },
-		{ L"PID", DataItemType::ProcessId, 70, LVCFMT_RIGHT },
-		{ L"Process Name", DataItemType::ProcessName, 120 },
-		{ L"TID", DataItemType::ThreadId, 70, LVCFMT_RIGHT },
-		{ L"Rectangle", DataItemType::Rectangle, 170, LVCFMT_LEFT, ColumnFlags::None },
-		{ L"Parent HWND", DataItemType::ParentWindow, 100, LVCFMT_RIGHT, ColumnFlags::Fixed },
-		{ L"Owner HWND", DataItemType::OwnerWindow, 100, LVCFMT_RIGHT, ColumnFlags::Fixed },
-		{ L"Next HWND", DataItemType::NextWindow, 100, LVCFMT_RIGHT, ColumnFlags::Fixed },
-		{ L"Previous HWND", DataItemType::PrevWindow, 100, LVCFMT_RIGHT, ColumnFlags::Fixed },
-		{ L"First Child HWND", DataItemType::FirstChildWindow, 100, LVCFMT_RIGHT, ColumnFlags::Fixed },
-		{ L"WndProc", DataItemType::WindowProc, 100, LVCFMT_RIGHT, ColumnFlags::Fixed },
-		{ L"User Data", DataItemType::UserData, 100, LVCFMT_RIGHT, ColumnFlags::Fixed },
-		{ L"ID", DataItemType::ID, 80, LVCFMT_RIGHT, ColumnFlags::Fixed },
-		{ L"Class Atom", DataItemType::ClassAtom, 90, LVCFMT_RIGHT },
-		{ L"Class Style", DataItemType::ClassStyle, 80, LVCFMT_RIGHT, ColumnFlags::Fixed },
-		{ L"Class Extra Bytes", DataItemType::ClassExtra, 70, LVCFMT_RIGHT, ColumnFlags::Fixed },
-		{ L"Window Extra Bytes", DataItemType::WindowExtra, 70, LVCFMT_RIGHT, ColumnFlags::Fixed },
-	};
-
-	for (auto& col : columns) {
-		cm->AddColumn(col.text, col.format, col.width, col.type, col.flags);
-	}
-
-	cm->UpdateColumns();
-
-	m_WindowMap.reserve(256);
 	InitTree();
+	m_WindowMap.reserve(256);
 
 	SetTimer(1, 2000, nullptr);
 
@@ -444,7 +183,7 @@ LRESULT CWindowsView::OnTimer(UINT, WPARAM id, LPARAM, BOOL&) {
 			m_Selected.Delete();
 		else {
 			m_SelectedHwnd.Attach(hWnd);
-			UpdateList();
+			m_WindowsView.UpdateList(hWnd);
 		}
 	}
 	return 0;
@@ -557,11 +296,7 @@ LRESULT CWindowsView::OnTreeNodeRightClick(int, LPNMHDR, BOOL&) {
 
 LRESULT CWindowsView::OnWindowFlash(WORD, WORD, HWND, BOOL&) {
 	ATLASSERT(m_Selected);
-	FLASHWINFO info = { sizeof(info) };
-	info.dwFlags = FLASHW_CAPTION;
-	info.uCount = 3;
-	info.hwnd = m_SelectedHwnd;
-	::FlashWindowEx(&info);
+	WindowHelper::Flash(m_SelectedHwnd);
 
 	return 0;
 }

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "WindowHelper.h"
 #include "ProcessHelper.h"
+#include "resource.h"
 
 CString WindowHelper::WindowStyleToString(HWND hWnd) {
 	auto style = CWindow(hWnd).GetStyle();
@@ -141,6 +142,43 @@ HICON WindowHelper::GetWindowOrProcessIcon(HWND hWnd) {
 	return hIcon;
 }
 
+bool WindowHelper::Flash(HWND hWnd) {
+	FLASHWINFO info = { sizeof(info) };
+	info.dwFlags = FLASHW_CAPTION;
+	info.uCount = 3;
+	info.hwnd = hWnd;
+	return ::FlashWindowEx(&info);
+}
+
+void WindowHelper::HighlightBorder(HWND hWnd, bool highlight) {
+	CRect rc;
+	::GetWindowRect(hWnd, &rc);
+	rc.OffsetRect(-rc.left, -rc.top);
+
+	if (!highlight) {
+		CRgn rgn1;
+		rc.InflateRect(2, 2);
+		rgn1.CreateRectRgnIndirect(&rc);
+		rc.DeflateRect(6, 6);
+		CRgn rgn2;
+		rgn2.CreateRectRgnIndirect(&rc);
+		CRgn rgn;
+		rgn.CreateRectRgn(0, 0, 1, 1);
+		rgn.CombineRgn(rgn1, rgn2, RGN_DIFF);
+		::RedrawWindow(hWnd, nullptr, rgn, RDW_INTERNALPAINT | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN | RDW_FRAME);
+		return;
+	}
+
+	CWindowDC dc(hWnd);
+	int save = dc.SaveDC();
+	CPen pen;
+	pen.CreatePen(PS_SOLID, 3, RGB(255, 0, 0));
+	dc.SelectStockBrush(NULL_BRUSH);
+	dc.SelectPen(pen);
+	dc.Rectangle(&rc);
+	dc.RestoreDC(save);
+}
+
 HICON WindowHelper::GetWindowIcon(HWND hWnd) {
 	HICON hIcon{ nullptr };
 	::SendMessageTimeout(hWnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG | SMTO_ERRORONEXIT, 100, (DWORD_PTR*)&hIcon);
@@ -150,3 +188,31 @@ HICON WindowHelper::GetWindowIcon(HWND hWnd) {
 	return hIcon;
 }
 
+CString WindowHelper::GetWindowClassAndTitle(HWND hWnd) {
+	if (hWnd == nullptr || !::IsWindow(hWnd))
+		return L"";
+
+	WCHAR className[64];
+	CString text;
+	if (::GetClassName(hWnd, className, _countof(className)))
+		text.Format(L"[%s]", className);
+	CString title;
+	CWindow(hWnd).GetWindowText(title);
+	if (!title.IsEmpty())
+		text.Format(L"%s (%s)", text, title);
+	return text;
+}
+
+std::unordered_map<HWND, int>& WindowHelper::GetIconMap() {
+	static std::unordered_map<HWND, int> s_IconMap;
+	return s_IconMap;
+}
+
+CImageList& WindowHelper::GetImageList() {
+	static CImageList images;
+	if (!images) {
+		images.Create(16, 16, ILC_COLOR32, 64, 16);
+		images.AddIcon(AtlLoadIconImage(IDI_WINDOW, 0, 16, 16));
+	}
+	return images;
+}

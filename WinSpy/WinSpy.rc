@@ -53,6 +53,8 @@ IDR_MAINFRAME MENU
 BEGIN
     POPUP "&File"
     BEGIN
+        MENUITEM "&Run As Administrator...",    ID_FILE_RUNASADMINISTRATOR
+        MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_APP_EXIT
     END
     POPUP "&Edit"
@@ -81,7 +83,8 @@ BEGIN
     BEGIN
         MENUITEM "&Find...\tCtrl+W",            ID_WINDOW_FIND
         MENUITEM SEPARATOR
-        POPUP "&State"
+        MENUITEM "Locate in &Tree",             ID_WINDOW_LOCATEINTREE
+        POPUP "&Action"
         BEGIN
             MENUITEM "&Show",                       ID_WINDOW_SHOW
             MENUITEM "&Hide",                       ID_WINDOW_HIDE
@@ -99,6 +102,7 @@ BEGIN
     POPUP "&Options"
     BEGIN
         MENUITEM "&Always On Top",              ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "&Fonts...",                   ID_OPTIONS_FONTS
     END
     POPUP "&Tab"
     BEGIN
@@ -115,6 +119,21 @@ IDR_CONTEXT MENU
 BEGIN
     POPUP "tree"
     BEGIN
+        MENUITEM "&Show",                       ID_WINDOW_SHOW
+        MENUITEM "&Hide",                       ID_WINDOW_HIDE
+        MENUITEM "&Highlight",                  ID_WINDOW_HIGHLIGHT
+        MENUITEM "&Minimize",                   ID_WINDOW_MINIMIZE
+        MENUITEM "Ma&ximize",                   ID_WINDOW_MAXIMIZE
+        MENUITEM "&Restore",                    ID_WINDOW_RESTORE
+        MENUITEM "&Bring To Front",             ID_WINDOW_BRINGTOFRONT
+        MENUITEM "Send to &Back",               ID_TREE_SENDTOBACK
+        MENUITEM "&Close",                      ID_STATE_CLOSE
+        MENUITEM "&Flash",                      ID_STATE_FLASH
+        MENUITEM SEPARATOR
+        MENUITEM "&Properties...",              ID_WINDOW_PROPERTIES
+    END
+    POPUP "list"
+    BEGIN
         POPUP "&State"
         BEGIN
             MENUITEM "&Show",                       ID_WINDOW_SHOW
@@ -129,6 +148,8 @@ BEGIN
         END
         MENUITEM SEPARATOR
         MENUITEM "&Properties...",              ID_WINDOW_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "Locate in &Tree",             ID_WINDOW_LOCATEINTREE
     END
 END
 
@@ -154,9 +175,17 @@ IDI_WINDOWS             ICON                    "res\\windows.ico"
 
 IDI_REFRESH             ICON                    "res\\refresh.ico"
 
-IDI_WINDOW_CLOSE        ICON                    "res\\window-close.ico"
+IDI_WINDOW_CLOSE        ICON                    "res\\close-window.ico"
+
+IDI_WINDOW_MAXIMIZE     ICON                    "res\\maximize.ico"
 
 IDI_WINDOW_NOTEXT       ICON                    "res\\window-notext.ico"
+
+IDI_WINDOW_MINIMIZE     ICON                    "res\\Minimize.ico"
+
+IDI_WINDOW_SENDTOBACK   ICON                    "res\\WindowSendToBack.ico"
+
+IDI_TARGET              ICON                    "res\\Target.ico"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -164,14 +193,14 @@ IDI_WINDOW_NOTEXT       ICON                    "res\\window-notext.ico"
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOGEX 0, 0, 187, 102
+IDD_ABOUTBOX DIALOGEX 0, 0, 187, 85
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About WinSpy"
 FONT 9, "Segoe UI", 0, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,68,81,50,14
-    CTEXT           "WinSpy v0.1\n\n(C)2020 Pavel Yosifovich",IDC_STATIC,48,24,90,32
-    ICON            IDR_MAINFRAME,IDC_STATIC,6,6,18,17
+    DEFPUSHBUTTON   "OK",IDOK,68,64,50,14
+    CTEXT           "WinSpy v0.1\n\n©2020-2021 Pavel Yosifovich",IDC_STATIC,46,7,90,32
+    ICON            IDR_MAINFRAME,IDC_STATIC,6,6,20,20
 END
 
 IDD_FINDWINDOW DIALOGEX 0, 0, 249, 146
@@ -179,16 +208,18 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Find Window"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    PUSHBUTTON      "Close",IDCANCEL,99,125,50,14
-    LTEXT           "Handle:",IDC_STATIC,22,7,26,8
-    EDITTEXT        IDC_HANDLE,54,5,84,14,ES_AUTOHSCROLL
-    LTEXT           "Class Name:",IDC_STATIC,9,28,40,8
-    EDITTEXT        IDC_CLASSNAME,54,25,119,14,ES_AUTOHSCROLL
+    LTEXT           "Handle:",IDC_STATIC,22,9,26,8
+    EDITTEXT        IDC_HANDLE,54,7,84,14,ES_AUTOHSCROLL
+    LTEXT           "Class Name:",IDC_STATIC,9,30,40,8
+    EDITTEXT        IDC_CLASSNAME,54,27,188,14,ES_AUTOHSCROLL
     LTEXT           "Text:",IDC_STATIC,29,49,18,8
-    EDITTEXT        IDC_CLASSNAME2,54,48,174,14,ES_AUTOHSCROLL
-    ICON            IDI_WINDOW,IDC_STATIC,119,72,21,20,SS_NOTIFY | SS_CENTERIMAGE | SS_REALSIZEIMAGE
+    EDITTEXT        IDC_TEXT,54,48,188,14,ES_AUTOHSCROLL
     LTEXT           "Drag and drop over a window",IDC_STATIC,12,78,96,8
-    PUSHBUTTON      "Search",IDC_SEARCH,156,75,50,14
+    ICON            IDI_TARGET,IDC_TARGET,119,72,20,20,SS_NOTIFY | SS_CENTERIMAGE
+    PUSHBUTTON      "Search",IDC_SEARCH,192,75,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,132,125,50,14
+    PUSHBUTTON      "OK",IDOK,66,125,50,14
+    CONTROL         "Hide main window while dragging",IDC_HIDE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,95,123,10
 END
 
 
@@ -205,7 +236,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 180
         TOPMARGIN, 7
-        BOTTOMMARGIN, 95
+        BOTTOMMARGIN, 78
     END
 
     IDD_FINDWINDOW, DIALOG
