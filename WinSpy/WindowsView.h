@@ -12,7 +12,7 @@ class CWindowsView :
 	public CViewBase<CWindowsView>,
 	public CTreeViewManager<CWindowsView> {
 public:
-	CWindowsView(IMainFrame* frame) : CViewBase(frame) {}
+	CWindowsView(IMainFrame* frame) : CViewBase(frame), m_WindowsView(frame) {}
 
 	BOOL PreTranslateMessage(MSG* pMsg);
 
@@ -20,6 +20,7 @@ public:
 
 	virtual void OnFinalMessage(HWND /*hWnd*/);
 
+protected:
 	enum { IDC_TREE = 123 };
 
 	BEGIN_MSG_MAP(CWindowsView)
@@ -29,6 +30,13 @@ public:
 		NOTIFY_CODE_HANDLER(TVN_DELETEITEM, OnNodeDeleted)
 		NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnNodeSelected)
 		NOTIFY_HANDLER(IDC_TREE, NM_RCLICK, OnTreeNodeRightClick)
+		COMMAND_ID_HANDLER(ID_WINDOW_SHOW, OnWindowShow)
+		COMMAND_ID_HANDLER(ID_WINDOW_HIDE, OnWindowHide)
+		COMMAND_ID_HANDLER(ID_WINDOW_BRINGTOFRONT, OnWindowBringToFront)
+		COMMAND_ID_HANDLER(ID_WINDOW_MINIMIZE, OnWindowMinimize)
+		COMMAND_ID_HANDLER(ID_WINDOW_MAXIMIZE, OnWindowMaximize)
+		COMMAND_ID_HANDLER(ID_STATE_FLASH, OnWindowFlash)
+		COMMAND_ID_HANDLER(ID_WINDOW_RESTORE, OnWindowRestore)
 		CHAIN_MSG_MAP(CTreeViewManager<CWindowsView>)
 		CHAIN_MSG_MAP(CViewBase<CWindowsView>)
 		if (m_WindowsView) {

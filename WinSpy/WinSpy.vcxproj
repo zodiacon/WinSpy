@@ -213,6 +213,8 @@
     <ClCompile Include="AboutDlg.cpp" />
     <ClCompile Include="ClipboardHelper.cpp" />
     <ClCompile Include="ColumnManager.cpp" />
+    <ClCompile Include="IconHelper.cpp" />
+    <ClCompile Include="ProcessesView.cpp" />
     <ClCompile Include="WindowsListView.cpp" />
     <ClCompile Include="FindWindowDlg.cpp" />
     <ClCompile Include="FormatHelper.cpp" />
@@ -234,6 +236,7 @@
     <ClInclude Include="AboutDlg.h" />
     <ClInclude Include="ClipboardHelper.h" />
     <ClInclude Include="ColumnManager.h" />
+    <ClInclude Include="IconHelper.h" />
     <ClInclude Include="WindowsListView.h" />
     <ClInclude Include="FindWindowDlg.h" />
     <ClInclude Include="FormatHelper.h" />

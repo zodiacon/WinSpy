@@ -8,6 +8,7 @@
 #include "WindowsView.h"
 #include "MainFrm.h"
 #include "FindWindowDlg.h"
+#include "IconHelper.h"
 
 const int WINDOW_MENU_POSITION = 5;
 
@@ -206,6 +207,7 @@ void CMainFrame::InitCommandBar() {
 		UINT id, icon;
 		HICON hIcon = nullptr;
 	} cmds[] = {
+		{ ID_FILE_RUNASADMINISTRATOR, 0, IconHelper::GetShieldIcon() },
 		{ ID_VIEW_REFRESH, IDI_REFRESH },
 		{ ID_VIEW_ALLWINDOWS, IDI_WINDOWS },
 		{ ID_VIEW_HIDDENWINDOWS, IDI_WINDOW_HIDDEN },

@@ -129,6 +129,12 @@ CString WindowHelper::GetWindowClassName(HWND hWnd) {
 	return name;
 }
 
+CString WindowHelper::GetWindowText(HWND hWnd) {
+	CString text;
+	CWindow(hWnd).GetWindowText(text);
+	return text;
+}
+
 HICON WindowHelper::GetWindowOrProcessIcon(HWND hWnd) {
 	auto hIcon = GetWindowIcon(hWnd);
 	if (!hIcon) {
@@ -199,7 +205,7 @@ CString WindowHelper::GetWindowClassAndTitle(HWND hWnd) {
 	CString title;
 	CWindow(hWnd).GetWindowText(title);
 	if (!title.IsEmpty())
-		text.Format(L"%s (%s)", text, title);
+		text.Format(L"%s (%s)", (PCWSTR)text, (PCWSTR)title);
 	return text;
 }
 
@@ -215,4 +221,13 @@ CImageList& WindowHelper::GetImageList() {
 		images.AddIcon(AtlLoadIconImage(IDI_WINDOW, 0, 16, 16));
 	}
 	return images;
+}
+
+WindowItem WindowHelper::GetWindowInfo(HWND hWnd) {
+	WindowItem wi;
+	wi.hWnd = hWnd;
+	wi.ThreadId = ::GetWindowThreadProcessId(hWnd, &wi.ProcessId);
+	wi.ProcessName = ProcessHelper::GetProcessImageName(wi.ProcessId);
+
+	return wi;
 }

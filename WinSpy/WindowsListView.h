@@ -1,6 +1,8 @@
 #pragma once
 
 #include "VirtualListView.h"
+#include "Interfaces.h"
+#include "WindowHelper.h"
 
 class CWindowsListView : 
 	public CFrameWindowImpl<CWindowsListView, CWindow, CControlWinTraits>,
@@ -9,10 +11,13 @@ class CWindowsListView :
 public:
 	using BaseFrame = CFrameWindowImpl<CWindowsListView, CWindow, CControlWinTraits>;
 
+	CWindowsListView(IMainFrame* frame) : m_pFrame(frame) {}
+
 	CString GetColumnText(HWND, int row, int col) const;
 	int GetRowImage(HWND, int row) const;
 	bool IsSortable(int col) const;
 	void DoSort(const SortInfo* si);
+	bool OnRightClickList(HWND, int row, int col, CPoint const&);
 
 	DWORD OnPrePaint(int, LPNMCUSTOMDRAW cd);
 	DWORD OnItemPrePaint(int, LPNMCUSTOMDRAW cd);
@@ -53,7 +58,7 @@ protected:
 	END_MSG_MAP()
 
 private:
-	void AddChildWindows(std::vector<HWND>& v, HWND hParent, bool directOnly);
+	void AddChildWindows(std::vector<WindowItem>& v, HWND hParent, bool directOnly);
 	CString GetDetails(const DataItem& item) const;
 	void UpdateList();
 
@@ -72,12 +77,15 @@ private:
 	LRESULT OnWindowBringToFront(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 private:
+
 	CListViewCtrl m_List;
-	std::vector<HWND> m_Items;
+	std::vector<WindowItem> m_Items;
 	DWORD m_TotalWindows, m_TotalVisibleWindows, m_TopLevelWindows;
 	CWindow m_SelectedHwnd;
+	IMainFrame* m_pFrame;
 	bool m_ShowHiddenWindows : 1 { false };
 	bool m_ShowNoTitleWindows : 1 { true };
 	bool m_ShowChildWindows : 1 { true };
-	bool m_Deleting{ false };
+	bool m_Deleting : 1{ false };
+	bool m_ContextMenuOpen : 1{ false };
 };

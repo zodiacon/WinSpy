@@ -13,7 +13,7 @@ class CMainFrame :
 	public CIdleHandler,
 	public IMainFrame {
 public:
-	DECLARE_FRAME_WND_CLASS(NULL, IDR_MAINFRAME)
+	DECLARE_FRAME_WND_CLASS(L"WinSpyMainWindowClass", IDR_MAINFRAME)
 
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	virtual BOOL OnIdle();
