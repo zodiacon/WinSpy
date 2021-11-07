@@ -22,7 +22,7 @@ struct WindowHelper abstract final {
 	static std::unordered_map<HWND, int>& GetIconMap();
 	static CImageList& GetImageList();
 	static WindowItem GetWindowInfo(HWND hWnd);
-
+	static bool ThreadHasWindows(DWORD tid);
 };
 
 

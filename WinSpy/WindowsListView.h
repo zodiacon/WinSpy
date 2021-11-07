@@ -3,6 +3,7 @@
 #include "VirtualListView.h"
 #include "Interfaces.h"
 #include "WindowHelper.h"
+#include "ProcessHelper.h"
 
 class CWindowsListView : 
 	public CFrameWindowImpl<CWindowsListView, CWindow, CControlWinTraits>,
@@ -24,6 +25,9 @@ public:
 
 	void SetSelectedHwnd(HWND hWnd);
 	void UpdateList(HWND hWnd);
+	void UpdateListByThread(DWORD tid);
+	void UpdateListByProcess(ProcessInfo const& pi);
+
 	void Refresh();
 
 	enum class DataItemType {
@@ -59,6 +63,7 @@ protected:
 
 private:
 	void AddChildWindows(std::vector<WindowItem>& v, HWND hParent, bool directOnly);
+	void AddThreadWindows(DWORD tid);
 	CString GetDetails(const DataItem& item) const;
 	void UpdateList();
 

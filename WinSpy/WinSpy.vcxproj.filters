@@ -75,6 +75,9 @@
     <ClCompile Include="ProcessesView.cpp">
       <Filter>Views</Filter>
     </ClCompile>
+    <ClCompile Include="ImageIconCache.cpp">
+      <Filter>Helpers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainFrm.h">
@@ -137,6 +140,9 @@
     <ClInclude Include="IconHelper.h">
       <Filter>Helpers</Filter>
     </ClInclude>
+    <ClInclude Include="ImageIconCache.h">
+      <Filter>Helpers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WinSpy.rc">
@@ -185,6 +191,9 @@
     </Image>
     <Image Include="res\Target.ico">
       <Filter>Resource Files\Icons</Filter>
+    </Image>
+    <Image Include="res\gears.ico">
+      <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
 </Project>

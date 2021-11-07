@@ -229,7 +229,7 @@ DWORD CWindowsListView::OnItemPrePaint(int, LPNMCUSTOMDRAW cd) {
 
 	auto& h = m_Items[(int)cd->dwItemSpec];
 	auto lv = (LPNMLVCUSTOMDRAW)cd;
-	lv->clrTextBk = ::IsWindowVisible(h.hWnd) ? CLR_INVALID : RGB(192, 192, 192);
+	lv->clrTextBk = ::IsWindowVisible(h.hWnd) ? CLR_INVALID : RGB(224, 224, 224);
 
 	return CDRF_DODEFAULT;
 }
@@ -245,6 +245,32 @@ void CWindowsListView::UpdateList(HWND hWnd) {
 
 	m_List.SetItemCountEx((int)m_Items.size(), LVSICF_NOSCROLL);
 	UpdateList();
+}
+
+void CWindowsListView::UpdateListByThread(DWORD tid) {
+	m_SelectedHwnd.Detach();
+	m_Items.clear();
+	AddThreadWindows(tid);
+
+	m_List.SetItemCountEx((int)m_Items.size(), LVSICF_NOSCROLL);
+	UpdateList();
+}
+
+void CWindowsListView::UpdateListByProcess(ProcessInfo const& pi) {
+	m_Items.clear();
+	for (auto tid : pi.Threads)
+		AddThreadWindows(tid);
+
+	m_List.SetItemCountEx((int)m_Items.size(), LVSICF_NOSCROLL);
+	UpdateList();
+}
+
+void CWindowsListView::AddThreadWindows(DWORD tid) {
+	::EnumThreadWindows(tid, [](auto hWnd, auto param) {
+		auto p = reinterpret_cast<CWindowsListView*>(param);
+		p->m_Items.push_back(WindowHelper::GetWindowInfo(hWnd));
+		return TRUE;
+		}, reinterpret_cast<LPARAM>(this));
 }
 
 void CWindowsListView::Refresh() {

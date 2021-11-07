@@ -231,3 +231,12 @@ WindowItem WindowHelper::GetWindowInfo(HWND hWnd) {
 
 	return wi;
 }
+
+bool WindowHelper::ThreadHasWindows(DWORD tid) {
+	bool hasWindows = false;
+	::EnumThreadWindows(tid, [](auto, auto param) {
+		*reinterpret_cast<bool*>(param) = true;
+		return FALSE;
+		}, reinterpret_cast<LPARAM>(&hasWindows));
+	return hasWindows;
+}

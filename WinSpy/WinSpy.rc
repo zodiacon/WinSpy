@@ -187,6 +187,8 @@ IDI_WINDOW_SENDTOBACK   ICON                    "res\\WindowSendToBack.ico"
 
 IDI_TARGET              ICON                    "res\\Target.ico"
 
+IDI_PROCESSES           ICON                    "res\\gears.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -203,23 +205,27 @@ BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,6,6,20,20
 END
 
-IDD_FINDWINDOW DIALOGEX 0, 0, 249, 146
+IDD_FINDWINDOW DIALOGEX 0, 0, 333, 146
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Find Window"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT           "Handle:",IDC_STATIC,22,9,26,8
-    EDITTEXT        IDC_HANDLE,54,7,84,14,ES_AUTOHSCROLL
-    LTEXT           "Class Name:",IDC_STATIC,9,30,40,8
-    EDITTEXT        IDC_CLASSNAME,54,27,188,14,ES_AUTOHSCROLL
-    LTEXT           "Text:",IDC_STATIC,29,49,18,8
-    EDITTEXT        IDC_TEXT,54,48,188,14,ES_AUTOHSCROLL
+    LTEXT           "Handle:",IDC_STATIC,9,9,26,8
+    EDITTEXT        IDC_HANDLE,41,7,69,14,ES_AUTOHSCROLL
+    LTEXT           "Class::",IDC_STATIC,9,30,23,8
+    EDITTEXT        IDC_CLASSNAME,41,27,285,14,ES_AUTOHSCROLL
+    LTEXT           "Text:",IDC_STATIC,16,50,18,8
+    EDITTEXT        IDC_TEXT,41,48,285,14,ES_AUTOHSCROLL
     LTEXT           "Drag and drop over a window",IDC_STATIC,12,78,96,8
     ICON            IDI_TARGET,IDC_TARGET,119,72,20,20,SS_NOTIFY | SS_CENTERIMAGE
-    PUSHBUTTON      "Search",IDC_SEARCH,192,75,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,132,125,50,14
-    PUSHBUTTON      "OK",IDOK,66,125,50,14
+    PUSHBUTTON      "Search",IDC_SEARCH,276,70,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,174,125,50,14
+    PUSHBUTTON      "OK",IDOK,108,125,50,14
     CONTROL         "Hide main window while dragging",IDC_HIDE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,95,123,10
+    LTEXT           "Thread:",IDC_STATIC,116,9,26,8
+    EDITTEXT        IDC_THREAD,145,7,40,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Process:",IDC_STATIC,195,9,28,8
+    EDITTEXT        IDC_PROCESS,228,7,98,14,ES_AUTOHSCROLL | ES_READONLY
 END
 
 
@@ -242,7 +248,7 @@ BEGIN
     IDD_FINDWINDOW, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 242
+        RIGHTMARGIN, 326
         TOPMARGIN, 7
         BOTTOMMARGIN, 139
     END

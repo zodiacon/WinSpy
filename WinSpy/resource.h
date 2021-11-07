@@ -18,14 +18,17 @@
 #define IDI_WINDOW_SENDTOBACK           214
 #define IDI_WINDOW_MAXIMIZE             215
 #define IDI_TARGET                      216
+#define IDI_PROCESSES                   217
 #define IDC_HANDLE                      1000
 #define IDC_CLASSNAME                   1001
 #define IDC_CLASSNAME2                  1002
 #define IDC_TEXT                        1002
 #define IDC_SEARCH                      1003
 #define IDC_TARGET                      1004
-#define IDC_CHECK1                      1005
 #define IDC_HIDE                        1005
+#define IDC_THREAD                      1006
+#define IDC_THREAD2                     1007
+#define IDC_PROCESS                     1007
 #define ID_WINDOW_CLOSE                 32772
 #define ID_WINDOW_CLOSE_ALL             32773
 #define ID_VIEW_ALLWINDOWS              32775
@@ -59,9 +62,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        217
+#define _APS_NEXT_RESOURCE_VALUE        218
 #define _APS_NEXT_COMMAND_VALUE         32801
-#define _APS_NEXT_CONTROL_VALUE         1006
+#define _APS_NEXT_CONTROL_VALUE         1007
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

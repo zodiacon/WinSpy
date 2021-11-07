@@ -9,6 +9,8 @@
 #include "MainFrm.h"
 #include "FindWindowDlg.h"
 #include "IconHelper.h"
+#include "ImageIconCache.h"
+#include "ProcessesView.h"
 
 const int WINDOW_MENU_POSITION = 5;
 
@@ -58,6 +60,8 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	UISetCheck(ID_VIEW_TOOLBAR, 1);
 	UISetCheck(ID_VIEW_STATUS_BAR, 1);
 
+	ImageIconCache::Get().SetImageList(WindowHelper::GetImageList());
+
 	// register object for message filtering and idle updates
 	CMessageLoop* pLoop = _Module.GetMessageLoop();
 	ATLASSERT(pLoop != NULL);
@@ -68,6 +72,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	CImageList images;
 	images.Create(16, 16, ILC_COLOR32, 4, 4);
 	images.AddIcon(AtlLoadIconImage(IDI_WINDOWS, 0, 16, 16));
+	images.AddIcon(AtlLoadIconImage(IDI_PROCESSES, 0, 16, 16));
 	m_view.SetImageList(images);
 
 	m_view.SetWindowMenu(menuMain.GetSubMenu(WINDOW_MENU_POSITION));
@@ -95,8 +100,23 @@ LRESULT CMainFrame::OnFileExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCt
 
 LRESULT CMainFrame::OnViewAllWindows(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	auto pView = new CWindowsView(this);
-	pView->Create(m_view, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
-	m_view.AddPage(pView->m_hWnd, _T("Windows Tree"), 0, pView);
+	{
+		CWaitCursor wait;
+		pView->Create(m_view, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
+		m_view.AddPage(pView->m_hWnd, _T("Windows Tree"), 0, pView);
+	}
+	pView->OnActivate(true);
+
+	return 0;
+}
+
+LRESULT CMainFrame::OnViewAllProcesses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	auto pView = new CProcessesView(this);
+	{
+		CWaitCursor wait;
+		pView->Create(m_view, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
+		m_view.AddPage(pView->m_hWnd, _T("Processes"), 1, pView);
+	}
 	pView->OnActivate(true);
 
 	return 0;
@@ -188,6 +208,7 @@ void CMainFrame::InitToolBar(CToolBarCtrl& tb) {
 		{ ID_VIEW_REFRESH, IDI_REFRESH },
 		{ 0 },
 		{ ID_VIEW_ALLWINDOWS, IDI_WINDOWS },
+		{ ID_VIEW_ALLPROCESSES, IDI_PROCESSES },
 		{ 0 },
 		{ ID_VIEW_HIDDENWINDOWS, IDI_WINDOW_HIDDEN },
 		{ ID_VIEW_EMPTYTITLEWINDOWS, IDI_WINDOW_NOTEXT },
@@ -217,6 +238,7 @@ void CMainFrame::InitCommandBar() {
 		{ ID_WINDOW_MINIMIZE, IDI_WINDOW_MINIMIZE },
 		{ ID_WINDOW_CLOSE, IDI_WINDOW_CLOSE },
 		{ ID_WINDOW_MAXIMIZE, IDI_WINDOW_MAXIMIZE },
+		{ ID_VIEW_ALLPROCESSES, IDI_PROCESSES },
 	};
 	for (auto& cmd : cmds) {
 		m_CmdBar.AddIcon(cmd.icon ? AtlLoadIconImage(cmd.icon, 0, 16, 16) : cmd.hIcon, cmd.id);

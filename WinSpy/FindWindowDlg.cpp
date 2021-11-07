@@ -2,11 +2,14 @@
 #include "resource.h"
 #include "FindWindowDlg.h"
 #include "WindowHelper.h"
+#include "ProcessHelper.h"
 
 void CFindWindowDlg::ClearWindowDetails() {
 	SetDlgItemText(IDC_HANDLE, L"");
 	SetDlgItemText(IDC_TEXT, L"");
 	SetDlgItemText(IDC_CLASSNAME, L"");
+	SetDlgItemText(IDC_THREAD, L"");
+	SetDlgItemText(IDC_PROCESS, L"");
 	if (m_hCursorWnd)
 		WindowHelper::HighlightBorder(m_hCursorWnd, false);
 	m_WinDrag.ShowWindow(SW_SHOW);
@@ -63,8 +66,8 @@ LRESULT CFindWindowDlg::OnMouseMove(UINT, WPARAM, LPARAM lp, BOOL&) {
 		CPoint pt{ GET_X_LPARAM(lp), GET_Y_LPARAM(lp) };
 		m_WinDrag.ClientToScreen(&pt);
 		auto hWnd = ::WindowFromPoint(pt);
-		DWORD pid;
-		if (::GetWindowThreadProcessId(hWnd, &pid) && pid == ::GetCurrentProcessId())
+		DWORD pid, tid;
+		if ((tid = ::GetWindowThreadProcessId(hWnd, &pid)) && pid == ::GetCurrentProcessId())
 			return 0;
 
 		if (m_hCursorWnd && m_hCursorWnd != hWnd)
@@ -81,6 +84,9 @@ LRESULT CFindWindowDlg::OnMouseMove(UINT, WPARAM, LPARAM lp, BOOL&) {
 				SetDlgItemText(IDC_CLASSNAME, clsName);
 			m_hCursorWnd.GetWindowText(text);
 			SetDlgItemText(IDC_TEXT, text);
+			SetDlgItemInt(IDC_THREAD, tid, FALSE);
+			text.Format(L"%s (%d)", (PCWSTR)ProcessHelper::GetProcessImageName(pid), pid);
+			SetDlgItemText(IDC_PROCESS, text);
 		}
 	}
 	return 0;

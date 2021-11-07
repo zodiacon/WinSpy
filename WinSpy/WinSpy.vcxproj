@@ -26,25 +26,25 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -214,6 +214,7 @@
     <ClCompile Include="ClipboardHelper.cpp" />
     <ClCompile Include="ColumnManager.cpp" />
     <ClCompile Include="IconHelper.cpp" />
+    <ClCompile Include="ImageIconCache.cpp" />
     <ClCompile Include="ProcessesView.cpp" />
     <ClCompile Include="WindowsListView.cpp" />
     <ClCompile Include="FindWindowDlg.cpp" />
@@ -237,6 +238,7 @@
     <ClInclude Include="ClipboardHelper.h" />
     <ClInclude Include="ColumnManager.h" />
     <ClInclude Include="IconHelper.h" />
+    <ClInclude Include="ImageIconCache.h" />
     <ClInclude Include="WindowsListView.h" />
     <ClInclude Include="FindWindowDlg.h" />
     <ClInclude Include="FormatHelper.h" />
@@ -259,6 +261,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\close-window.ico" />
+    <Image Include="res\gears.ico" />
     <Image Include="res\maximize.ico" />
     <Image Include="res\Minimize.ico" />
     <Image Include="res\refresh.ico" />
