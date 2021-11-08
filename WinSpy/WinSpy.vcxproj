@@ -216,6 +216,7 @@
     <ClCompile Include="IconHelper.cpp" />
     <ClCompile Include="ImageIconCache.cpp" />
     <ClCompile Include="ProcessesView.cpp" />
+    <ClCompile Include="WindowGeneralPage.cpp" />
     <ClCompile Include="WindowsListView.cpp" />
     <ClCompile Include="FindWindowDlg.cpp" />
     <ClCompile Include="FormatHelper.cpp" />
@@ -237,8 +238,10 @@
     <ClInclude Include="AboutDlg.h" />
     <ClInclude Include="ClipboardHelper.h" />
     <ClInclude Include="ColumnManager.h" />
+    <ClInclude Include="DialogHelper.h" />
     <ClInclude Include="IconHelper.h" />
     <ClInclude Include="ImageIconCache.h" />
+    <ClInclude Include="WindowGeneralPage.h" />
     <ClInclude Include="WindowsListView.h" />
     <ClInclude Include="FindWindowDlg.h" />
     <ClInclude Include="FormatHelper.h" />

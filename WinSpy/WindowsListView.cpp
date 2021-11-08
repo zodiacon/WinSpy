@@ -360,6 +360,12 @@ LRESULT CWindowsListView::OnWindowBringToFront(WORD, WORD, HWND, BOOL&) {
 	return 0;
 }
 
+LRESULT CWindowsListView::OnWindowProperties(WORD, WORD, HWND, BOOL&) {
+	auto& item = m_Items[m_List.GetSelectionMark()];
+	WindowHelper::ShowWindowProperties(item.hWnd);
+	return LRESULT();
+}
+
 LRESULT CWindowsListView::OnWindowFlash(WORD, WORD, HWND, BOOL&) {
 	auto& item = m_Items[m_List.GetSelectionMark()];
 	WindowHelper::Flash(item.hWnd);

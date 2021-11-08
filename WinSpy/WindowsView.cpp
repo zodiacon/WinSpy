@@ -214,6 +214,7 @@ LRESULT CWindowsView::OnNodeDeleted(int, LPNMHDR hdr, BOOL&) {
 LRESULT CWindowsView::OnNodeSelected(int, LPNMHDR, BOOL&) {
 	// short delay before update in case the user moves quickly through the tree
 	SetTimer(3, 250, nullptr);
+	
 	return 0;
 }
 
@@ -281,15 +282,13 @@ LRESULT CWindowsView::OnToggleChildWindows(WORD, WORD, HWND, BOOL&) {
 	return 0;
 }
 
-LRESULT CWindowsView::OnTreeNodeRightClick(int, LPNMHDR, BOOL&) {
+LRESULT CWindowsView::OnTreeNodeRightClick(HTREEITEM hItem, CPoint const& pt) {
 	ATLASSERT(m_Selected);
 	if (!m_Selected)
 		return 0;
 
 	CMenu menu;
 	menu.LoadMenu(IDR_CONTEXT);
-	CPoint pt;
-	::GetCursorPos(&pt);
 
 	return GetFrame()->ShowContextMenu(menu.GetSubMenu(0), pt);
 }
@@ -300,3 +299,11 @@ LRESULT CWindowsView::OnWindowFlash(WORD, WORD, HWND, BOOL&) {
 
 	return 0;
 }
+
+LRESULT CWindowsView::OnWindowProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	ATLASSERT(m_SelectedHwnd);
+	WindowHelper::ShowWindowProperties(m_SelectedHwnd);
+
+	return 0;
+}
+

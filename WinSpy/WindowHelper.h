@@ -7,6 +7,11 @@ struct WindowItem {
 	CString ProcessName;
 };
 
+struct StyleItem {
+	DWORD Value;
+	PCWSTR Text;
+};
+
 struct WindowHelper abstract final {
 	static CString WindowStyleToString(HWND hWnd);
 	static CString ClassStyleToString(HWND hWnd);
@@ -23,6 +28,10 @@ struct WindowHelper abstract final {
 	static CImageList& GetImageList();
 	static WindowItem GetWindowInfo(HWND hWnd);
 	static bool ThreadHasWindows(DWORD tid);
+	static int ShowWindowProperties(HWND hWnd);
+	static std::pair<StyleItem const*, int> GetWindowStyleArray();
+	static std::pair<StyleItem const*, int> GetWindowStyleExArray();
+	static std::pair<StyleItem const*, int> GetClassStyleArray();
 };
 
 

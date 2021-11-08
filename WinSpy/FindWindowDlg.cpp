@@ -3,6 +3,11 @@
 #include "FindWindowDlg.h"
 #include "WindowHelper.h"
 #include "ProcessHelper.h"
+#include "FormatHelper.h"
+
+HWND CFindWindowDlg::GetSelectedHwnd() const {
+	return m_SelectedHwnd;
+}
 
 void CFindWindowDlg::ClearWindowDetails() {
 	SetDlgItemText(IDC_HANDLE, L"");
@@ -33,6 +38,12 @@ LRESULT CFindWindowDlg::OnCloseCmd(WORD, WORD id, HWND, BOOL&) {
 		ClearWindowDetails();
 		return 0;
 	}
+	if (id == IDOK) {
+		CString text;
+		GetDlgItemText(IDC_HANDLE, text);
+		m_SelectedHwnd = (HWND)FormatHelper::ParseHex(text);
+	}
+
 	EndDialog(id);
 	return 0;
 }
@@ -77,7 +88,7 @@ LRESULT CFindWindowDlg::OnMouseMove(UINT, WPARAM, LPARAM lp, BOOL&) {
 			m_hCursorWnd.Detach();
 			m_hCursorWnd.Attach(hWnd);
 			CString text;
-			text.Format(L"0x%X", PtrToUlong(hWnd));
+			text.Format(L"0x%zX", DWORD_PTR(hWnd));
 			SetDlgItemText(IDC_HANDLE, text);
 			WCHAR clsName[128];
 			if (::GetClassName(hWnd, clsName, _countof(clsName)))

@@ -30,28 +30,7 @@ void CProcessesView::OnFinalMessage(HWND) {
 LRESULT CProcessesView::OnTimer(UINT /*uMsg*/, WPARAM id, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 	if (id == 3) {
 		KillTimer(3);
-		m_Selected = m_Tree.GetSelectedItem();
-		auto data = static_cast<ItemType>(m_Selected.GetData());
-		switch (data) {
-			case ItemType::Process:
-				m_WindowsView.UpdateListByProcess(m_Processes[m_Selected]);
-				break;
-
-			case ItemType::Thread:
-				m_WindowsView.UpdateListByThread(m_Threads[m_Selected]);
-				break;
-
-			default:
-				auto hWnd = (HWND)m_Selected.GetData();
-				m_SelectedHwnd = hWnd;
-				if (!::IsWindow(hWnd))	// window is probably destroyed
-					m_Selected.Delete();
-				else {
-					m_WindowsView.UpdateList(hWnd);
-				}
-				break;
-		}
-
+		ChangeSelection(m_Tree.GetSelectedItem());
 	}
 	return 0;
 }
@@ -75,7 +54,7 @@ void CProcessesView::InitTree() {
 		for (auto tid : pi.Threads) {
 			text.Format(L"Thread %u (0x%X)", tid, tid);
 			auto tnode = m_Tree.InsertItem(text, icon, icon, node, TVI_LAST);
-			if(!WindowHelper::ThreadHasWindows(tid))
+			if (!WindowHelper::ThreadHasWindows(tid))
 				tnode.SetState(TVIS_CUT, TVIS_CUT);
 			tnode.SetData((DWORD_PTR)ItemType::Thread);
 			m_Threads.insert({ tnode, tid });
@@ -178,17 +157,19 @@ BOOL CProcessesView::AddChildNode(HWND hChild) {
 	return TRUE;
 }
 
-LRESULT CProcessesView::OnTreeNodeRightClick(int, LPNMHDR, BOOL&) {
+LRESULT CProcessesView::OnTreeNodeRightClick(HTREEITEM hItem, CPoint const& pt) {
 	ATLASSERT(m_Selected);
-	if (!m_Selected)
-		return 0;
+
+	auto data = static_cast<ItemType>(m_Selected.GetData());
+	int index = 0;
+	if (data == ItemType::Thread)
+		index = 3;
+	else if (data == ItemType::Process)
+		index = 2;
 
 	CMenu menu;
 	menu.LoadMenu(IDR_CONTEXT);
-	CPoint pt;
-	::GetCursorPos(&pt);
-
-	return GetFrame()->ShowContextMenu(menu.GetSubMenu(0), pt);
+	return GetFrame()->ShowContextMenu(menu.GetSubMenu(index), pt);
 }
 
 LRESULT CProcessesView::OnWindowShow(WORD, WORD, HWND, BOOL&) {
@@ -236,8 +217,45 @@ LRESULT CProcessesView::OnWindowBringToFront(WORD, WORD, HWND, BOOL&) {
 	return 0;
 }
 
-LRESULT CProcessesView::OnNodeSelected(int, LPNMHDR, BOOL&) {
-	// short delay before update in case the user moves quickly through the tree
-	SetTimer(3, 250, nullptr);
+LRESULT CProcessesView::OnNodeSelected(int, LPNMHDR hdr, BOOL&) {
+	auto tv = (NMTREEVIEW*)hdr;
+	if (tv->action == TVC_BYKEYBOARD) {
+		// short delay before update in case the user moves quickly through the tree
+		SetTimer(3, 250, nullptr);
+	}
+	else {
+		ChangeSelection(tv->itemNew.hItem);
+	}
 	return 0;
+}
+
+LRESULT CProcessesView::OnWindowProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	ATLASSERT(m_SelectedHwnd);
+	WindowHelper::ShowWindowProperties(m_SelectedHwnd);
+	return 0;
+}
+
+void CProcessesView::ChangeSelection(HTREEITEM hItem) {
+	m_Selected = hItem;
+	m_Selected.m_pTreeView = &m_Tree;
+	auto data = static_cast<ItemType>(m_Selected.GetData());
+	switch (data) {
+		case ItemType::Process:
+			m_WindowsView.UpdateListByProcess(m_Processes[m_Selected]);
+			break;
+
+		case ItemType::Thread:
+			m_WindowsView.UpdateListByThread(m_Threads[m_Selected]);
+			break;
+
+		default:
+			auto hWnd = (HWND)m_Selected.GetData();
+			m_SelectedHwnd = hWnd;
+			if (!::IsWindow(hWnd))	// window is probably destroyed
+				m_Selected.Delete();
+			else {
+				m_WindowsView.UpdateList(hWnd);
+			}
+			break;
+	}
 }

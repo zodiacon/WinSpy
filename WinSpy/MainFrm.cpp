@@ -181,6 +181,7 @@ LRESULT CMainFrame::OnCommandToActiveView(WORD code, WORD id, HWND h, BOOL&) {
 LRESULT CMainFrame::OnFindWindow(WORD, WORD, HWND, BOOL&) {
 	CFindWindowDlg dlg(this);
 	if (IDOK == dlg.DoModal()) {
+		WindowHelper::ShowWindowProperties(dlg.GetSelectedHwnd());
 	}
 
 	return 0;
@@ -246,7 +247,7 @@ void CMainFrame::InitCommandBar() {
 }
 
 LRESULT CMainFrame::OnTabActivated(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/) {
-	if (m_ActivePage >= 0)
+	if (m_ActivePage >= 0 && m_ActivePage < m_view.GetPageCount())
 		::SendMessage(m_view.GetPageHWND(m_ActivePage), TBVN_PAGEACTIVATED, 0, 0);
 
 	m_ActivePage = m_view.GetActivePage();

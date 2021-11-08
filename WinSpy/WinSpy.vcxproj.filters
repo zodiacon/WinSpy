@@ -78,6 +78,9 @@
     <ClCompile Include="ImageIconCache.cpp">
       <Filter>Helpers</Filter>
     </ClCompile>
+    <ClCompile Include="WindowGeneralPage.cpp">
+      <Filter>Dialogs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainFrm.h">
@@ -141,6 +144,12 @@
       <Filter>Helpers</Filter>
     </ClInclude>
     <ClInclude Include="ImageIconCache.h">
+      <Filter>Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowGeneralPage.h">
+      <Filter>Dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="DialogHelper.h">
       <Filter>Helpers</Filter>
     </ClInclude>
   </ItemGroup>

@@ -22,7 +22,6 @@ protected:
 		NOTIFY_CODE_HANDLER(TVN_ITEMEXPANDING, OnNodeExpanding)
 		//NOTIFY_CODE_HANDLER(TVN_DELETEITEM, OnNodeDeleted)
 		NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnNodeSelected)
-		NOTIFY_HANDLER(IDC_TREE, NM_RCLICK, OnTreeNodeRightClick)
 		COMMAND_ID_HANDLER(ID_WINDOW_SHOW, OnWindowShow)
 		COMMAND_ID_HANDLER(ID_WINDOW_HIDE, OnWindowHide)
 		COMMAND_ID_HANDLER(ID_WINDOW_BRINGTOFRONT, OnWindowBringToFront)
@@ -30,12 +29,15 @@ protected:
 		COMMAND_ID_HANDLER(ID_WINDOW_MAXIMIZE, OnWindowMaximize)
 		COMMAND_ID_HANDLER(ID_STATE_FLASH, OnWindowFlash)
 		COMMAND_ID_HANDLER(ID_WINDOW_RESTORE, OnWindowRestore)
+		COMMAND_ID_HANDLER(ID_WINDOW_PROPERTIES, OnWindowProperties)
 		CHAIN_MSG_MAP(CTreeViewManager<CProcessesView>)
 		CHAIN_MSG_MAP(CViewBase<CProcessesView>)
 		if (m_WindowsView) {
 			CHAIN_MSG_MAP_ALT_MEMBER(m_WindowsView, 1)
 		}
 	END_MSG_MAP()
+
+	LRESULT OnTreeNodeRightClick(HTREEITEM hItem, CPoint const& pt);
 
 private:
 	enum class ItemType {
@@ -48,6 +50,7 @@ private:
 	CTreeItem AddNode(HWND hWnd, HTREEITEM hParent);
 	void AddChildWindows(HTREEITEM hParent);
 	BOOL AddChildNode(HWND hChild);
+	void ChangeSelection(HTREEITEM hItem);
 
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnTimer(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
@@ -63,9 +66,9 @@ private:
 	LRESULT OnRefresh(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnToggleEmptyTitleWindows(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnToggleChildWindows(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnTreeNodeRightClick(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
 	LRESULT OnWindowFlash(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnWindowBringToFront(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnWindowProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	CWindowsListView m_WindowsView;
 	CSplitterWindow m_Splitter;

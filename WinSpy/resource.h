@@ -19,6 +19,7 @@
 #define IDI_WINDOW_MAXIMIZE             215
 #define IDI_TARGET                      216
 #define IDI_PROCESSES                   217
+#define IDD_WINPROP                     218
 #define IDC_HANDLE                      1000
 #define IDC_CLASSNAME                   1001
 #define IDC_CLASSNAME2                  1002
@@ -27,8 +28,19 @@
 #define IDC_TARGET                      1004
 #define IDC_HIDE                        1005
 #define IDC_THREAD                      1006
-#define IDC_THREAD2                     1007
 #define IDC_PROCESS                     1007
+#define IDC_RECT                        1008
+#define IDC_CLIENTRECT                  1009
+#define IDC_STYLE                       1010
+#define IDC_STYLES                      1011
+#define IDC_STYLEEX                     1012
+#define IDC_STYLESEX                    1013
+#define IDC_ATOM                        1014
+#define IDC_RESTORE_RECT                1015
+#define IDC_MENU                        1016
+#define IDC_USERDATA                    1017
+#define IDC_STYLECLASS                  1018
+#define IDC_CLASSSTYLE                  1019
 #define ID_WINDOW_CLOSE                 32772
 #define ID_WINDOW_CLOSE_ALL             32773
 #define ID_VIEW_ALLWINDOWS              32775
@@ -57,14 +69,17 @@
 #define ID_TREE_SENDTOBACK              32798
 #define ID_FILE_RUNASADMINISTRATOR      32799
 #define ID_OPTIONS_FONTS                32800
+#define ID_PROCESS_TERMINATE            32801
+#define ID_PROCESS_PROPERTIES           32802
+#define ID_THREAD_PROPERTIES            32803
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        218
-#define _APS_NEXT_COMMAND_VALUE         32801
-#define _APS_NEXT_CONTROL_VALUE         1007
+#define _APS_NEXT_RESOURCE_VALUE        220
+#define _APS_NEXT_COMMAND_VALUE         32804
+#define _APS_NEXT_CONTROL_VALUE         1015
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

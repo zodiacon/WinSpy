@@ -8,6 +8,8 @@ public:
 
 	CFindWindowDlg(IMainFrame* frame) : m_pFrame(frame), m_WinDrag(this, 1) {}
 
+	HWND GetSelectedHwnd() const;
+
 protected:
 	BEGIN_MSG_MAP(CFindWindowDlg)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
@@ -38,6 +40,7 @@ private:
 	CIcon m_DragCursor;
 	CWindow m_hCursorWnd;
 	IMainFrame* m_pFrame;
+	HWND m_SelectedHwnd{ nullptr };
 	bool m_Capture{ false };
 };
 
