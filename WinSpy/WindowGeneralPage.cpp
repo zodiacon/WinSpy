@@ -5,24 +5,7 @@
 #include "ProcessHelper.h"
 #include "WindowHelper.h"
 
-void CWindowGeneralPage::FillStyleList(DWORD style, std::pair<StyleItem const*, int> styles, UINT id, PCWSTR prefix, PCWSTR defaultStyle) {
-	auto const [items, count] = styles;
-	CListBox lb(GetDlgItem(id));
-	ATLASSERT(lb);
-	lb.ResetContent();
-
-	CString text;
-	for (int i = 0; i < count; i++) {
-		if ((style & items[i].Value) == items[i].Value) {
-			text.Format(L"%s%s (0x%08X)", prefix, (PCWSTR)items[i].Text, items[i].Value);
-			lb.AddString(text);
-		}
-	}
-	if (lb.GetCount() == 0 && defaultStyle)
-		lb.AddString(CString(defaultStyle) + L" (0)");
-}
-
-LRESULT CWindowGeneralPage::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
+void CWindowGeneralPage::UpdateData() {
 	WINDOWINFO wi{ sizeof(wi) };
 	::GetWindowInfo(m_Win, &wi);
 	GetParent().SetIcon(WindowHelper::GetWindowIcon(m_Win));
@@ -63,6 +46,36 @@ LRESULT CWindowGeneralPage::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 	FillStyleList(wi.dwStyle, WindowHelper::GetWindowStyleArray(), IDC_STYLES, L"WS_", L"WS_OVERLAPPED");
 	FillStyleList(wi.dwExStyle, WindowHelper::GetWindowStyleExArray(), IDC_STYLESEX, L"WS_EX_", L"WS_EX_LEFT");
 	FillStyleList(clsStyle, WindowHelper::GetClassStyleArray(), IDC_CLASSSTYLE, L"CS_", nullptr);
+}
+
+void CWindowGeneralPage::FillStyleList(DWORD style, std::pair<StyleItem const*, int> styles, UINT id, PCWSTR prefix, PCWSTR defaultStyle) {
+	auto const [items, count] = styles;
+	CListBox lb(GetDlgItem(id));
+	ATLASSERT(lb);
+	lb.ResetContent();
+
+	CString text;
+	for (int i = 0; i < count; i++) {
+		if ((style & items[i].Value) == items[i].Value) {
+			text.Format(L"%s%s (0x%08X)", prefix, (PCWSTR)items[i].Text, items[i].Value);
+			lb.AddString(text);
+		}
+	}
+	if (lb.GetCount() == 0 && defaultStyle)
+		lb.AddString(CString(defaultStyle) + L" (0)");
+}
+
+LRESULT CWindowGeneralPage::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
+	UpdateData();
+
+	return 0;
+}
+
+LRESULT CWindowGeneralPage::OnUpdate(UINT, WPARAM, LPARAM lp, BOOL&) {
+	ATLASSERT(lp);
+	m_Win.Detach();
+	m_Win.Attach(reinterpret_cast<HWND>(lp));
+	UpdateData();
 
 	return 0;
 }

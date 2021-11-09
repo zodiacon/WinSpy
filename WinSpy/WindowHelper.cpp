@@ -4,6 +4,7 @@
 #include "ProcessHelper.h"
 #include "FormatHelper.h"
 #include "WindowGeneralPage.h"
+#include "WindowWindowsPage.h"
 
 CString WindowHelper::WindowStyleToString(HWND hWnd) {
 	auto style = CWindow(hWnd).GetStyle();
@@ -183,9 +184,11 @@ int WindowHelper::ShowWindowProperties(HWND hWnd) {
 	CString text;
 	text.Format(L"Window 0x%X Proerties", PtrToUlong(hWnd));
 	CPropertySheet sheet((PCWSTR)text);
-	(sheet.m_psh.dwFlags |= PSH_NOAPPLYNOW) &= ~PSH_HASHELP;
+	sheet.m_psh.dwFlags |= PSH_NOAPPLYNOW | PSH_NOCONTEXTHELP;
 	CWindowGeneralPage general(hWnd);
+	CWindowWindowsPage windows(hWnd);
 	sheet.AddPage(general);
+	sheet.AddPage(windows);
 	sheet.DoModal();
 
 	return 0;

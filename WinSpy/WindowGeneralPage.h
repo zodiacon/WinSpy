@@ -10,11 +10,16 @@ class CWindowGeneralPage :
 public:
 	enum { IDD = IDD_WINPROP };
 
+	const UINT WM_UPDATE = WM_USER + 300;
+
 	CWindowGeneralPage(HWND hWnd) : m_Win(hWnd) {}
+
+	void UpdateData();
 
 protected:
 	BEGIN_MSG_MAP(CWindowGeneralPage)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+		MESSAGE_HANDLER(WM_UPDATE, OnUpdate)
 	END_MSG_MAP()
 
 private:
@@ -25,6 +30,7 @@ private:
 //	LRESULT NotifyHandler(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/)
 
 	LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	LRESULT OnUpdate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 
 	CWindow m_Win;
 };

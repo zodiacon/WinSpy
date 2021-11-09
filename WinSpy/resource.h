@@ -3,6 +3,7 @@
 // Used by WinSpy.rc
 //
 #define IDD_ABOUTBOX                    100
+#define IDD_PROPWINDOWS                 107
 #define IDR_MAINFRAME                   128
 #define IDI_WINDOW                      201
 #define IDI_WINDOW_HIDDEN               202
@@ -20,15 +21,24 @@
 #define IDI_TARGET                      216
 #define IDI_PROCESSES                   217
 #define IDD_WINPROP                     218
+#define IDI_WINPROP                     221
+#define IDI_ICON2                       222
+#define IDI_PROCESS_INFO                222
 #define IDC_HANDLE                      1000
 #define IDC_CLASSNAME                   1001
+#define IDC_HANDLE2                     1001
 #define IDC_CLASSNAME2                  1002
 #define IDC_TEXT                        1002
 #define IDC_SEARCH                      1003
+#define IDC_TEXT2                       1003
 #define IDC_TARGET                      1004
+#define IDC_HANDLE3                     1004
 #define IDC_HIDE                        1005
+#define IDC_TEXT3                       1005
 #define IDC_THREAD                      1006
+#define IDC_HANDLE4                     1006
 #define IDC_PROCESS                     1007
+#define IDC_TEXT4                       1007
 #define IDC_RECT                        1008
 #define IDC_CLIENTRECT                  1009
 #define IDC_STYLE                       1010
@@ -38,9 +48,13 @@
 #define IDC_ATOM                        1014
 #define IDC_RESTORE_RECT                1015
 #define IDC_MENU                        1016
+#define IDC_CLASS                       1016
 #define IDC_USERDATA                    1017
+#define IDC_CLASS2                      1017
 #define IDC_STYLECLASS                  1018
+#define IDC_CLASS3                      1018
 #define IDC_CLASSSTYLE                  1019
+#define IDC_CLASS4                      1019
 #define ID_WINDOW_CLOSE                 32772
 #define ID_WINDOW_CLOSE_ALL             32773
 #define ID_VIEW_ALLWINDOWS              32775
@@ -77,9 +91,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        220
+#define _APS_NEXT_RESOURCE_VALUE        223
 #define _APS_NEXT_COMMAND_VALUE         32804
-#define _APS_NEXT_CONTROL_VALUE         1015
+#define _APS_NEXT_CONTROL_VALUE         1019
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

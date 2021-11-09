@@ -199,6 +199,10 @@ IDI_TARGET              ICON                    "res\\Target.ico"
 
 IDI_PROCESSES           ICON                    "res\\gears.ico"
 
+IDI_WINPROP             ICON                    "res\\window-properties.ico"
+
+IDI_PROCESS_INFO        ICON                    "res\\gear_information.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -276,6 +280,41 @@ BEGIN
     LISTBOX         IDC_CLASSSTYLE,293,146,132,93,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
 END
 
+IDD_PROPWINDOWS DIALOGEX 0, 0, 401, 247
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Windows"
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    GROUPBOX        "Parent Window",IDC_STATIC,7,7,387,56
+    LTEXT           "Handle:",IDC_STATIC,15,23,26,8
+    LTEXT           "Class:",IDC_STATIC,118,22,20,8
+    EDITTEXT        IDC_CLASS,148,20,246,14,ES_AUTOHSCROLL | ES_READONLY
+    CONTROL         "<a>SysLink1</a>",IDC_HANDLE,"SysLink",LWS_RIGHT | WS_TABSTOP,45,23,60,10
+    LTEXT           "Text:",IDC_STATIC,15,43,18,8
+    EDITTEXT        IDC_TEXT,39,41,355,14,ES_AUTOHSCROLL | ES_READONLY
+    GROUPBOX        "Next Window",IDC_STATIC,7,66,387,56
+    LTEXT           "Handle:",IDC_STATIC,15,82,26,8
+    LTEXT           "Class:",IDC_STATIC,118,81,20,8
+    EDITTEXT        IDC_CLASS2,148,79,246,14,ES_AUTOHSCROLL | ES_READONLY
+    CONTROL         "<a>SysLink1</a>",IDC_HANDLE2,"SysLink",LWS_RIGHT | WS_TABSTOP,45,82,60,10
+    LTEXT           "Text:",IDC_STATIC,15,102,18,8
+    EDITTEXT        IDC_TEXT2,39,100,355,14,ES_AUTOHSCROLL | ES_READONLY
+    GROUPBOX        "Previous Window",IDC_STATIC,7,126,387,56
+    LTEXT           "Handle:",IDC_STATIC,15,142,26,8
+    LTEXT           "Class:",IDC_STATIC,118,142,20,8
+    EDITTEXT        IDC_CLASS3,148,139,246,14,ES_AUTOHSCROLL | ES_READONLY
+    CONTROL         "<a>SysLink1</a>",IDC_HANDLE3,"SysLink",LWS_RIGHT | WS_TABSTOP,45,142,60,10
+    LTEXT           "Text:",IDC_STATIC,15,162,18,8
+    EDITTEXT        IDC_TEXT3,39,161,355,14,ES_AUTOHSCROLL | ES_READONLY
+    GROUPBOX        "First Child Window",IDC_STATIC,7,184,387,56
+    LTEXT           "Handle:",IDC_STATIC,15,200,26,8
+    LTEXT           "Class:",IDC_STATIC,118,200,20,8
+    EDITTEXT        IDC_CLASS4,148,197,246,14,ES_AUTOHSCROLL | ES_READONLY
+    CONTROL         "<a>SysLink1</a>",IDC_HANDLE4,"SysLink",LWS_RIGHT | WS_TABSTOP,45,200,60,10
+    LTEXT           "Text:",IDC_STATIC,15,220,18,8
+    EDITTEXT        IDC_TEXT4,39,219,355,14,ES_AUTOHSCROLL | ES_READONLY
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -307,6 +346,14 @@ BEGIN
         RIGHTMARGIN, 426
         TOPMARGIN, 7
         BOTTOMMARGIN, 236
+    END
+
+    IDD_PROPWINDOWS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 394
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 240
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -390,6 +437,11 @@ BEGIN
 END
 
 IDD_WINPROP AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_PROPWINDOWS AFX_DIALOG_LAYOUT
 BEGIN
     0
 END

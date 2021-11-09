@@ -216,6 +216,7 @@
     <ClCompile Include="IconHelper.cpp" />
     <ClCompile Include="ImageIconCache.cpp" />
     <ClCompile Include="ProcessesView.cpp" />
+    <ClCompile Include="SecurityHelper.cpp" />
     <ClCompile Include="WindowGeneralPage.cpp" />
     <ClCompile Include="WindowsListView.cpp" />
     <ClCompile Include="FindWindowDlg.cpp" />
@@ -232,6 +233,7 @@
     <ClCompile Include="SortHelper.cpp" />
     <ClCompile Include="WindowHelper.cpp" />
     <ClCompile Include="WindowsView.cpp" />
+    <ClCompile Include="WindowWindowsPage.cpp" />
     <ClCompile Include="WinSpy.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -241,6 +243,7 @@
     <ClInclude Include="DialogHelper.h" />
     <ClInclude Include="IconHelper.h" />
     <ClInclude Include="ImageIconCache.h" />
+    <ClInclude Include="SecurityHelper.h" />
     <ClInclude Include="WindowGeneralPage.h" />
     <ClInclude Include="WindowsListView.h" />
     <ClInclude Include="FindWindowDlg.h" />
@@ -258,6 +261,7 @@
     <ClInclude Include="VirtualListView.h" />
     <ClInclude Include="WindowHelper.h" />
     <ClInclude Include="WindowsView.h" />
+    <ClInclude Include="WindowWindowsPage.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WinSpy.rc" />
@@ -265,6 +269,7 @@
   <ItemGroup>
     <Image Include="res\close-window.ico" />
     <Image Include="res\gears.ico" />
+    <Image Include="res\gear_information.ico" />
     <Image Include="res\maximize.ico" />
     <Image Include="res\Minimize.ico" />
     <Image Include="res\refresh.ico" />
@@ -272,6 +277,7 @@
     <Image Include="res\window-close.ico" />
     <Image Include="res\window-hidden.ico" />
     <Image Include="res\window-notext.ico" />
+    <Image Include="res\window-properties.ico" />
     <Image Include="res\window.ico" />
     <Image Include="res\windows.ico" />
     <Image Include="res\WindowSendToBack.ico" />

@@ -213,6 +213,7 @@ void CMainFrame::InitToolBar(CToolBarCtrl& tb) {
 		{ 0 },
 		{ ID_VIEW_HIDDENWINDOWS, IDI_WINDOW_HIDDEN },
 		{ ID_VIEW_EMPTYTITLEWINDOWS, IDI_WINDOW_NOTEXT },
+		{ ID_WINDOW_PROPERTIES, IDI_WINPROP },
 	};
 	for (auto& b : buttons) {
 		if (b.id == 0)
@@ -237,9 +238,10 @@ void CMainFrame::InitCommandBar() {
 		{ ID_WINDOW_CLOSE, IDI_WINDOW_CLOSE },
 		{ ID_STATE_CLOSE, IDI_WINDOW_CLOSE },
 		{ ID_WINDOW_MINIMIZE, IDI_WINDOW_MINIMIZE },
-		{ ID_WINDOW_CLOSE, IDI_WINDOW_CLOSE },
 		{ ID_WINDOW_MAXIMIZE, IDI_WINDOW_MAXIMIZE },
 		{ ID_VIEW_ALLPROCESSES, IDI_PROCESSES },
+		{ ID_WINDOW_PROPERTIES, IDI_WINPROP },
+		{ ID_PROCESS_PROPERTIES, IDI_PROCESS_INFO },
 	};
 	for (auto& cmd : cmds) {
 		m_CmdBar.AddIcon(cmd.icon ? AtlLoadIconImage(cmd.icon, 0, 16, 16) : cmd.hIcon, cmd.id);

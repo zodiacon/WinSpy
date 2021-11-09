@@ -265,6 +265,15 @@ void CWindowsListView::UpdateListByProcess(ProcessInfo const& pi) {
 	UpdateList();
 }
 
+void CWindowsListView::UpdateUI(CUpdateUIBase& ui) {
+	if (::GetFocus() != m_List)
+		return;
+
+	int first = m_List.GetSelectionMark();
+	int selected = m_List.GetSelectedCount();
+	ui.UIEnable(ID_WINDOW_PROPERTIES, selected == 1);
+}
+
 void CWindowsListView::AddThreadWindows(DWORD tid) {
 	::EnumThreadWindows(tid, [](auto hWnd, auto param) {
 		auto p = reinterpret_cast<CWindowsListView*>(param);
@@ -366,6 +375,11 @@ LRESULT CWindowsListView::OnWindowProperties(WORD, WORD, HWND, BOOL&) {
 	return LRESULT();
 }
 
+LRESULT CWindowsListView::OnItemChanged(int, LPNMHDR, BOOL&) {
+	UpdateUI(m_pFrame->GetUIUpdate());
+	return 0;
+}
+
 LRESULT CWindowsListView::OnWindowFlash(WORD, WORD, HWND, BOOL&) {
 	auto& item = m_Items[m_List.GetSelectionMark()];
 	WindowHelper::Flash(item.hWnd);
@@ -379,3 +393,9 @@ LRESULT CWindowsListView::OnToggleHiddenWindows(WORD, WORD, HWND, BOOL&) {
 
 	return 0;
 }
+
+bool CWindowsListView::OnDoubleClickList(HWND, int row, int col, CPoint const&) {
+	WindowHelper::ShowWindowProperties(m_Items[row].hWnd);
+	return true;
+}
+

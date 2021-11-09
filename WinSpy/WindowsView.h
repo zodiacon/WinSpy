@@ -17,6 +17,7 @@ public:
 	BOOL PreTranslateMessage(MSG* pMsg);
 
 	void OnActivate(bool activate);
+	LRESULT OnTreeNodeDoubleClick(HTREEITEM hItem, CPoint const& pt);
 
 	virtual void OnFinalMessage(HWND /*hWnd*/);
 
@@ -29,6 +30,7 @@ protected:
 		NOTIFY_CODE_HANDLER(TVN_ITEMEXPANDING, OnNodeExpanding)
 		NOTIFY_CODE_HANDLER(TVN_DELETEITEM, OnNodeDeleted)
 		NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnNodeSelected)
+		MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
 		COMMAND_ID_HANDLER(ID_WINDOW_SHOW, OnWindowShow)
 		COMMAND_ID_HANDLER(ID_WINDOW_HIDE, OnWindowHide)
 		COMMAND_ID_HANDLER(ID_WINDOW_BRINGTOFRONT, OnWindowBringToFront)
@@ -53,6 +55,7 @@ private:
 	void AddChildWindows(HTREEITEM hParent);
 	CTreeItem AddNode(HWND hWnd, HTREEITEM hParent);
 	BOOL AddChildNode(HWND hChild);
+	void NodeSelected();
 
 	// Handler prototypes (uncomment arguments if needed):
 	//	LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -60,6 +63,7 @@ private:
 	//	LRESULT NotifyHandler(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/)
 
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	LRESULT OnSetFocus(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnTimer(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnNodeExpanding(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
 	LRESULT OnNodeDeleted(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);

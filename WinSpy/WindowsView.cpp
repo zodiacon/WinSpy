@@ -32,9 +32,15 @@ void CWindowsView::OnFinalMessage(HWND /*hWnd*/) {
 
 void CWindowsView::UpdateUI() {
 	auto& ui = GetFrame()->GetUIUpdate();
-	ui.UISetCheck(ID_VIEW_HIDDENWINDOWS, m_ShowHiddenWindows);
-	ui.UISetCheck(ID_VIEW_EMPTYTITLEWINDOWS, m_ShowNoTitleWindows);
-	//ui.UISetCheck(ID_VIEW_CHILDWINDOWS, m_ShowChildWindows);
+	if (::GetFocus() == m_Tree) {
+		ui.UISetCheck(ID_VIEW_HIDDENWINDOWS, m_ShowHiddenWindows);
+		ui.UISetCheck(ID_VIEW_EMPTYTITLEWINDOWS, m_ShowNoTitleWindows);
+		ui.UIEnable(ID_WINDOW_PROPERTIES, m_SelectedHwnd != nullptr);
+		//ui.UISetCheck(ID_VIEW_CHILDWINDOWS, m_ShowChildWindows);
+	}
+	else {
+		m_WindowsView.UpdateUI(ui);
+	}
 }
 
 void CWindowsView::Refresh() {
@@ -177,16 +183,21 @@ LRESULT CWindowsView::OnTimer(UINT, WPARAM id, LPARAM, BOOL&) {
 	else if (id == 3) {
 		KillTimer(3);
 		m_Selected = m_Tree.GetSelectedItem();
-		m_SelectedHwnd.Detach();
-		auto hWnd = (HWND)m_Selected.GetData();
-		if (!::IsWindow(hWnd))	// window is probably destroyed
-			m_Selected.Delete();
-		else {
-			m_SelectedHwnd.Attach(hWnd);
-			m_WindowsView.UpdateList(hWnd);
-		}
+		NodeSelected();
 	}
 	return 0;
+}
+
+void CWindowsView::NodeSelected() {
+	m_SelectedHwnd.Detach();
+	auto hWnd = (HWND)m_Selected.GetData();
+	if (!::IsWindow(hWnd))	// window is probably destroyed
+		m_Selected.Delete();
+	else {
+		m_SelectedHwnd.Attach(hWnd);
+		m_WindowsView.UpdateList(hWnd);
+	}
+	UpdateUI();
 }
 
 LRESULT CWindowsView::OnNodeExpanding(int, LPNMHDR hdr, BOOL&) {
@@ -211,10 +222,18 @@ LRESULT CWindowsView::OnNodeDeleted(int, LPNMHDR hdr, BOOL&) {
 	return 0;
 }
 
-LRESULT CWindowsView::OnNodeSelected(int, LPNMHDR, BOOL&) {
-	// short delay before update in case the user moves quickly through the tree
-	SetTimer(3, 250, nullptr);
-	
+LRESULT CWindowsView::OnNodeSelected(int, LPNMHDR hdr, BOOL&) {
+	auto tv = (NMTREEVIEW*)hdr;
+	if (tv->action == TVC_BYKEYBOARD) {
+		// short delay before update in case the user moves quickly through the tree
+		SetTimer(3, 250, nullptr);
+	}
+	else {
+		m_Selected.m_hTreeItem = tv->itemNew.hItem;
+		m_Selected.m_pTreeView = &m_Tree;
+		NodeSelected();
+	}
+
 	return 0;
 }
 
@@ -300,10 +319,26 @@ LRESULT CWindowsView::OnWindowFlash(WORD, WORD, HWND, BOOL&) {
 	return 0;
 }
 
-LRESULT CWindowsView::OnWindowProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+LRESULT CWindowsView::OnWindowProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& handled) {
+	if (::GetFocus() != m_Tree) {
+		handled = FALSE;
+		return 0;
+	}
+
 	ATLASSERT(m_SelectedHwnd);
 	WindowHelper::ShowWindowProperties(m_SelectedHwnd);
 
 	return 0;
 }
+
+LRESULT CWindowsView::OnTreeNodeDoubleClick(HTREEITEM hItem, CPoint const& pt) {
+	WindowHelper::ShowWindowProperties((HWND)m_Tree.GetItemData(hItem));
+	return 1;
+}
+
+LRESULT CWindowsView::OnSetFocus(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+	m_Tree.SetFocus();
+	return 0;
+}
+
 

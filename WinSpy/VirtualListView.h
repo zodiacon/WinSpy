@@ -77,7 +77,7 @@ struct CVirtualListView {
 		info.pt = pt;
 		lv.SubItemHitTest(&info);
 		auto pT = static_cast<T*>(this);
-		handled = pT->OnDoubleClickList(info.iItem, info.iSubItem, pt2);
+		handled = pT->OnDoubleClickList(lv, info.iItem, info.iSubItem, pt2);
 		return 0;
 	}
 
@@ -103,7 +103,7 @@ struct CVirtualListView {
 		auto pT = static_cast<T*>(this);
 		int index = header.HitTest(&hti);
 		if (index >= 0) {
-			handled = pT->OnRightClickHeader(index, pt2);
+			handled = pT->OnRightClickHeader(lv, index, pt2);
 		}
 		else {
 			LVHITTESTINFO info{};
@@ -114,15 +114,15 @@ struct CVirtualListView {
 		return 0;
 	}
 
-	bool OnRightClickHeader(int index, POINT& pt) {
+	bool OnRightClickHeader(HWND, int index, POINT& pt) {
 		return false;
 	}
 
-	bool OnRightClickList(int row, int col, POINT& pt) {
+	bool OnRightClickList(HWND, int row, int col, POINT& pt) {
 		return false;
 	}
 
-	bool OnDoubleClickList(int row, int col, POINT& pt) {
+	bool OnDoubleClickList(HWND, int row, int col, POINT& pt) {
 		return false;
 	}
 

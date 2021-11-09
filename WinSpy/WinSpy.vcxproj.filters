@@ -81,6 +81,12 @@
     <ClCompile Include="WindowGeneralPage.cpp">
       <Filter>Dialogs</Filter>
     </ClCompile>
+    <ClCompile Include="WindowWindowsPage.cpp">
+      <Filter>Dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="SecurityHelper.cpp">
+      <Filter>Helpers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainFrm.h">
@@ -152,6 +158,12 @@
     <ClInclude Include="DialogHelper.h">
       <Filter>Helpers</Filter>
     </ClInclude>
+    <ClInclude Include="WindowWindowsPage.h">
+      <Filter>Dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="SecurityHelper.h">
+      <Filter>Helpers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WinSpy.rc">
@@ -201,8 +213,14 @@
     <Image Include="res\Target.ico">
       <Filter>Resource Files\Icons</Filter>
     </Image>
+    <Image Include="res\window-properties.ico">
+      <Filter>Resource Files\Icons</Filter>
+    </Image>
     <Image Include="res\gears.ico">
-      <Filter>Resource Files</Filter>
+      <Filter>Resource Files\Icons</Filter>
+    </Image>
+    <Image Include="res\gear_information.ico">
+      <Filter>Resource Files\Icons</Filter>
     </Image>
   </ItemGroup>
 </Project>

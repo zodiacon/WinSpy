@@ -19,6 +19,7 @@ public:
 	bool IsSortable(int col) const;
 	void DoSort(const SortInfo* si);
 	bool OnRightClickList(HWND, int row, int col, CPoint const&);
+	bool OnDoubleClickList(HWND, int row, int col, CPoint const&);
 
 	DWORD OnPrePaint(int, LPNMCUSTOMDRAW cd);
 	DWORD OnItemPrePaint(int, LPNMCUSTOMDRAW cd);
@@ -27,6 +28,7 @@ public:
 	void UpdateList(HWND hWnd);
 	void UpdateListByThread(DWORD tid);
 	void UpdateListByProcess(ProcessInfo const& pi);
+	void UpdateUI(CUpdateUIBase& ui);
 
 	void Refresh();
 
@@ -44,11 +46,14 @@ public:
 protected:
 	BEGIN_MSG_MAP(CWindowsListView)
 		MESSAGE_HANDLER(WM_CREATE, OnCreate)
+		NOTIFY_CODE_HANDLER(LVN_ITEMCHANGED, OnItemChanged)
 		CHAIN_MSG_MAP(CVirtualListView<CWindowsListView>)
 		CHAIN_MSG_MAP(CCustomDraw<CWindowsListView>)
 		CHAIN_MSG_MAP(BaseFrame)
 
-	ALT_MSG_MAP(1)
+		ALT_MSG_MAP(1)
+		if (::GetFocus() != m_List)
+			return FALSE;
 		COMMAND_ID_HANDLER(ID_WINDOW_SHOW, OnWindowShow)
 		COMMAND_ID_HANDLER(ID_WINDOW_HIDE, OnWindowHide)
 		COMMAND_ID_HANDLER(ID_WINDOW_BRINGTOFRONT, OnWindowBringToFront)
@@ -69,7 +74,6 @@ private:
 	void UpdateList();
 
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
-	LRESULT OnTimer(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnWindowShow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnWindowHide(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnWindowMinimize(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -82,6 +86,7 @@ private:
 	LRESULT OnToggleChildWindows(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnWindowBringToFront(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnWindowProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnItemChanged(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
 
 private:
 
