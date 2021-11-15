@@ -12,7 +12,10 @@ public:
 
 	const UINT WM_UPDATE = WM_USER + 300;
 
-	CWindowGeneralPage(HWND hWnd) : m_Win(hWnd) {}
+	CWindowGeneralPage(HWND hWnd) : m_Win(hWnd) {
+		m_psp.dwFlags |= PSP_USEICONID;
+		m_psp.pszIcon = MAKEINTRESOURCE(IDI_WINPROP);
+	}
 
 	void UpdateData();
 

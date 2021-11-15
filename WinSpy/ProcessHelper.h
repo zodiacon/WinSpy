@@ -17,5 +17,6 @@ DEFINE_ENUM_FLAG_OPERATORS(EnumProcessesOptions);
 struct ProcessHelper {
 	static CString GetProcessImageName(DWORD pid, bool fullPath = false);
 	static std::vector<ProcessInfo> EnumProcessesAndThreads(EnumProcessesOptions options);
+	static void ShowProcessProperties(ProcessInfo const& pi);
 };
 

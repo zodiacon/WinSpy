@@ -8,7 +8,10 @@ class CWindowWindowsPage :
 public:
 	enum { IDD = IDD_PROPWINDOWS };
 
-	CWindowWindowsPage(HWND hWnd) : m_Win(hWnd) {}
+	CWindowWindowsPage(HWND hWnd) : m_Win(hWnd) {
+		m_psp.dwFlags |= PSP_USEICONID;
+		m_psp.pszIcon = MAKEINTRESOURCE(IDI_WINDOWS);
+	}
 
 protected:
 	BEGIN_MSG_MAP(CWindowWindowsPage)

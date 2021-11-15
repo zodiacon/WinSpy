@@ -33,7 +33,7 @@ void CWindowGeneralPage::UpdateData() {
 	SetDlgItemText(IDC_ATOM, text);
 	text.Format(L"0x%08X\n", wi.dwStyle);
 	SetDlgItemText(IDC_STYLE, text);
-	text.Format(L"0x08%X\n", wi.dwExStyle);
+	text.Format(L"0x%08X\n", wi.dwExStyle);
 	SetDlgItemText(IDC_STYLEEX, text);
 
 	WCHAR className[128];

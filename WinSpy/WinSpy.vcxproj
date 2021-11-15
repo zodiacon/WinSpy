@@ -243,6 +243,7 @@
     <ClInclude Include="DialogHelper.h" />
     <ClInclude Include="IconHelper.h" />
     <ClInclude Include="ImageIconCache.h" />
+    <ClInclude Include="MessagesView.h" />
     <ClInclude Include="SecurityHelper.h" />
     <ClInclude Include="WindowGeneralPage.h" />
     <ClInclude Include="WindowsListView.h" />

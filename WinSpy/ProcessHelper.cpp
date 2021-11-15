@@ -80,3 +80,6 @@ std::vector<ProcessInfo> ProcessHelper::EnumProcessesAndThreads(EnumProcessesOpt
 	return processes;
 }
 
+void ProcessHelper::ShowProcessProperties(ProcessInfo const& pi) {
+}
+

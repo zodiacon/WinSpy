@@ -6,11 +6,6 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD reason, PVOID lpReserved) {
 		case DLL_PROCESS_ATTACH:
 			::DisableThreadLibraryCalls(hModule);
 			break;
-
-		case DLL_THREAD_ATTACH:
-		case DLL_THREAD_DETACH:
-		case DLL_PROCESS_DETACH:
-			break;
 	}
 	return TRUE;
 }

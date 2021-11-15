@@ -241,24 +241,30 @@ std::pair<StyleItem const*, int> WindowHelper::GetWindowStyleExArray() {
 		{ WS_EX_LAYOUTRTL			, L"LAYOUTRTL" },
 		{ WS_EX_COMPOSITED			, L"COMPOSITED" },
 		{ WS_EX_NOACTIVATE			, L"NOACTIVATE" },
+		{ 0x8000,					L"FEEDBACK" },
+		{ 0x80000000,				L"ANSICREATOR" },
+		{ 0x800000,					L"NOPADDEDBORDER" },
+		{ 0x2,						L"DRAGOBJECT" },
 	};
 	return std::make_pair(styles, (int)_countof(styles));
 }
 
 std::pair<StyleItem const*, int> WindowHelper::GetClassStyleArray() {
 	static const StyleItem styles[] = {
-		{ CS_HREDRAW			, L"HREDRAW" },
-		{ CS_VREDRAW			, L"VREDRAW" },
-		{ CS_DBLCLKS			, L"DBLCLKS" },
-		{ CS_OWNDC				, L"OWNDC" },
-		{ CS_CLASSDC			, L"CLASSDC" },
-		{ CS_PARENTDC			, L"PARENTDC" },
-		{ CS_SAVEBITS			, L"SAVEBITS" },
-		{ CS_GLOBALCLASS		, L"GLOBALCLASS" },
-		{ CS_BYTEALIGNCLIENT	, L"BYTEALIGNCLIENT" },
-		{ CS_BYTEALIGNWINDOW	, L"BYTEALIGWINDOW" },
-		{ CS_IME				, L"IME" },
-		{ CS_DROPSHADOW			, L"DROPSHADOW" },
+		{ CS_HREDRAW,			L"HREDRAW" },
+		{ CS_VREDRAW,			L"VREDRAW" },
+		{ CS_DBLCLKS,			L"DBLCLKS" },
+		{ CS_OWNDC,				L"OWNDC" },
+		{ CS_CLASSDC,			L"CLASSDC" },
+		{ CS_PARENTDC,			L"PARENTDC" },
+		{ CS_SAVEBITS,			L"SAVEBITS" },
+		{ CS_GLOBALCLASS,		L"GLOBALCLASS" },
+		{ CS_BYTEALIGNCLIENT,	L"BYTEALIGNCLIENT" },
+		{ CS_BYTEALIGNWINDOW,	L"BYTEALIGWINDOW" },
+		{ CS_IME,				L"IME" },
+		{ CS_DROPSHADOW,		L"DROPSHADOW" },
+		{ CS_NOCLOSE,			L"NOCLOSE" },
+		{ 0x8000,				L"SYSTEM" },
 	};
 	return std::make_pair(styles, (int)_countof(styles));
 }

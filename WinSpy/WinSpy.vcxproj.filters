@@ -164,6 +164,9 @@
     <ClInclude Include="SecurityHelper.h">
       <Filter>Helpers</Filter>
     </ClInclude>
+    <ClInclude Include="MessagesView.h">
+      <Filter>Views</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WinSpy.rc">

@@ -11,6 +11,7 @@
 #include "IconHelper.h"
 #include "ImageIconCache.h"
 #include "ProcessesView.h"
+#include "SecurityHelper.h"
 
 const int WINDOW_MENU_POSITION = 5;
 
@@ -27,6 +28,11 @@ BOOL CMainFrame::OnIdle() {
 }
 
 LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+	if (SecurityHelper::IsRunningElevated()) {
+		CMenuHandle menu = GetMenu();
+		menu.GetSubMenu(0).DeleteMenu(0, MF_BYPOSITION);
+		menu.GetSubMenu(0).DeleteMenu(0, MF_BYPOSITION);
+	}
 	// create command bar window
 	HWND hWndCmdBar = m_CmdBar.Create(m_hWnd, rcDefault, NULL, ATL_SIMPLE_CMDBAR_PANE_STYLE);
 	// attach menu
@@ -184,6 +190,13 @@ LRESULT CMainFrame::OnFindWindow(WORD, WORD, HWND, BOOL&) {
 		WindowHelper::ShowWindowProperties(dlg.GetSelectedHwnd());
 	}
 
+	return 0;
+}
+
+LRESULT CMainFrame::OnRunAsAdmin(WORD, WORD, HWND, BOOL&) {
+	if (SecurityHelper::RunElevated()) {
+		SendMessage(WM_CLOSE);
+	}
 	return 0;
 }
 

@@ -229,9 +229,33 @@ LRESULT CProcessesView::OnNodeSelected(int, LPNMHDR hdr, BOOL&) {
 	return 0;
 }
 
+LRESULT CProcessesView::OnTreeNodeDoubleClick(HTREEITEM hItem, CPoint const& pt) {
+	auto data = m_Tree.GetItemData(hItem);
+	switch (static_cast<ItemType>(data)) {
+		case ItemType::Process:
+			ProcessHelper::ShowProcessProperties(m_Processes[hItem]);
+			break;
+
+		case ItemType::Thread:
+			break;
+
+		default:
+			auto hWnd = reinterpret_cast<HWND>(data);
+			WindowHelper::ShowWindowProperties(hWnd);
+			break;
+	}
+	return 0;
+}
+
 LRESULT CProcessesView::OnWindowProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	ATLASSERT(m_SelectedHwnd);
 	WindowHelper::ShowWindowProperties(m_SelectedHwnd);
+	return 0;
+}
+
+LRESULT CProcessesView::OnProcessProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	auto hItem = m_Tree.GetSelectedItem();
+	ProcessHelper::ShowProcessProperties(m_Processes[hItem]);
 	return 0;
 }
 
