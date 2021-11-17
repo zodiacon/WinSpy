@@ -389,8 +389,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 0,2,0,0
+ PRODUCTVERSION 0,2,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -403,15 +403,15 @@ VS_VERSION_INFO VERSIONINFO
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        BLOCK "040904B0"
+        BLOCK "040904b0"
         BEGIN
-            VALUE "FileDescription", "WinSpy Module"
-            VALUE "FileVersion", "1, 0, 0, 1"
+            VALUE "FileDescription", "WinSpy - Examine Windows Propertiea and Messages"
+            VALUE "FileVersion", "0.2.0.0"
             VALUE "InternalName", "WinSpy"
-            VALUE "LegalCopyright", "Copyright 2020"
+            VALUE "LegalCopyright", "(C) 2021 Pavel Yosifovich"
             VALUE "OriginalFilename", "WinSpy.exe"
-            VALUE "ProductName", "WinSpy Module"
-            VALUE "ProductVersion", "1, 0, 0, 1"
+            VALUE "ProductName", "WinSpy v0.2"
+            VALUE "ProductVersion", "0.2.0.0"
         END
     END
     BLOCK "VarFileInfo"

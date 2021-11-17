@@ -44,7 +44,7 @@ void CWindowsView::UpdateUI() {
 }
 
 void CWindowsView::Refresh() {
-	if (!m_SelectedHwnd.IsWindow()) {
+	if (m_SelectedHwnd != nullptr && !m_SelectedHwnd.IsWindow()) {
 		m_Tree.DeleteItem(m_Selected);
 		return;
 	}
@@ -73,6 +73,9 @@ void CWindowsView::InitTree() {
 		pThis->AddNode(hWnd, pThis->m_DesktopNode);
 		return TRUE;
 		}, reinterpret_cast<LPARAM>(this));
+
+	AddMessageOnlyWindows();
+
 	m_DesktopNode.Expand(TVE_EXPAND);
 	m_Tree.LockWindowUpdate(FALSE);
 	m_DesktopNode.Select();
@@ -89,6 +92,7 @@ void CWindowsView::AddChildWindows(HTREEITEM hParent) {
 		auto pThis = (CWindowsView*)p;
 		return pThis->AddChildNode(hChild);
 		}, reinterpret_cast<LPARAM>(this));
+
 }
 
 CTreeItem CWindowsView::AddNode(HWND hWnd, HTREEITEM hParent) {
@@ -97,7 +101,6 @@ CTreeItem CWindowsView::AddNode(HWND hWnd, HTREEITEM hParent) {
 	m_TotalWindows++;
 	if (win.IsWindowVisible())
 		m_TotalVisibleWindows++;
-
 
 	if (m_DesktopNode) {
 		if (::GetAncestor(hWnd, GA_PARENT) == (HWND)m_DesktopNode.GetData())
@@ -157,13 +160,26 @@ BOOL CWindowsView::AddChildNode(HWND hChild) {
 LRESULT CWindowsView::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 	m_Splitter.SetSplitterExtendedStyle(SPLIT_FLATBAR | SPLIT_PROPORTIONAL);
 	m_hWndClient = m_Splitter.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
+	
+	//m_TreeFrame.Create(m_Splitter, rcDefault, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
+	//m_Tree.Attach(m_TreeFrame.m_hWndClient);
+
+	//ToolBarButtonInfo buttons[] = {
+	//	{ ID_VIEW_REFRESH, IDI_REFRESH },
+	//	{ 0 },
+	//	{ ID_VIEW_HIDDENWINDOWS, IDI_WINDOW_HIDDEN },
+	//	{ ID_VIEW_EMPTYTITLEWINDOWS, IDI_WINDOW_NOTEXT },
+	//	{ ID_WINDOW_PROPERTIES, IDI_WINPROP },
+	//};
+
+	//m_TreeFrame.CreateAndInitToolBar(buttons, _countof(buttons));
 
 	m_Tree.Create(m_Splitter, rcDefault, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
-		TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS | TVS_SHOWSELALWAYS, WS_EX_CLIENTEDGE, IDC_TREE);
-	m_WindowsView.Create(m_Splitter, rcDefault, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
+		TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS | TVS_SHOWSELALWAYS, WS_EX_CLIENTEDGE);
 	m_Tree.SetExtendedStyle(TVS_EX_DOUBLEBUFFER, TVS_EX_DOUBLEBUFFER);
-
 	m_Tree.SetImageList(WindowHelper::GetImageList(), TVSIL_NORMAL);
+
+	m_WindowsView.Create(m_Splitter, rcDefault, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
 
 	m_Splitter.SetSplitterPanes(m_Tree, m_WindowsView);
 	UpdateLayout();
@@ -190,12 +206,17 @@ LRESULT CWindowsView::OnTimer(UINT, WPARAM id, LPARAM, BOOL&) {
 
 void CWindowsView::NodeSelected() {
 	m_SelectedHwnd.Detach();
-	auto hWnd = (HWND)m_Selected.GetData();
-	if (!::IsWindow(hWnd))	// window is probably destroyed
+	auto data = m_Selected.GetData();
+	auto hWnd = (HWND)data;
+	if (data != MessageOnlyWindowsNode && !::IsWindow(hWnd))	// window is probably destroyed
 		m_Selected.Delete();
 	else {
-		m_SelectedHwnd.Attach(hWnd);
-		m_WindowsView.UpdateList(hWnd);
+		if (data == MessageOnlyWindowsNode)
+			m_WindowsView.UpdateList(nullptr);
+		else {
+			m_SelectedHwnd.Attach(hWnd);
+			m_WindowsView.UpdateList(hWnd);
+		}
 	}
 	UpdateUI();
 }
@@ -250,6 +271,12 @@ LRESULT CWindowsView::OnWindowHide(WORD, WORD, HWND, BOOL&) {
 	return 0;
 }
 
+LRESULT CWindowsView::OnWindowClose(WORD, WORD, HWND, BOOL&) {
+	ATLASSERT(m_Selected);
+	m_SelectedHwnd.SendMessage(WM_CLOSE);
+	return 0;
+}
+
 LRESULT CWindowsView::OnWindowMinimize(WORD, WORD, HWND, BOOL&) {
 	ATLASSERT(m_Selected);
 	m_SelectedHwnd.ShowWindow(SW_MINIMIZE);
@@ -275,14 +302,14 @@ LRESULT CWindowsView::OnWindowBringToFront(WORD, WORD, HWND, BOOL&) {
 	return 0;
 }
 
-LRESULT CWindowsView::OnToggleHiddenWindows(WORD, WORD, HWND, BOOL&) {
-	m_ShowHiddenWindows = !m_ShowHiddenWindows;
-	UpdateUI();
+LRESULT CWindowsView::OnRefresh(WORD, WORD, HWND, BOOL&) {
 	InitTree();
 	return 0;
 }
 
-LRESULT CWindowsView::OnRefresh(WORD, WORD, HWND, BOOL&) {
+LRESULT CWindowsView::OnToggleHiddenWindows(WORD, WORD, HWND, BOOL&) {
+	m_ShowHiddenWindows = !m_ShowHiddenWindows;
+	UpdateUI();
 	InitTree();
 	return 0;
 }
@@ -325,9 +352,9 @@ LRESULT CWindowsView::OnWindowProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 		return 0;
 	}
 
-	ATLASSERT(m_SelectedHwnd);
-	WindowHelper::ShowWindowProperties(m_SelectedHwnd);
-
+	if (m_SelectedHwnd) {
+		WindowHelper::ShowWindowProperties(m_SelectedHwnd);
+	}
 	return 0;
 }
 
@@ -341,4 +368,9 @@ LRESULT CWindowsView::OnSetFocus(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	return 0;
 }
 
+CTreeItem CWindowsView::AddMessageOnlyWindows() {
+	m_MsgOnlyNode = m_Tree.InsertItem(L"Message Only Windows", TVI_ROOT, TVI_LAST);
+	m_MsgOnlyNode.SetData(MessageOnlyWindowsNode);
+	return m_MsgOnlyNode;
+}
 

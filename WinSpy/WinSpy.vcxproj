@@ -217,6 +217,7 @@
     <ClCompile Include="ImageIconCache.cpp" />
     <ClCompile Include="ProcessesView.cpp" />
     <ClCompile Include="SecurityHelper.cpp" />
+    <ClCompile Include="TreeViewFrame.cpp" />
     <ClCompile Include="WindowGeneralPage.cpp" />
     <ClCompile Include="WindowsListView.cpp" />
     <ClCompile Include="FindWindowDlg.cpp" />
@@ -245,6 +246,8 @@
     <ClInclude Include="ImageIconCache.h" />
     <ClInclude Include="MessagesView.h" />
     <ClInclude Include="SecurityHelper.h" />
+    <ClInclude Include="TreeViewFrame.h" />
+    <ClInclude Include="FrameWindowHelper.h" />
     <ClInclude Include="WindowGeneralPage.h" />
     <ClInclude Include="WindowsListView.h" />
     <ClInclude Include="FindWindowDlg.h" />

@@ -2,6 +2,7 @@
 #include "ProcessHelper.h"
 #include "WindowHelper.h"
 #include <TlHelp32.h>
+#include <unordered_set>
 
 CString ProcessHelper::GetProcessImageName(DWORD pid, bool fullPath) {
 	auto hProcess = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
@@ -17,13 +18,14 @@ CString ProcessHelper::GetProcessImageName(DWORD pid, bool fullPath) {
 	return result;
 }
 
-std::vector<ProcessInfo> ProcessHelper::EnumProcessesAndThreads(EnumProcessesOptions options) {
-	std::vector<ProcessInfo> processes;
+ProcessesInfo ProcessHelper::EnumProcessesAndThreads(EnumProcessesOptions options) {
+	ProcessesInfo info;
+	auto& processes = info.Processes;
 	processes.reserve(512);
 
 	auto hSnapshot = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS | TH32CS_SNAPTHREAD, 0);
 	if (hSnapshot == INVALID_HANDLE_VALUE)
-		return processes;
+		return info;
 
 	PROCESSENTRY32 pe;
 	pe.dwSize = sizeof(pe);
@@ -48,6 +50,23 @@ std::vector<ProcessInfo> ProcessHelper::EnumProcessesAndThreads(EnumProcessesOpt
 		processMap.insert({ pi.ProcessId, (int)processes.size() - 1 });
 	}
 
+	std::unordered_set<DWORD> msgOnly;
+	if ((options & EnumProcessesOptions::IncludeMessageOnly) == EnumProcessesOptions::IncludeMessageOnly) {
+		HWND hWnd = nullptr;
+		for (;;) {
+			hWnd = ::FindWindowEx(HWND_MESSAGE, hWnd, nullptr, nullptr);
+			if (!hWnd)
+				break;
+			auto tid = ::GetWindowThreadProcessId(hWnd, nullptr);
+			msgOnly.insert(tid);
+			if (auto it = info.MessageOnly.find(tid); it != info.MessageOnly.end()) {
+				it->second.push_back(hWnd);
+			}
+			else {
+				info.MessageOnly.insert({ tid, { hWnd } });
+			}
+		}
+	}
 	THREADENTRY32 te;
 	te.dwSize = sizeof(te);
 
@@ -62,7 +81,7 @@ std::vector<ProcessInfo> ProcessHelper::EnumProcessesAndThreads(EnumProcessesOpt
 
 		auto& pi = processes[processMap[te.th32OwnerProcessID]];
 		if ((options & EnumProcessesOptions::UIThreadsOnly) == EnumProcessesOptions::UIThreadsOnly) {
-			if(!WindowHelper::ThreadHasWindows(te.th32ThreadID))
+			if(!WindowHelper::ThreadHasWindows(te.th32ThreadID) && !msgOnly.contains(te.th32ThreadID))
 				continue;
 		}
 		pi.Threads.push_back(te.th32ThreadID);
@@ -77,7 +96,7 @@ std::vector<ProcessInfo> ProcessHelper::EnumProcessesAndThreads(EnumProcessesOpt
 		}
 	}
 
-	return processes;
+	return info;
 }
 
 void ProcessHelper::ShowProcessProperties(ProcessInfo const& pi) {

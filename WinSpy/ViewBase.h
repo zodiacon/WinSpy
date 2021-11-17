@@ -43,13 +43,6 @@ protected:
 		return 0;
 	}
 
-	struct ToolBarButtonInfo {
-		UINT id;
-		int image;
-		BYTE style = BTNS_BUTTON;
-		PCWSTR text = nullptr;
-	};
-
 	HWND CreateAndInitToolBar(const ToolBarButtonInfo* buttons, int count) {
 		auto pT = static_cast<T*>(this);
 
@@ -58,7 +51,7 @@ protected:
 		tb.SetExtendedStyle(TBSTYLE_EX_MIXEDBUTTONS);
 
 		CImageList tbImages;
-		tbImages.Create(24, 24, ILC_COLOR32, 4, 4);
+		tbImages.Create(24, 24, ILC_COLOR32 | ILC_COLOR | ILC_MASK, 4, 4);
 		tb.SetImageList(tbImages);
 
 		for (int i = 0; i < count; i++) {

@@ -21,6 +21,8 @@ protected:
 		MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		NOTIFY_CODE_HANDLER(TVN_ITEMEXPANDING, OnNodeExpanding)
 		//NOTIFY_CODE_HANDLER(TVN_DELETEITEM, OnNodeDeleted)
+		COMMAND_ID_HANDLER(ID_VIEW_HIDDENWINDOWS, OnToggleHiddenWindows)
+		COMMAND_ID_HANDLER(ID_VIEW_EMPTYTITLEWINDOWS, OnToggleEmptyTitleWindows)
 		NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnNodeSelected)
 		COMMAND_ID_HANDLER(ID_WINDOW_SHOW, OnWindowShow)
 		COMMAND_ID_HANDLER(ID_WINDOW_HIDE, OnWindowHide)
@@ -49,6 +51,7 @@ private:
 	};
 
 	void InitTree();
+	void UpdateUI();
 	CTreeItem AddNode(HWND hWnd, HTREEITEM hParent);
 	void AddChildWindows(HTREEITEM hParent);
 	BOOL AddChildNode(HWND hChild);

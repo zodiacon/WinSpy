@@ -7,6 +7,7 @@
 #include "TreeViewManager.h"
 #include "ViewBase.h"
 #include "WindowsListView.h"
+#include "TreeViewFrame.h"
 
 class CWindowsView : 
 	public CViewBase<CWindowsView>,
@@ -31,6 +32,8 @@ protected:
 		NOTIFY_CODE_HANDLER(TVN_DELETEITEM, OnNodeDeleted)
 		NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnNodeSelected)
 		MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
+		COMMAND_ID_HANDLER(ID_VIEW_HIDDENWINDOWS, OnToggleHiddenWindows)
+		COMMAND_ID_HANDLER(ID_VIEW_EMPTYTITLEWINDOWS, OnToggleEmptyTitleWindows)
 		COMMAND_ID_HANDLER(ID_WINDOW_SHOW, OnWindowShow)
 		COMMAND_ID_HANDLER(ID_WINDOW_HIDE, OnWindowHide)
 		COMMAND_ID_HANDLER(ID_WINDOW_BRINGTOFRONT, OnWindowBringToFront)
@@ -38,6 +41,7 @@ protected:
 		COMMAND_ID_HANDLER(ID_WINDOW_MAXIMIZE, OnWindowMaximize)
 		COMMAND_ID_HANDLER(ID_STATE_FLASH, OnWindowFlash)
 		COMMAND_ID_HANDLER(ID_WINDOW_RESTORE, OnWindowRestore)
+		COMMAND_ID_HANDLER(ID_STATE_CLOSE, OnWindowClose)
 		COMMAND_ID_HANDLER(ID_WINDOW_PROPERTIES, OnWindowProperties)
 		CHAIN_MSG_MAP(CTreeViewManager<CWindowsView>)
 		CHAIN_MSG_MAP(CViewBase<CWindowsView>)
@@ -48,6 +52,8 @@ protected:
 
 	LRESULT OnTreeNodeRightClick(HTREEITEM hItem, CPoint const& pt);
 
+	HWND CreateControl(HWND hParent);
+
 private:
 	void UpdateUI();
 	void Refresh();
@@ -56,6 +62,7 @@ private:
 	CTreeItem AddNode(HWND hWnd, HTREEITEM hParent);
 	BOOL AddChildNode(HWND hChild);
 	void NodeSelected();
+	CTreeItem AddMessageOnlyWindows();
 
 	// Handler prototypes (uncomment arguments if needed):
 	//	LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -73,6 +80,7 @@ private:
 	LRESULT OnWindowMinimize(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnWindowMaximize(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnWindowRestore(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnWindowClose(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnToggleHiddenWindows(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnRefresh(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnToggleEmptyTitleWindows(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -81,12 +89,16 @@ private:
 	LRESULT OnWindowBringToFront(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnWindowProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
+	enum { MessageOnlyWindowsNode = 1 };
+
 	CSplitterWindow m_Splitter;
 	CWindowsListView m_WindowsView;
+	//CTreeViewFrame m_TreeFrame;
 	CTreeViewCtrlEx m_Tree;
 	CTreeItem m_hCurrentNode;
 	CTreeItem m_DesktopNode;
 	CTreeItem m_Selected;
+	CTreeItem m_MsgOnlyNode;
 	CWindow m_SelectedHwnd;
 	std::unordered_map<HWND, HTREEITEM> m_WindowMap;
 	DWORD m_TotalWindows, m_TotalVisibleWindows, m_TopLevelWindows;

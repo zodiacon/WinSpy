@@ -229,20 +229,38 @@ DWORD CWindowsListView::OnItemPrePaint(int, LPNMCUSTOMDRAW cd) {
 
 	auto& h = m_Items[(int)cd->dwItemSpec];
 	auto lv = (LPNMLVCUSTOMDRAW)cd;
-	lv->clrTextBk = ::IsWindowVisible(h.hWnd) ? CLR_INVALID : RGB(224, 224, 224);
+	lv->clrTextBk = m_SelectedHwnd == nullptr || ::IsWindowVisible(h.hWnd) ? CLR_INVALID : RGB(224, 224, 224);
 
 	return CDRF_DODEFAULT;
+}
+
+void CWindowsListView::AddMessageOnlyWindows() {
+	HWND hWnd = nullptr;
+	for (;;) {
+		hWnd = ::FindWindowEx(HWND_MESSAGE, hWnd, nullptr, nullptr);
+		if (!hWnd)
+			break;
+		
+		m_Items.push_back(WindowHelper::GetWindowInfo(hWnd));
+	}
 }
 
 void CWindowsListView::UpdateList(HWND hWnd) {
 	if (m_ContextMenuOpen)
 		return;
 
-	m_SelectedHwnd = hWnd;
 	m_Items.clear();
-	m_Items.push_back(WindowHelper::GetWindowInfo(m_SelectedHwnd));
-	AddChildWindows(m_Items, m_SelectedHwnd, true);
-
+	m_SelectedHwnd = hWnd;
+	if (hWnd == nullptr) {
+		//
+		// message only windows
+		//
+		AddMessageOnlyWindows();
+	}
+	else {
+		m_Items.push_back(WindowHelper::GetWindowInfo(m_SelectedHwnd));
+		AddChildWindows(m_Items, m_SelectedHwnd, true);
+	}
 	m_List.SetItemCountEx((int)m_Items.size(), LVSICF_NOSCROLL);
 	UpdateList();
 }

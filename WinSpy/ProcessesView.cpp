@@ -44,7 +44,9 @@ void CProcessesView::InitTree() {
 	m_TotalWindows = m_TotalVisibleWindows = m_TopLevelWindows = 0;
 
 	CString text;
-	for (auto& pi : ProcessHelper::EnumProcessesAndThreads(EnumProcessesOptions::UIThreadsOnly | EnumProcessesOptions::SkipProcessesWithNoUI)) {
+	auto info = ProcessHelper::EnumProcessesAndThreads(
+		EnumProcessesOptions::UIThreadsOnly | EnumProcessesOptions::SkipProcessesWithNoUI | EnumProcessesOptions::IncludeMessageOnly);
+	for (auto& pi : info.Processes) {
 		auto icon = ImageIconCache::Get().GetIcon(pi.FullPath);
 		text.Format(L"%s (%u)", (PCWSTR)pi.ProcessName, pi.ProcessId);
 		auto node = m_Tree.InsertItem(text, icon, icon, TVI_ROOT, TVI_SORT);
@@ -68,6 +70,15 @@ void CProcessesView::InitTree() {
 				data->pThis->AddNode(hWnd, data->hParent);
 				return TRUE;
 				}, reinterpret_cast<LPARAM>(&data));
+
+			//
+			// add message-only windows
+			//
+			if (auto it = info.MessageOnly.find(tid); it != info.MessageOnly.end()) {
+				for (auto hWnd : it->second) {
+					AddNode(hWnd, tnode);
+				}
+			}
 		}
 	}
 	m_Tree.LockWindowUpdate(FALSE);
@@ -281,5 +292,31 @@ void CProcessesView::ChangeSelection(HTREEITEM hItem) {
 				m_WindowsView.UpdateList(hWnd);
 			}
 			break;
+	}
+}
+
+LRESULT CProcessesView::OnToggleHiddenWindows(WORD, WORD, HWND, BOOL&) {
+	m_ShowHiddenWindows = !m_ShowHiddenWindows;
+	UpdateUI();
+	InitTree();
+	return 0;
+}
+
+LRESULT CProcessesView::OnToggleEmptyTitleWindows(WORD, WORD, HWND, BOOL&) {
+	m_ShowNoTitleWindows = !m_ShowNoTitleWindows;
+	UpdateUI();
+	InitTree();
+	return 0;
+}
+
+void CProcessesView::UpdateUI() {
+	auto& ui = GetFrame()->GetUIUpdate();
+	if (::GetFocus() == m_Tree) {
+		ui.UISetCheck(ID_VIEW_HIDDENWINDOWS, m_ShowHiddenWindows);
+		ui.UISetCheck(ID_VIEW_EMPTYTITLEWINDOWS, m_ShowNoTitleWindows);
+		ui.UIEnable(ID_WINDOW_PROPERTIES, m_SelectedHwnd != nullptr);
+	}
+	else {
+		m_WindowsView.UpdateUI(ui);
 	}
 }
