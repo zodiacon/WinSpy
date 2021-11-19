@@ -8,5 +8,10 @@
 #define PCH_H
 
 #include <Windows.h>
+#include <vector>
+#include <functional>
+#include <mutex>
+#include <algorithm>
+#include <atlstr.h>
 
 #endif //PCH_H

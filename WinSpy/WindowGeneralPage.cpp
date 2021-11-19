@@ -43,9 +43,9 @@ void CWindowGeneralPage::UpdateData() {
 	auto clsStyle = (DWORD)::GetClassLongPtr(m_Win, GCL_STYLE);
 	text.Format(L"0x%08X", clsStyle);
 	SetDlgItemText(IDC_STYLECLASS, text);
-	FillStyleList(wi.dwStyle, WindowHelper::GetWindowStyleArray(), IDC_STYLES, L"WS_", L"WS_OVERLAPPED");
-	FillStyleList(wi.dwExStyle, WindowHelper::GetWindowStyleExArray(), IDC_STYLESEX, L"WS_EX_", L"WS_EX_LEFT");
-	FillStyleList(clsStyle, WindowHelper::GetClassStyleArray(), IDC_CLASSSTYLE, L"CS_", nullptr);
+	FillStyleList(wi.dwStyle, WindowHelper::GetWindowStyleArray(), IDC_STYLES, L"", L"WS_OVERLAPPED");
+	FillStyleList(wi.dwExStyle, WindowHelper::GetWindowStyleExArray(), IDC_STYLESEX, L"", L"WS_EX_LEFT");
+	FillStyleList(clsStyle, WindowHelper::GetClassStyleArray(), IDC_CLASSSTYLE, L"", nullptr);
 }
 
 void CWindowGeneralPage::FillStyleList(DWORD style, std::pair<StyleItem const*, int> styles, UINT id, PCWSTR prefix, PCWSTR defaultStyle) {
@@ -57,7 +57,7 @@ void CWindowGeneralPage::FillStyleList(DWORD style, std::pair<StyleItem const*, 
 	CString text;
 	for (int i = 0; i < count; i++) {
 		if ((style & items[i].Value) == items[i].Value) {
-			text.Format(L"%s%s (0x%08X)", prefix, (PCWSTR)items[i].Text, items[i].Value);
+			text.Format(L"%s%s (0x%X)", prefix, (PCWSTR)items[i].Text, items[i].Value);
 			lb.AddString(text);
 		}
 	}

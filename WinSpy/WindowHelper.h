@@ -32,6 +32,7 @@ struct WindowHelper abstract final {
 	static std::pair<StyleItem const*, int> GetWindowStyleArray();
 	static std::pair<StyleItem const*, int> GetWindowStyleExArray();
 	static std::pair<StyleItem const*, int> GetClassStyleArray();
+	static CString WindowMessageToString(DWORD msg);
 };
 
 

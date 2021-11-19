@@ -22,8 +22,10 @@
 #define IDI_PROCESSES                   217
 #define IDD_WINPROP                     218
 #define IDI_WINPROP                     221
-#define IDI_ICON2                       222
 #define IDI_PROCESS_INFO                222
+#define IDI_MESSAGE                     223
+#define IDI_ICON2                       224
+#define IDI_MESSAGES                    224
 #define IDC_HANDLE                      1000
 #define IDC_CLASSNAME                   1001
 #define IDC_HANDLE2                     1001
@@ -86,13 +88,14 @@
 #define ID_PROCESS_TERMINATE            32801
 #define ID_PROCESS_PROPERTIES           32802
 #define ID_THREAD_PROPERTIES            32803
+#define ID_WINDOW_MESSAGES              32804
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        223
-#define _APS_NEXT_COMMAND_VALUE         32804
+#define _APS_NEXT_RESOURCE_VALUE        225
+#define _APS_NEXT_COMMAND_VALUE         32805
 #define _APS_NEXT_CONTROL_VALUE         1019
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

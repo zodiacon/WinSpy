@@ -23,6 +23,13 @@ LRESULT CProcessesView::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	return 0;
 }
 
+void CProcessesView::OnActivate(bool active) {
+	if (active) {
+		UpdateUI();
+	}
+}
+
+
 void CProcessesView::OnFinalMessage(HWND) {
 	delete this;
 }

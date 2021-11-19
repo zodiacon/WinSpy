@@ -39,10 +39,13 @@ protected:
 		COMMAND_ID_HANDLER(ID_WINDOW_BRINGTOFRONT, OnWindowBringToFront)
 		COMMAND_ID_HANDLER(ID_WINDOW_MINIMIZE, OnWindowMinimize)
 		COMMAND_ID_HANDLER(ID_WINDOW_MAXIMIZE, OnWindowMaximize)
+		COMMAND_ID_HANDLER(ID_WINDOW_HIGHLIGHT, OnWindowHighlight)
 		COMMAND_ID_HANDLER(ID_STATE_FLASH, OnWindowFlash)
 		COMMAND_ID_HANDLER(ID_WINDOW_RESTORE, OnWindowRestore)
 		COMMAND_ID_HANDLER(ID_STATE_CLOSE, OnWindowClose)
+		COMMAND_ID_HANDLER(ID_WINDOW_MESSAGES, OnCaptureMessages)
 		COMMAND_ID_HANDLER(ID_WINDOW_PROPERTIES, OnWindowProperties)
+		COMMAND_ID_HANDLER(ID_VIEW_REFRESH, OnRefreshAll)
 		CHAIN_MSG_MAP(CTreeViewManager<CWindowsView>)
 		CHAIN_MSG_MAP(CViewBase<CWindowsView>)
 		if (m_WindowsView) {
@@ -51,8 +54,6 @@ protected:
 	END_MSG_MAP()
 
 	LRESULT OnTreeNodeRightClick(HTREEITEM hItem, CPoint const& pt);
-
-	HWND CreateControl(HWND hParent);
 
 private:
 	void UpdateUI();
@@ -75,6 +76,7 @@ private:
 	LRESULT OnNodeExpanding(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
 	LRESULT OnNodeDeleted(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
 	LRESULT OnNodeSelected(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
+	LRESULT OnRefreshAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnWindowShow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnWindowHide(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnWindowMinimize(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -88,6 +90,8 @@ private:
 	LRESULT OnWindowFlash(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnWindowBringToFront(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnWindowProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnWindowHighlight(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnCaptureMessages(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	enum { MessageOnlyWindowsNode = 1 };
 

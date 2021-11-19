@@ -1,0 +1,7 @@
+LIBRARY
+EXPORTS
+	HookFunc3		PRIVATE
+	HookFunc4		PRIVATE
+	HookFunc12		PRIVATE
+	AddHook
+	RemoveHook

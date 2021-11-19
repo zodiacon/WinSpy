@@ -28,3 +28,9 @@ DWORD_PTR FormatHelper::ParseHex(CString const& text) {
 	ss >> value;
 	return value;
 }
+
+CString FormatHelper::FormatPoint(POINT const& pt) {
+	CString text;
+	text.Format(L"(%d,%d)", pt.x, pt.y);
+	return text;
+}

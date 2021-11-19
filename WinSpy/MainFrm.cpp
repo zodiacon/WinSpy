@@ -12,6 +12,7 @@
 #include "ImageIconCache.h"
 #include "ProcessesView.h"
 #include "SecurityHelper.h"
+#include "MessagesView.h"
 
 const int WINDOW_MENU_POSITION = 5;
 
@@ -77,8 +78,10 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	CMenuHandle menuMain = m_CmdBar.GetMenu();
 	CImageList images;
 	images.Create(16, 16, ILC_COLOR32, 4, 4);
-	images.AddIcon(AtlLoadIconImage(IDI_WINDOWS, 0, 16, 16));
-	images.AddIcon(AtlLoadIconImage(IDI_PROCESSES, 0, 16, 16));
+	UINT icons[] = { IDI_WINDOWS, IDI_PROCESSES, IDI_MESSAGES };
+	for (auto icon : icons) {
+		images.AddIcon(AtlLoadIconImage(icon, 0, 16, 16));
+	}
 	m_view.SetImageList(images);
 
 	m_view.SetWindowMenu(menuMain.GetSubMenu(WINDOW_MENU_POSITION));
@@ -97,6 +100,10 @@ LRESULT CMainFrame::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 
 	bHandled = FALSE;
 	return 1;
+}
+
+LRESULT CMainFrame::OnMenuSelect(UINT, WPARAM, LPARAM, BOOL&) {
+	return 0;
 }
 
 LRESULT CMainFrame::OnFileExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
@@ -206,6 +213,15 @@ CUpdateUIBase& CMainFrame::GetUIUpdate() {
 
 UINT CMainFrame::ShowContextMenu(HMENU hMenu, const POINT& pt, DWORD flags) {
 	return (UINT)m_CmdBar.TrackPopupMenu(hMenu, flags, pt.x, pt.y);
+}
+
+CMessagesView* CMainFrame::CreateMessagesView() {
+	auto pView = new CMessagesView(this);
+	pView->Create(m_view, rcDefault, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
+	m_view.AddPage(pView->m_hWnd, _T("Messages"), 2, pView);
+	pView->OnActivate(true);
+
+	return pView;
 }
 
 void CMainFrame::InitToolBar(CToolBarCtrl& tb) {

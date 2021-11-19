@@ -45,9 +45,6 @@
     <ClCompile Include="ColumnManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HookManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="FindWindowDlg.cpp">
       <Filter>Dialogs</Filter>
     </ClCompile>
@@ -90,6 +87,9 @@
     <ClCompile Include="TreeViewFrame.cpp">
       <Filter>Views</Filter>
     </ClCompile>
+    <ClCompile Include="MessagesView.cpp">
+      <Filter>Views</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainFrm.h">
@@ -111,9 +111,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ViewBase.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HookManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Interfaces.h">
@@ -232,6 +229,12 @@
       <Filter>Resource Files\Icons</Filter>
     </Image>
     <Image Include="res\gear_information.ico">
+      <Filter>Resource Files\Icons</Filter>
+    </Image>
+    <Image Include="res\message.ico">
+      <Filter>Resource Files\Icons</Filter>
+    </Image>
+    <Image Include="res\messages.ico">
       <Filter>Resource Files\Icons</Filter>
     </Image>
   </ItemGroup>

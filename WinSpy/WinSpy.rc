@@ -82,6 +82,7 @@ BEGIN
     POPUP "&Window"
     BEGIN
         MENUITEM "&Find...\tCtrl+W",            ID_WINDOW_FIND
+        MENUITEM "&Messages...",                ID_WINDOW_MESSAGES
         MENUITEM SEPARATOR
         MENUITEM "Locate in &Tree",             ID_WINDOW_LOCATEINTREE
         POPUP "&Action"
@@ -129,6 +130,7 @@ BEGIN
         MENUITEM "Send to &Back",               ID_TREE_SENDTOBACK
         MENUITEM "&Close",                      ID_STATE_CLOSE
         MENUITEM "&Flash",                      ID_STATE_FLASH
+        MENUITEM "&Messages...",                ID_WINDOW_MESSAGES
         MENUITEM SEPARATOR
         MENUITEM "&Properties...",              ID_WINDOW_PROPERTIES
     END
@@ -160,6 +162,8 @@ BEGIN
     POPUP "thread"
     BEGIN
         MENUITEM "&Properties...",              ID_THREAD_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "&Messages...",                ID_WINDOW_MESSAGES
     END
 END
 
@@ -203,6 +207,10 @@ IDI_WINPROP             ICON                    "res\\window-properties.ico"
 
 IDI_PROCESS_INFO        ICON                    "res\\gear_information.ico"
 
+IDI_MESSAGE             ICON                    "res\\message.ico"
+
+IDI_MESSAGES            ICON                    "res\\messages.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -214,8 +222,8 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About WinSpy"
 FONT 9, "Segoe UI", 0, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,68,64,50,14
-    CTEXT           "WinSpy v0.1\n\n©2020-2021 Pavel Yosifovich",IDC_STATIC,46,7,90,32
+    DEFPUSHBUTTON   "OK",IDOK,70,64,48,14
+    CTEXT           "WinSpy v0.2\n\n©2020-2021 Pavel Yosifovich",IDC_STATIC,46,14,103,32
     ICON            IDR_MAINFRAME,IDC_STATIC,6,6,20,20
 END
 

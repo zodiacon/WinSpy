@@ -9,12 +9,12 @@
 #include "ProcessHelper.h"
 #include "WindowHelper.h"
 #include "SortHelper.h"
+#include "MessagesView.h"
 
 BOOL CWindowsView::PreTranslateMessage(MSG* pMsg) {
 	pMsg;
 	return FALSE;
 }
-
 
 void CWindowsView::OnActivate(bool activate) {
 	if (activate) {
@@ -49,6 +49,11 @@ void CWindowsView::Refresh() {
 		return;
 	}
 	m_WindowsView.UpdateList(m_SelectedHwnd);
+}
+
+LRESULT CWindowsView::OnRefreshAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	InitTree();
+	return 0;
 }
 
 void CWindowsView::InitTree() {
@@ -259,46 +264,46 @@ LRESULT CWindowsView::OnNodeSelected(int, LPNMHDR hdr, BOOL&) {
 }
 
 LRESULT CWindowsView::OnWindowShow(WORD, WORD, HWND, BOOL&) {
-	ATLASSERT(m_Selected);
-	m_SelectedHwnd.ShowWindow(SW_SHOW);
+	if (m_SelectedHwnd)
+		m_SelectedHwnd.ShowWindow(SW_SHOW);
 
 	return 0;
 }
 
 LRESULT CWindowsView::OnWindowHide(WORD, WORD, HWND, BOOL&) {
-	ATLASSERT(m_Selected);
-	m_SelectedHwnd.ShowWindow(SW_HIDE);
+	if (m_SelectedHwnd)
+		m_SelectedHwnd.ShowWindow(SW_HIDE);
 	return 0;
 }
 
 LRESULT CWindowsView::OnWindowClose(WORD, WORD, HWND, BOOL&) {
-	ATLASSERT(m_Selected);
-	m_SelectedHwnd.SendMessage(WM_CLOSE);
+	if (m_SelectedHwnd)
+		m_SelectedHwnd.SendMessage(WM_CLOSE);
 	return 0;
 }
 
 LRESULT CWindowsView::OnWindowMinimize(WORD, WORD, HWND, BOOL&) {
-	ATLASSERT(m_Selected);
-	m_SelectedHwnd.ShowWindow(SW_MINIMIZE);
+	if (m_SelectedHwnd)
+		m_SelectedHwnd.ShowWindow(SW_MINIMIZE);
 	return 0;
 }
 
 LRESULT CWindowsView::OnWindowMaximize(WORD, WORD, HWND, BOOL&) {
-	ATLASSERT(m_Selected);
-	m_SelectedHwnd.ShowWindow(SW_MAXIMIZE);
+	if (m_SelectedHwnd)
+		m_SelectedHwnd.ShowWindow(SW_MAXIMIZE);
 
 	return 0;
 }
 
 LRESULT CWindowsView::OnWindowRestore(WORD, WORD, HWND, BOOL&) {
-	ATLASSERT(m_Selected);
-	m_SelectedHwnd.ShowWindow(SW_RESTORE);
+	if (m_SelectedHwnd)
+		m_SelectedHwnd.ShowWindow(SW_RESTORE);
 	return 0;
 }
 
 LRESULT CWindowsView::OnWindowBringToFront(WORD, WORD, HWND, BOOL&) {
-	ATLASSERT(m_Selected);
-	m_SelectedHwnd.BringWindowToTop();
+	if (m_SelectedHwnd)
+		m_SelectedHwnd.BringWindowToTop();
 	return 0;
 }
 
@@ -340,9 +345,24 @@ LRESULT CWindowsView::OnTreeNodeRightClick(HTREEITEM hItem, CPoint const& pt) {
 }
 
 LRESULT CWindowsView::OnWindowFlash(WORD, WORD, HWND, BOOL&) {
-	ATLASSERT(m_Selected);
-	WindowHelper::Flash(m_SelectedHwnd);
+	if (m_SelectedHwnd)
+		WindowHelper::Flash(m_SelectedHwnd);
 
+	return 0;
+}
+
+LRESULT CWindowsView::OnWindowHighlight(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if (m_SelectedHwnd) {
+		::TrySubmitThreadpoolCallback([](auto, auto p) {
+			auto hWnd = (HWND)p;
+			for (int i = 0; i < 3; i++) {
+				WindowHelper::HighlightBorder(hWnd);
+				::Sleep(500);
+				WindowHelper::HighlightBorder(hWnd, false);
+				::Sleep(500);
+			}
+			}, m_SelectedHwnd, nullptr);
+	}
 	return 0;
 }
 
@@ -372,5 +392,13 @@ CTreeItem CWindowsView::AddMessageOnlyWindows() {
 	m_MsgOnlyNode = m_Tree.InsertItem(L"Message Only Windows", TVI_ROOT, TVI_LAST);
 	m_MsgOnlyNode.SetData(MessageOnlyWindowsNode);
 	return m_MsgOnlyNode;
+}
+
+LRESULT CWindowsView::OnCaptureMessages(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if (m_SelectedHwnd) {
+		auto view = GetFrame()->CreateMessagesView();
+		view->CaptureWindow(m_SelectedHwnd);
+	}
+	return 0;
 }
 
