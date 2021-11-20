@@ -44,6 +44,7 @@ void CWindowGeneralPage::UpdateData() {
 	text.Format(L"0x%08X", clsStyle);
 	SetDlgItemText(IDC_STYLECLASS, text);
 	FillStyleList(wi.dwStyle, WindowHelper::GetWindowStyleArray(), IDC_STYLES, L"", L"WS_OVERLAPPED");
+	FillSpecificControlStyles();
 	FillStyleList(wi.dwExStyle, WindowHelper::GetWindowStyleExArray(), IDC_STYLESEX, L"", L"WS_EX_LEFT");
 	FillStyleList(clsStyle, WindowHelper::GetClassStyleArray(), IDC_CLASSSTYLE, L"", nullptr);
 }
@@ -52,7 +53,6 @@ void CWindowGeneralPage::FillStyleList(DWORD style, std::pair<StyleItem const*, 
 	auto const [items, count] = styles;
 	CListBox lb(GetDlgItem(id));
 	ATLASSERT(lb);
-	lb.ResetContent();
 
 	CString text;
 	for (int i = 0; i < count; i++) {
@@ -63,6 +63,32 @@ void CWindowGeneralPage::FillStyleList(DWORD style, std::pair<StyleItem const*, 
 	}
 	if (lb.GetCount() == 0 && defaultStyle)
 		lb.AddString(CString(defaultStyle) + L" (0)");
+}
+
+void CWindowGeneralPage::FillSpecificControlStyles() {
+	WCHAR name[64];
+	if (!::GetClassName(m_Win, name, _countof(name)))
+		return;
+
+	auto style = m_Win.GetStyle() & 0xffff;
+	CString ATLPrefix = L"ATL:";
+
+	static const struct {
+		PCWSTR className;
+		std::pair<StyleItem const*, int> items;
+		PCWSTR def = L"";
+	} controls[] = {
+		{ WC_LISTVIEW, WindowHelper::GetListViewStyleArray(), L"LVS_ALIGNTOP" },
+		{ WC_TREEVIEW, WindowHelper::GetTreeViewStyleArray() },
+		{ WC_TABCONTROL, WindowHelper::GetTabCtrlStyleArray(), L"TCS_TABS" },
+	};
+
+	for (auto& item : controls) {
+		if (_wcsicmp(name, item.className) == 0 || _wcsicmp(name, ATLPrefix + item.className) == 0) {
+			FillStyleList(style, item.items, IDC_STYLES, L"", item.def);
+			break;
+		}
+	}
 }
 
 LRESULT CWindowGeneralPage::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {

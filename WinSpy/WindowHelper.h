@@ -30,6 +30,9 @@ struct WindowHelper abstract final {
 	static bool ThreadHasWindows(DWORD tid);
 	static int ShowWindowProperties(HWND hWnd);
 	static std::pair<StyleItem const*, int> GetWindowStyleArray();
+	static std::pair<StyleItem const*, int> GetListViewStyleArray();
+	static std::pair<StyleItem const*, int> GetTreeViewStyleArray();
+	static std::pair<StyleItem const*, int> GetTabCtrlStyleArray();
 	static std::pair<StyleItem const*, int> GetWindowStyleExArray();
 	static std::pair<StyleItem const*, int> GetClassStyleArray();
 	static CString WindowMessageToString(DWORD msg);

@@ -271,6 +271,10 @@ void CMainFrame::InitCommandBar() {
 		{ ID_VIEW_ALLPROCESSES, IDI_PROCESSES },
 		{ ID_WINDOW_PROPERTIES, IDI_WINPROP },
 		{ ID_PROCESS_PROPERTIES, IDI_PROCESS_INFO },
+		{ ID_WINDOW_FIND, IDI_WINDOWSEARCH },
+		{ ID_WINDOW_RESTORE, IDI_RESTORE },
+		{ ID_TREE_SENDTOBACK, IDI_WINDOW_SENDTOBACK },
+		{ ID_WINDOW_BRINGTOFRONT, IDI_SENDTOFRONT },
 	};
 	for (auto& cmd : cmds) {
 		m_CmdBar.AddIcon(cmd.icon ? AtlLoadIconImage(cmd.icon, 0, 16, 16) : cmd.hIcon, cmd.id);

@@ -197,7 +197,7 @@ IDI_WINDOW_NOTEXT       ICON                    "res\\window-notext.ico"
 
 IDI_WINDOW_MINIMIZE     ICON                    "res\\Minimize.ico"
 
-IDI_WINDOW_SENDTOBACK   ICON                    "res\\WindowSendToBack.ico"
+IDI_WINDOW_SENDTOBACK   ICON                    "D:\\Dev\\WinSpy\\WinSpy\\res\\WindowSendToBack.ico"
 
 IDI_TARGET              ICON                    "res\\Target.ico"
 
@@ -210,6 +210,12 @@ IDI_PROCESS_INFO        ICON                    "res\\gear_information.ico"
 IDI_MESSAGE             ICON                    "res\\message.ico"
 
 IDI_MESSAGES            ICON                    "res\\messages.ico"
+
+IDI_WINDOWSEARCH        ICON                    "res\\WindowSearch.ico"
+
+IDI_SENDTOFRONT         ICON                    "res\\WindowSendToFront.ico"
+
+IDI_RESTORE             ICON                    "res\\restore.ico"
 
 
 /////////////////////////////////////////////////////////////////////////////

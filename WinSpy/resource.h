@@ -24,8 +24,11 @@
 #define IDI_WINPROP                     221
 #define IDI_PROCESS_INFO                222
 #define IDI_MESSAGE                     223
-#define IDI_ICON2                       224
 #define IDI_MESSAGES                    224
+#define IDI_WINDOWSEARCH                225
+#define IDI_SENDTOFRONT                 227
+#define IDI_ICON1                       228
+#define IDI_RESTORE                     228
 #define IDC_HANDLE                      1000
 #define IDC_CLASSNAME                   1001
 #define IDC_HANDLE2                     1001
@@ -94,7 +97,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        225
+#define _APS_NEXT_RESOURCE_VALUE        229
 #define _APS_NEXT_COMMAND_VALUE         32805
 #define _APS_NEXT_CONTROL_VALUE         1019
 #define _APS_NEXT_SYMED_VALUE           101

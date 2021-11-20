@@ -214,6 +214,77 @@ std::pair<StyleItem const*, int> WindowHelper::GetWindowStyleArray() {
 	return std::make_pair(styles, (int)_countof(styles));
 }
 
+std::pair<StyleItem const*, int> WindowHelper::GetListViewStyleArray() {
+	static const StyleItem styles[] = {
+		PAIR_STR(LVS_ALIGNLEFT),
+		PAIR_STR(LVS_AUTOARRANGE),
+		PAIR_STR(LVS_EDITLABELS),
+		PAIR_STR(LVS_ICON),
+		PAIR_STR(LVS_LIST),
+		PAIR_STR(LVS_NOCOLUMNHEADER),
+		PAIR_STR(LVS_NOLABELWRAP),
+		PAIR_STR(LVS_SINGLESEL),
+		PAIR_STR(LVS_REPORT),
+		PAIR_STR(LVS_SMALLICON),
+		PAIR_STR(LVS_SORTASCENDING),
+		PAIR_STR(LVS_SORTDESCENDING),
+		PAIR_STR(LVS_SHOWSELALWAYS),
+		PAIR_STR(LVS_SHAREIMAGELISTS),
+		PAIR_STR(LVS_OWNERDATA),
+		PAIR_STR(LVS_OWNERDRAWFIXED),
+		PAIR_STR(LVS_NOSCROLL),
+		PAIR_STR(LVS_NOSORTHEADER),
+	};
+	return std::make_pair(styles, (int)_countof(styles));
+}
+
+std::pair<StyleItem const*, int> WindowHelper::GetTreeViewStyleArray() {
+	static const StyleItem styles[] = {
+		PAIR_STR(TVS_CHECKBOXES),
+		PAIR_STR(TVS_DISABLEDRAGDROP),
+		PAIR_STR(TVS_EDITLABELS),
+		PAIR_STR(TVS_FULLROWSELECT),
+		PAIR_STR(TVS_HASBUTTONS),
+		PAIR_STR(TVS_HASLINES),
+		PAIR_STR(TVS_LINESATROOT),
+		PAIR_STR(TVS_NOHSCROLL),
+		PAIR_STR(TVS_INFOTIP),
+		PAIR_STR(TVS_NONEVENHEIGHT),
+		PAIR_STR(TVS_NOTOOLTIPS),
+		PAIR_STR(TVS_RTLREADING),
+		PAIR_STR(TVS_SHOWSELALWAYS),
+		PAIR_STR(TVS_SINGLEEXPAND),
+		PAIR_STR(TVS_TRACKSELECT),
+		PAIR_STR(TVS_NOSCROLL),
+	};
+	return std::make_pair(styles, (int)_countof(styles));
+}
+
+std::pair<StyleItem const*, int> WindowHelper::GetTabCtrlStyleArray() {
+	static const StyleItem styles[] = {
+		PAIR_STR(TCS_BOTTOM),
+		PAIR_STR(TCS_BUTTONS),
+		PAIR_STR(TCS_FIXEDWIDTH),
+		PAIR_STR(TCS_FLATBUTTONS),
+		PAIR_STR(TCS_FOCUSNEVER),
+		PAIR_STR(TCS_FOCUSONBUTTONDOWN),
+		PAIR_STR(TCS_FORCEICONLEFT),
+		PAIR_STR(TCS_FORCELABELLEFT),
+		PAIR_STR(TCS_HOTTRACK),
+		PAIR_STR(TCS_MULTILINE),
+		PAIR_STR(TCS_MULTISELECT),
+		PAIR_STR(TCS_OWNERDRAWFIXED),
+		PAIR_STR(TCS_RAGGEDRIGHT),
+		PAIR_STR(TCS_RIGHT),
+		PAIR_STR(TCS_RIGHTJUSTIFY),
+		PAIR_STR(TCS_SCROLLOPPOSITE),
+		PAIR_STR(TCS_SINGLELINE),
+		PAIR_STR(TCS_TOOLTIPS),
+		PAIR_STR(TCS_VERTICAL),
+	};
+	return std::make_pair(styles, (int)_countof(styles));
+}
+
 std::pair<StyleItem const*, int> WindowHelper::GetWindowStyleExArray() {
 	static const StyleItem styles[] = {
 		PAIR_STR(WS_EX_DLGMODALFRAME),
@@ -227,7 +298,6 @@ std::pair<StyleItem const*, int> WindowHelper::GetWindowStyleExArray() {
 		PAIR_STR(WS_EX_CONTEXTHELP),
 		PAIR_STR(WS_EX_RIGHT),
 		PAIR_STR(WS_EX_RTLREADING),
-		PAIR_STR(WS_EX_LTRREADING),
 		PAIR_STR(WS_EX_LEFTSCROLLBAR),
 		PAIR_STR(WS_EX_CONTROLPARENT),
 		PAIR_STR(WS_EX_STATICEDGE),

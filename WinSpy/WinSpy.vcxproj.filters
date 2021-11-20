@@ -90,6 +90,9 @@
     <ClCompile Include="MessagesView.cpp">
       <Filter>Views</Filter>
     </ClCompile>
+    <ClCompile Include="MessageDecoder.cpp">
+      <Filter>Helpers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainFrm.h">
@@ -173,6 +176,9 @@
     <ClInclude Include="FrameWindowHelper.h">
       <Filter>Helpers</Filter>
     </ClInclude>
+    <ClInclude Include="MessageDecoder.h">
+      <Filter>Helpers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WinSpy.rc">
@@ -235,6 +241,15 @@
       <Filter>Resource Files\Icons</Filter>
     </Image>
     <Image Include="res\messages.ico">
+      <Filter>Resource Files\Icons</Filter>
+    </Image>
+    <Image Include="res\WindowSearch.ico">
+      <Filter>Resource Files\Icons</Filter>
+    </Image>
+    <Image Include="res\WindowSendToFront.ico">
+      <Filter>Resource Files\Icons</Filter>
+    </Image>
+    <Image Include="res\restore.ico">
       <Filter>Resource Files\Icons</Filter>
     </Image>
   </ItemGroup>

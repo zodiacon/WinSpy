@@ -219,6 +219,7 @@
     <ClCompile Include="ColumnManager.cpp" />
     <ClCompile Include="IconHelper.cpp" />
     <ClCompile Include="ImageIconCache.cpp" />
+    <ClCompile Include="MessageDecoder.cpp" />
     <ClCompile Include="MessagesView.cpp" />
     <ClCompile Include="ProcessesView.cpp" />
     <ClCompile Include="SecurityHelper.cpp" />
@@ -248,6 +249,7 @@
     <ClInclude Include="DialogHelper.h" />
     <ClInclude Include="IconHelper.h" />
     <ClInclude Include="ImageIconCache.h" />
+    <ClInclude Include="MessageDecoder.h" />
     <ClInclude Include="MessagesView.h" />
     <ClInclude Include="SecurityHelper.h" />
     <ClInclude Include="TreeViewFrame.h" />
@@ -282,6 +284,7 @@
     <Image Include="res\messages.ico" />
     <Image Include="res\Minimize.ico" />
     <Image Include="res\refresh.ico" />
+    <Image Include="res\restore.ico" />
     <Image Include="res\Target.ico" />
     <Image Include="res\window-close.ico" />
     <Image Include="res\window-hidden.ico" />
@@ -289,7 +292,9 @@
     <Image Include="res\window-properties.ico" />
     <Image Include="res\window.ico" />
     <Image Include="res\windows.ico" />
+    <Image Include="res\WindowSearch.ico" />
     <Image Include="res\WindowSendToBack.ico" />
+    <Image Include="res\WindowSendToFront.ico" />
     <Image Include="res\window_delete.ico" />
     <Image Include="res\window_new.ico" />
     <Image Include="res\WinSpy.ico" />

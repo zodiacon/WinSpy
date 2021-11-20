@@ -3,6 +3,7 @@
 #include "hooks.h"
 #include "FormatHelper.h"
 #include "WindowHelper.h"
+#include "MessageDecoder.h"
 
 bool CMessagesView::CaptureWindow(HWND hWnd) {
 	if (!m_hReadyEvent)
@@ -85,6 +86,9 @@ CString CMessagesView::GetColumnText(HWND hWnd, int row, int col) const {
 
 		case ColumnType::Point:
 			return FormatHelper::FormatPoint(item.pt);
+
+		case ColumnType::DecodedMessage:
+			return MessageDecoder::Decode(item.message, item.wParam, item.lParam);
 	}
 	return text;
 }
@@ -122,14 +126,14 @@ LRESULT CMessagesView::OnCreate(UINT, WPARAM, LPARAM, BOOL&) {
 		int format = LVCFMT_LEFT;
 		ColumnFlags flags = ColumnFlags::Visible;
 	} columns[] = {
-		{ L"Type", ColumnType::Type, 70 },
+//		{ L"Type", ColumnType::Type, 70 },
 		{ L"Time", ColumnType::Time, 120, LVCFMT_LEFT },
 		{ L"Window", ColumnType::Window, 100, LVCFMT_RIGHT },
 		{ L"Message", ColumnType::Message, 140, LVCFMT_LEFT },
 		{ L"WPARAM", ColumnType::wParam, 100, LVCFMT_RIGHT },
 		{ L"LPARAM", ColumnType::lParam, 100, LVCFMT_RIGHT },
 		{ L"Thread", ColumnType::Thread, 100, LVCFMT_RIGHT },
-		{ L"Decoded Message", ColumnType::DecodedMessage, 150 },
+		{ L"Decoded Message", ColumnType::DecodedMessage, 250 },
 		{ L"Process", ColumnType::Process, 100, LVCFMT_RIGHT },
 		{ L"Point", ColumnType::Point, 100, LVCFMT_RIGHT },
 	};
