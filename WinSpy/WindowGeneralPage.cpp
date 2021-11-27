@@ -56,12 +56,12 @@ void CWindowGeneralPage::FillStyleList(DWORD style, std::pair<StyleItem const*, 
 
 	CString text;
 	for (int i = 0; i < count; i++) {
-		if ((style & items[i].Value) == items[i].Value) {
+		if ((style & items[i].Mask) == items[i].Value) {
 			text.Format(L"%s%s (0x%X)", prefix, (PCWSTR)items[i].Text, items[i].Value);
 			lb.AddString(text);
 		}
 	}
-	if (lb.GetCount() == 0 && defaultStyle)
+	if (style == 0 && defaultStyle)
 		lb.AddString(CString(defaultStyle) + L" (0)");
 }
 
@@ -71,7 +71,7 @@ void CWindowGeneralPage::FillSpecificControlStyles() {
 		return;
 
 	auto style = m_Win.GetStyle() & 0xffff;
-	CString ATLPrefix = L"ATL:";
+	const CString ATLPrefix = L"ATL:";
 
 	static const struct {
 		PCWSTR className;
@@ -81,6 +81,16 @@ void CWindowGeneralPage::FillSpecificControlStyles() {
 		{ WC_LISTVIEW, WindowHelper::GetListViewStyleArray(), L"LVS_ALIGNTOP" },
 		{ WC_TREEVIEW, WindowHelper::GetTreeViewStyleArray() },
 		{ WC_TABCONTROL, WindowHelper::GetTabCtrlStyleArray(), L"TCS_TABS" },
+		{ WC_LISTBOX, WindowHelper::GetListBoxStyleArray(), L"" },
+		{ WC_COMBOBOX, WindowHelper::GetComboBoxStyleArray(), L"" },
+		{ WC_EDIT, WindowHelper::GetEditStyleArray(), L"ES_LEFT" },
+		{ WC_BUTTON, WindowHelper::GetButtonStyleArray(), L"BS_TEXT" },
+		{ WC_HEADER, WindowHelper::GetHeaderStyleArray(), L"HDS_HORZ" },
+		{ WC_STATIC, WindowHelper::GetStaticStyleArray(), L"SS_LEFT" },
+		{ TOOLTIPS_CLASS, WindowHelper::GetToolTipStyleArray(), L"" },
+		{ STATUSCLASSNAME, WindowHelper::GetStatusBarStyleArray(), L"" },
+		{ TOOLBARCLASSNAME, WindowHelper::GetToolBarStyleArray(), L"" },
+		{ REBARCLASSNAME, WindowHelper::GetRebarStyleArray(), L"" },
 	};
 
 	for (auto& item : controls) {

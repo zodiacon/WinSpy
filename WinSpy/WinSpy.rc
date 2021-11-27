@@ -59,8 +59,6 @@ BEGIN
     END
     POPUP "&Edit"
     BEGIN
-        MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
-        MENUITEM SEPARATOR
         MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
         MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
         MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
@@ -234,19 +232,19 @@ BEGIN
 END
 
 IDD_FINDWINDOW DIALOGEX 0, 0, 333, 146
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 CAPTION "Find Window"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT           "Handle:",IDC_STATIC,9,9,26,8
     EDITTEXT        IDC_HANDLE,41,7,69,14,ES_AUTOHSCROLL
-    LTEXT           "Class::",IDC_STATIC,9,30,23,8
+    LTEXT           "Class:",IDC_STATIC,9,30,20,8
     EDITTEXT        IDC_CLASSNAME,41,27,285,14,ES_AUTOHSCROLL
     LTEXT           "Text:",IDC_STATIC,16,50,18,8
     EDITTEXT        IDC_TEXT,41,48,285,14,ES_AUTOHSCROLL
     LTEXT           "Drag and drop over a window",IDC_STATIC,12,78,96,8
     ICON            IDI_TARGET,IDC_TARGET,119,72,20,20,SS_NOTIFY | SS_CENTERIMAGE
-    PUSHBUTTON      "Search",IDC_SEARCH,276,70,50,14
+    PUSHBUTTON      "Search",IDC_SEARCH,163,75,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,174,125,50,14
     PUSHBUTTON      "OK",IDOK,108,125,50,14
     CONTROL         "Hide main window while dragging",IDC_HIDE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,95,123,10
@@ -447,7 +445,23 @@ END
 
 IDD_FINDWINDOW AFX_DIALOG_LAYOUT
 BEGIN
-    0
+    0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 100, 0,
+    0, 0, 0, 0,
+    0, 0, 100, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    50, 100, 0, 0,
+    50, 100, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 100, 0
 END
 
 IDD_WINPROP AFX_DIALOG_LAYOUT
@@ -525,6 +539,7 @@ STRINGTABLE
 BEGIN
     ID_VIEW_TOOLBAR         "Show or hide the toolbar\nToggle ToolBar"
     ID_VIEW_STATUS_BAR      "Show or hide the status bar\nToggle StatusBar"
+    ID_VIEW_REFRESH         "\nRefresh"
 END
 
 STRINGTABLE
@@ -553,6 +568,30 @@ END
 STRINGTABLE
 BEGIN
     ATL_IDS_MRU_FILE        "Open this document"
+END
+
+STRINGTABLE
+BEGIN
+    ID_WINDOW_CLOSE         "\nClose Tab"
+    ID_WINDOW_CLOSE_ALL     "\nClose All Tabs"
+    ID_VIEW_ALLWINDOWS      "\nWindow Tree"
+    ID_VIEW_ALLPROCESSES    "\nProcesses, Threads && Windows"
+    ID_WINDOW_SHOW          "\nShow Window"
+    ID_WINDOW_HIDE          "\nHide Window"
+    ID_WINDOW_HIGHLIGHT     "\nHighlight Window"
+END
+
+STRINGTABLE
+BEGIN
+    ID_WINDOW_PROPERTIES    "\nWindow Properties"
+    ID_WINDOW_FIND          "\nFind Window"
+    ID_VIEW_HIDDENWINDOWS   "\nHidden Windows"
+    ID_VIEW_EMPTYTITLEWINDOWS "\nWindows with no Titles"
+END
+
+STRINGTABLE
+BEGIN
+    ID_WINDOW_MESSAGES      "\nMonitor Messages"
 END
 
 #endif    // English (United States) resources

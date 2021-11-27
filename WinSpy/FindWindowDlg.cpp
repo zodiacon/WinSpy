@@ -23,7 +23,27 @@ void CFindWindowDlg::ClearWindowDetails() {
 	}
 }
 
+void CFindWindowDlg::SelectWindow(HWND hWnd) {
+	CString text;
+	text.Format(L"0x%zX", DWORD_PTR(hWnd));
+	SetDlgItemText(IDC_HANDLE, text);
+	WCHAR clsName[128];
+	m_SelectedHwnd = hWnd;
+	if (::GetClassName(hWnd, clsName, _countof(clsName)))
+		SetDlgItemText(IDC_CLASSNAME, clsName);
+	CWindow win(hWnd);
+	win.GetWindowText(text);
+	SetDlgItemText(IDC_TEXT, text);
+	DWORD pid;
+	auto tid = ::GetWindowThreadProcessId(hWnd, &pid);
+	SetDlgItemInt(IDC_THREAD, tid, FALSE);
+	text.Format(L"%s (%d)", (PCWSTR)ProcessHelper::GetProcessImageName(pid), pid);
+	SetDlgItemText(IDC_PROCESS, text);
+}
+
 LRESULT CFindWindowDlg::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
+	InitDynamicLayout();
+	SetDialogIcon(IDI_WINDOWSEARCH);
 	m_WinDrag.SubclassWindow(GetDlgItem(IDC_TARGET));
 	m_WinDrag.SetIcon(AtlLoadIconImage(IDI_TARGET, 0, 32, 32));
 	m_DragCursor = AtlLoadIconImage(IDI_TARGET, 0, ::GetSystemMetrics(SM_CXCURSOR), ::GetSystemMetrics(SM_CYCURSOR));
@@ -45,6 +65,35 @@ LRESULT CFindWindowDlg::OnCloseCmd(WORD, WORD id, HWND, BOOL&) {
 	}
 
 	EndDialog(id);
+	return 0;
+}
+
+LRESULT CFindWindowDlg::OnSearch(WORD, WORD id, HWND, BOOL&) {
+	CString handle;
+	GetDlgItemText(IDC_HANDLE, handle);
+	if (!handle.IsEmpty()) {
+		auto hWnd = (HWND)FormatHelper::ParseHex(handle);
+		if (::IsWindow(hWnd)) {
+			SelectWindow(hWnd);
+		}
+		else {
+			AtlMessageBox(m_hWnd, (PCWSTR)(L"Cannot locate window with handle " + handle), L"Window Finder", MB_ICONERROR);
+		}
+		return 0;
+	}
+	CString text, cls;
+	GetDlgItemText(IDC_TEXT, text);
+	GetDlgItemText(IDC_CLASSNAME, cls);
+	if (text.IsEmpty() && cls.IsEmpty()) {
+		AtlMessageBox(m_hWnd, L"Specify handle, class and/or text to search", L"Window Finder", MB_ICONWARNING);
+		return 0;
+	}
+
+	auto hWnd = ::FindWindowEx(nullptr, nullptr, cls, text);
+	if (hWnd)
+		SelectWindow(hWnd);
+	else
+		AtlMessageBox(m_hWnd, L"Cannot locate window with this class/text", L"Window Finder", MB_ICONERROR);
 	return 0;
 }
 
@@ -87,17 +136,7 @@ LRESULT CFindWindowDlg::OnMouseMove(UINT, WPARAM, LPARAM lp, BOOL&) {
 			WindowHelper::HighlightBorder(hWnd);
 			m_hCursorWnd.Detach();
 			m_hCursorWnd.Attach(hWnd);
-			CString text;
-			text.Format(L"0x%zX", DWORD_PTR(hWnd));
-			SetDlgItemText(IDC_HANDLE, text);
-			WCHAR clsName[128];
-			if (::GetClassName(hWnd, clsName, _countof(clsName)))
-				SetDlgItemText(IDC_CLASSNAME, clsName);
-			m_hCursorWnd.GetWindowText(text);
-			SetDlgItemText(IDC_TEXT, text);
-			SetDlgItemInt(IDC_THREAD, tid, FALSE);
-			text.Format(L"%s (%d)", (PCWSTR)ProcessHelper::GetProcessImageName(pid), pid);
-			SetDlgItemText(IDC_PROCESS, text);
+			SelectWindow(hWnd);
 		}
 	}
 	return 0;

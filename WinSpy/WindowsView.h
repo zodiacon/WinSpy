@@ -7,7 +7,6 @@
 #include "TreeViewManager.h"
 #include "ViewBase.h"
 #include "WindowsListView.h"
-#include "TreeViewFrame.h"
 
 class CWindowsView : 
 	public CViewBase<CWindowsView>,

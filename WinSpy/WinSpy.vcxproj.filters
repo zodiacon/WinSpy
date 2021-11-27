@@ -84,9 +84,6 @@
     <ClCompile Include="SecurityHelper.cpp">
       <Filter>Helpers</Filter>
     </ClCompile>
-    <ClCompile Include="TreeViewFrame.cpp">
-      <Filter>Views</Filter>
-    </ClCompile>
     <ClCompile Include="MessagesView.cpp">
       <Filter>Views</Filter>
     </ClCompile>
@@ -168,9 +165,6 @@
       <Filter>Helpers</Filter>
     </ClInclude>
     <ClInclude Include="MessagesView.h">
-      <Filter>Views</Filter>
-    </ClInclude>
-    <ClInclude Include="TreeViewFrame.h">
       <Filter>Views</Filter>
     </ClInclude>
     <ClInclude Include="FrameWindowHelper.h">

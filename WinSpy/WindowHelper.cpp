@@ -8,6 +8,7 @@
 
 #define CASE_STR(x) case x: return L#x 
 #define PAIR_STR(x) { x, L#x }
+#define PAIR_STR2(x, mask) { x, L#x, mask }
 
 CString WindowHelper::WindowStyleToString(HWND hWnd) {
 	auto style = CWindow(hWnd).GetStyle();
@@ -324,7 +325,6 @@ std::pair<StyleItem const*, int> WindowHelper::GetClassStyleArray() {
 		PAIR_STR(CS_DBLCLKS),
 		PAIR_STR(CS_OWNDC),
 		PAIR_STR(CS_CLASSDC),
-		PAIR_STR(CS_HREDRAW),
 		PAIR_STR(CS_PARENTDC),
 		PAIR_STR(CS_SAVEBITS),
 		PAIR_STR(CS_GLOBALCLASS),
@@ -338,6 +338,188 @@ std::pair<StyleItem const*, int> WindowHelper::GetClassStyleArray() {
 
 	return std::make_pair(styles, (int)_countof(styles));
 }
+
+std::pair<StyleItem const*, int> WindowHelper::GetEditStyleArray() {
+	static const StyleItem styles[] = {
+		PAIR_STR(ES_AUTOHSCROLL),
+		PAIR_STR(ES_AUTOVSCROLL),
+		PAIR_STR(ES_READONLY),
+		PAIR_STR(ES_CENTER),
+		PAIR_STR(ES_RIGHT),
+		PAIR_STR(ES_NOHIDESEL),
+		PAIR_STR(ES_LOWERCASE),
+		PAIR_STR(ES_UPPERCASE),
+		PAIR_STR(ES_WANTRETURN),
+		PAIR_STR(ES_MULTILINE),
+		PAIR_STR(ES_PASSWORD),
+		PAIR_STR(ES_NUMBER),
+		PAIR_STR(ES_OEMCONVERT),
+	};
+	return std::make_pair(styles, (int)_countof(styles));
+}
+
+std::pair<StyleItem const*, int> WindowHelper::GetToolTipStyleArray() {
+	static const StyleItem styles[] = {
+		PAIR_STR(TTS_ALWAYSTIP),
+		PAIR_STR(TTS_BALLOON),
+		PAIR_STR(TTS_CLOSE),
+		PAIR_STR(TTS_NOANIMATE),
+		PAIR_STR(TTS_NOFADE),
+		PAIR_STR(TTS_NOPREFIX),
+		PAIR_STR(TTS_USEVISUALSTYLE),
+	};
+	return std::make_pair(styles, (int)_countof(styles));
+}
+
+std::pair<StyleItem const*, int> WindowHelper::GetStatusBarStyleArray() {
+	static const StyleItem styles[] = {
+		PAIR_STR(SBARS_SIZEGRIP),
+		PAIR_STR(SBARS_TOOLTIPS),
+	};
+	return std::make_pair(styles, (int)_countof(styles));
+}
+
+std::pair<StyleItem const*, int> WindowHelper::GetToolBarStyleArray() {
+	static const StyleItem styles[] = {
+		PAIR_STR(TBSTYLE_ALTDRAG),
+		PAIR_STR(TBSTYLE_FLAT),
+		PAIR_STR(TBSTYLE_LIST),
+		PAIR_STR(TBSTYLE_WRAPABLE),
+		PAIR_STR(TBSTYLE_CUSTOMERASE),
+		PAIR_STR(TBSTYLE_REGISTERDROP),
+	};
+	return std::make_pair(styles, (int)_countof(styles));
+}
+
+std::pair<StyleItem const*, int> WindowHelper::GetRebarStyleArray() {
+	static const StyleItem styles[] = {
+		PAIR_STR(RBS_AUTOSIZE),
+		PAIR_STR(RBS_BANDBORDERS),
+		PAIR_STR(RBS_DBLCLKTOGGLE),
+		PAIR_STR(RBS_FIXEDORDER),
+		PAIR_STR(RBS_VERTICALGRIPPER),
+		PAIR_STR(RBS_REGISTERDROP),
+		PAIR_STR(RBS_VARHEIGHT),
+		PAIR_STR(RBS_TOOLTIPS),
+	};
+	return std::make_pair(styles, (int)_countof(styles));
+}
+
+std::pair<StyleItem const*, int> WindowHelper::GetStaticStyleArray() {
+	static const StyleItem styles[] = {
+		PAIR_STR2(SS_RIGHT, SS_TYPEMASK),
+		PAIR_STR2(SS_BLACKFRAME, SS_TYPEMASK),
+		PAIR_STR2(SS_GRAYFRAME, SS_TYPEMASK),
+		PAIR_STR2(SS_SIMPLE, SS_TYPEMASK),
+		PAIR_STR2(SS_GRAYRECT, SS_TYPEMASK),
+		PAIR_STR2(SS_BLACKRECT, SS_TYPEMASK),
+		PAIR_STR2(SS_ICON, SS_TYPEMASK),
+		PAIR_STR2(SS_BITMAP, SS_TYPEMASK),
+		PAIR_STR2(SS_OWNERDRAW, SS_TYPEMASK),
+		PAIR_STR2(SS_ENHMETAFILE, SS_TYPEMASK),
+		PAIR_STR2(SS_ETCHEDFRAME, SS_TYPEMASK),
+		PAIR_STR2(SS_ETCHEDHORZ, SS_TYPEMASK),
+		PAIR_STR2(SS_ETCHEDVERT, SS_TYPEMASK),
+		PAIR_STR2(SS_WHITEFRAME, SS_TYPEMASK),
+		PAIR_STR2(SS_LEFTNOWORDWRAP, SS_TYPEMASK),
+		PAIR_STR2(SS_CENTER, SS_TYPEMASK),
+
+		PAIR_STR(SS_NOPREFIX),
+		PAIR_STR(SS_NOTIFY),
+		PAIR_STR(SS_CENTERIMAGE),
+		PAIR_STR(SS_SUNKEN),
+		PAIR_STR(SS_EDITCONTROL),
+		PAIR_STR(SS_RIGHTJUST),
+		PAIR_STR(SS_REALSIZEIMAGE),
+		PAIR_STR2(SS_PATHELLIPSIS, SS_ELLIPSISMASK),
+		PAIR_STR2(SS_WORDELLIPSIS, SS_ELLIPSISMASK),
+		PAIR_STR2(SS_ENDELLIPSIS, SS_ELLIPSISMASK),
+	};
+	return std::make_pair(styles, (int)_countof(styles));
+}
+
+std::pair<StyleItem const*, int> WindowHelper::GetHeaderStyleArray() {
+	static const StyleItem styles[] = {
+		PAIR_STR(HDS_BUTTONS),
+		PAIR_STR(HDS_CHECKBOXES),
+		PAIR_STR(HDS_DRAGDROP),
+		PAIR_STR(HDS_FILTERBAR),
+		PAIR_STR(HDS_FLAT),
+		PAIR_STR(HDS_FULLDRAG),
+		PAIR_STR(HDS_HIDDEN),
+		PAIR_STR(HDS_HOTTRACK),
+		PAIR_STR(HDS_NOSIZING),
+		PAIR_STR(HDS_OVERFLOW),
+	};
+	return std::make_pair(styles, (int)_countof(styles));
+}
+
+std::pair<StyleItem const*, int> WindowHelper::GetButtonStyleArray() {
+	static const StyleItem styles[] = {
+		PAIR_STR2(BS_AUTO3STATE, BS_TYPEMASK),
+		PAIR_STR2(BS_AUTOCHECKBOX, BS_TYPEMASK),
+		PAIR_STR2(BS_AUTORADIOBUTTON, BS_TYPEMASK),
+		PAIR_STR2(BS_GROUPBOX, BS_TYPEMASK),
+		PAIR_STR2(BS_OWNERDRAW, BS_TYPEMASK),
+		PAIR_STR2(BS_PUSHBOX, BS_TYPEMASK),
+		PAIR_STR2(BS_CHECKBOX, BS_TYPEMASK),
+		PAIR_STR2(BS_DEFPUSHBUTTON, BS_TYPEMASK),
+		PAIR_STR2(BS_DEFSPLITBUTTON, BS_TYPEMASK),
+
+		PAIR_STR(BS_CENTER),
+		PAIR_STR(BS_RIGHT),
+		PAIR_STR(BS_BITMAP),
+		PAIR_STR(BS_BOTTOM),
+		PAIR_STR(BS_COMMANDLINK),
+		PAIR_STR(BS_FLAT),
+		PAIR_STR(BS_NOTIFY),
+		PAIR_STR(BS_MULTILINE),
+		PAIR_STR(BS_TOP),
+		PAIR_STR(BS_FLAT),
+		PAIR_STR(BS_LEFTTEXT),
+		PAIR_STR2(BS_USERBUTTON, BS_TYPEMASK),
+	};
+	return std::make_pair(styles, (int)_countof(styles));
+}
+
+std::pair<StyleItem const*, int> WindowHelper::GetListBoxStyleArray() {
+	static const StyleItem styles[] = {
+		PAIR_STR(LBS_COMBOBOX),
+		PAIR_STR(LBS_NOSEL),
+		PAIR_STR(LBS_SORT),
+		PAIR_STR(LBS_NOTIFY),
+		PAIR_STR(LBS_NOREDRAW),
+		PAIR_STR(LBS_MULTICOLUMN),
+		PAIR_STR(LBS_MULTIPLESEL),
+		PAIR_STR(LBS_HASSTRINGS),
+		PAIR_STR(LBS_USETABSTOPS),
+		PAIR_STR(LBS_NOINTEGRALHEIGHT),
+		PAIR_STR(LBS_OWNERDRAWFIXED),
+		PAIR_STR(LBS_OWNERDRAWVARIABLE),
+		PAIR_STR(LBS_WANTKEYBOARDINPUT),
+		PAIR_STR(LBS_EXTENDEDSEL),
+		PAIR_STR(LBS_DISABLENOSCROLL),
+	};
+	return std::make_pair(styles, (int)_countof(styles));
+}
+
+std::pair<StyleItem const*, int> WindowHelper::GetComboBoxStyleArray() {
+	static const StyleItem styles[] = {
+		PAIR_STR(CBS_AUTOHSCROLL),
+		PAIR_STR(CBS_SIMPLE),
+		PAIR_STR(CBS_SORT),
+		PAIR_STR(CBS_DROPDOWN),
+		PAIR_STR(CBS_DROPDOWNLIST),
+		PAIR_STR(CBS_HASSTRINGS),
+		PAIR_STR(CBS_HASSTRINGS),
+		PAIR_STR(CBS_UPPERCASE),
+		PAIR_STR(CBS_LOWERCASE),
+		PAIR_STR(CBS_OWNERDRAWFIXED),
+		PAIR_STR(CBS_OWNERDRAWVARIABLE),
+	};
+	return std::make_pair(styles, (int)_countof(styles));
+}
+
 
 CString WindowHelper::WindowMessageToString(DWORD msg) {
 	switch (msg) {
