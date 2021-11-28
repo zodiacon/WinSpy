@@ -420,7 +420,7 @@ BEGIN
             VALUE "FileDescription", "WinSpy - Examine Windows Propertiea and Messages"
             VALUE "FileVersion", "0.2.0.0"
             VALUE "InternalName", "WinSpy"
-            VALUE "LegalCopyright", "(C) 2021 Pavel Yosifovich"
+            VALUE "LegalCopyright", "©2021 Pavel Yosifovich"
             VALUE "OriginalFilename", "WinSpy.exe"
             VALUE "ProductName", "WinSpy v0.2"
             VALUE "ProductVersion", "0.2.0.0"
@@ -482,7 +482,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDR_MAINFRAME           "WinSpy"
+    IDR_MAINFRAME           "WinSpy v0.2 ©Pavel Yosifovich "
+    IDS_TITLE               "WinSpy"
 END
 
 STRINGTABLE

@@ -47,6 +47,7 @@ private:
 		return m_hWnd;
 	}
 	CMessagesView* CreateMessagesView() override;
+	void CloseTab(CWindow* win) override;
 
 	void InitToolBar(CToolBarCtrl& tb);
 	void InitCommandBar();

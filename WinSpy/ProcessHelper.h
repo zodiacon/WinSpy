@@ -24,5 +24,9 @@ struct ProcessHelper {
 	static CString GetProcessImageName(DWORD pid, bool fullPath = false);
 	static ProcessesInfo EnumProcessesAndThreads(EnumProcessesOptions options);
 	static void ShowProcessProperties(ProcessInfo const& pi);
+	static void EnumProcesses();
+
+private:
+	inline static std::unordered_map<DWORD, CString> _names;
 };
 

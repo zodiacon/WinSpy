@@ -7,6 +7,7 @@ struct IMainFrame {
 	virtual UINT ShowContextMenu(HMENU hMenu, const POINT& pt, DWORD flags = 0) = 0;
 	virtual HWND GetHwnd() const = 0;
 	virtual CMessagesView* CreateMessagesView() = 0;
+	virtual void CloseTab(CWindow* win) = 0;
 };
 
 struct ToolBarButtonInfo {

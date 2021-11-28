@@ -18,7 +18,7 @@ struct CVirtualListView {
 		NOTIFY_CODE_HANDLER(NM_DBLCLK, OnDoubleClick)
 
 		//NOTIFY_CODE_HANDLER(LVN_ITEMCHANGED, OnItemChanged)
-		ALT_MSG_MAP(1)
+	ALT_MSG_MAP(1)
 		REFLECTED_NOTIFY_CODE_HANDLER(LVN_GETDISPINFO, OnGetDispInfo)
 		REFLECTED_NOTIFY_CODE_HANDLER(LVN_COLUMNCLICK, OnColumnClick)
 		REFLECTED_NOTIFY_CODE_HANDLER(LVN_ODFINDITEM, OnFindItem)
@@ -26,6 +26,13 @@ struct CVirtualListView {
 		REFLECTED_NOTIFY_CODE_HANDLER(NM_DBLCLK, OnDoubleClick)
 		//REFLECTED_NOTIFY_CODE_HANDLER(LVN_ITEMCHANGED, OnItemChanged)
 	END_MSG_MAP()
+
+	//IListView* GetIListView(HWND hWnd) {
+	//	#define LVM_QUERYINTERFACE (LVM_FIRST + 189)
+	//	IListView* p{ nullptr };
+	//	::SendMessage(hWnd, LVM_QUERYINTERFACE, (WPARAM) & __uuidof(IListView), (LPARAM)&p);
+	//	return p;
+	//}
 
 	struct SortInfo {
 		int SortColumn = -1;

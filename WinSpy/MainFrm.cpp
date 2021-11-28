@@ -224,6 +224,10 @@ CMessagesView* CMainFrame::CreateMessagesView() {
 	return pView;
 }
 
+void CMainFrame::CloseTab(CWindow* win) {
+	m_view.RemovePage(m_view.GetActivePage());
+}
+
 void CMainFrame::InitToolBar(CToolBarCtrl& tb) {
 	CImageList tbImages;
 	tbImages.Create(24, 24, ILC_COLOR32, 8, 4);

@@ -769,3 +769,11 @@ CString WindowHelper::WindowMessageToString(DWORD msg) {
 	return L"";
 }
 
+ULONG_PTR WindowHelper::GetID(HWND hWnd) {
+	return ::GetWindowLongPtr(hWnd, GWLP_ID);
+}
+
+ULONG_PTR WindowHelper::GetUserData(HWND hWnd) {
+	return ::GetWindowLongPtr(hWnd, GWLP_USERDATA);
+}
+

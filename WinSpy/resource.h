@@ -5,6 +5,7 @@
 #define IDD_ABOUTBOX                    100
 #define IDD_PROPWINDOWS                 107
 #define IDR_MAINFRAME                   128
+#define IDS_TITLE                       129
 #define IDI_WINDOW                      201
 #define IDI_WINDOW_HIDDEN               202
 #define IDI_WINDOW_DELETE               204
@@ -27,7 +28,6 @@
 #define IDI_MESSAGES                    224
 #define IDI_WINDOWSEARCH                225
 #define IDI_SENDTOFRONT                 227
-#define IDI_ICON1                       228
 #define IDI_RESTORE                     228
 #define IDC_HANDLE                      1000
 #define IDC_CLASSNAME                   1001

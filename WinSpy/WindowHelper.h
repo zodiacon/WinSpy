@@ -31,6 +31,8 @@ struct WindowHelper abstract final {
 	static bool ThreadHasWindows(DWORD tid);
 	static int ShowWindowProperties(HWND hWnd);
 	static CString WindowMessageToString(DWORD msg);
+	static ULONG_PTR GetID(HWND hWnd);
+	static ULONG_PTR GetUserData(HWND hWnd);
 
 	static std::pair<StyleItem const*, int> GetWindowStyleArray();
 	static std::pair<StyleItem const*, int> GetListViewStyleArray();

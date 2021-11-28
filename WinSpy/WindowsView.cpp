@@ -397,7 +397,10 @@ CTreeItem CWindowsView::AddMessageOnlyWindows() {
 LRESULT CWindowsView::OnCaptureMessages(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
 	if (m_SelectedHwnd) {
 		auto view = GetFrame()->CreateMessagesView();
-		view->CaptureWindow(m_SelectedHwnd);
+		if (!view->CaptureWindow(m_SelectedHwnd)) {
+			AtlMessageBox(m_hWnd, L"Failed to register hook", IDS_TITLE, MB_ICONERROR);
+			GetFrame()->CloseTab(view);
+		}
 	}
 	return 0;
 }

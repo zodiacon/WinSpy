@@ -35,6 +35,10 @@ void CWindowGeneralPage::UpdateData() {
 	SetDlgItemText(IDC_STYLE, text);
 	text.Format(L"0x%08X\n", wi.dwExStyle);
 	SetDlgItemText(IDC_STYLEEX, text);
+	text.Format(L"0x%zX", m_Win.GetMenu() ? (ULONG_PTR)m_Win.GetMenu() : WindowHelper::GetID(m_Win));
+	SetDlgItemText(IDC_MENU, text);
+	text.Format(L"0x%zX", m_Win.GetWindowLongPtr(GWLP_USERDATA));
+	SetDlgItemText(IDC_USERDATA, text);
 
 	WCHAR className[128];
 	if (::GetClassName(m_Win, className, _countof(className)))

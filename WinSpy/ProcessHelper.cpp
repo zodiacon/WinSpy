@@ -5,6 +5,9 @@
 #include <unordered_set>
 
 CString ProcessHelper::GetProcessImageName(DWORD pid, bool fullPath) {
+	if (_names.empty())
+		EnumProcesses();
+
 	auto hProcess = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
 	CString result;
 	if (hProcess) {
@@ -15,6 +18,9 @@ CString ProcessHelper::GetProcessImageName(DWORD pid, bool fullPath) {
 		}
 		::CloseHandle(hProcess);
 	}
+	else if (auto it = _names.find(pid); it != _names.end())
+		return it->second;
+
 	return result;
 }
 
@@ -81,7 +87,7 @@ ProcessesInfo ProcessHelper::EnumProcessesAndThreads(EnumProcessesOptions option
 
 		auto& pi = processes[processMap[te.th32OwnerProcessID]];
 		if ((options & EnumProcessesOptions::UIThreadsOnly) == EnumProcessesOptions::UIThreadsOnly) {
-			if(!WindowHelper::ThreadHasWindows(te.th32ThreadID) && !msgOnly.contains(te.th32ThreadID))
+			if (!WindowHelper::ThreadHasWindows(te.th32ThreadID) && !msgOnly.contains(te.th32ThreadID))
 				continue;
 		}
 		pi.Threads.push_back(te.th32ThreadID);
@@ -100,5 +106,29 @@ ProcessesInfo ProcessHelper::EnumProcessesAndThreads(EnumProcessesOptions option
 }
 
 void ProcessHelper::ShowProcessProperties(ProcessInfo const& pi) {
+}
+
+void ProcessHelper::EnumProcesses() {
+	auto hSnapshot = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	ATLASSERT(hSnapshot != INVALID_HANDLE_VALUE);
+	if (hSnapshot == INVALID_HANDLE_VALUE) {
+		_names.insert({ 0, L"(Idle)" });
+		return;
+	}
+
+	PROCESSENTRY32 pe;
+	pe.dwSize = sizeof(pe);
+	::Process32First(hSnapshot, &pe);
+	_names.reserve(512);
+
+	while (::Process32Next(hSnapshot, &pe)) {
+		auto hProcess = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pe.th32ProcessID);
+		if (!hProcess) {
+			_names.insert({ pe.th32ProcessID, pe.szExeFile });
+		}
+		else {
+			::CloseHandle(hProcess);
+		}
+	}
 }
 

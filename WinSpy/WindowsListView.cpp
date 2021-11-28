@@ -34,14 +34,14 @@ LRESULT CWindowsListView::OnCreate(UINT, WPARAM, LPARAM, BOOL&) {
 		{ L"Process Name", DataItemType::ProcessName, 120 },
 		{ L"TID", DataItemType::ThreadId, 70, LVCFMT_RIGHT },
 		{ L"Rectangle", DataItemType::Rectangle, 170, LVCFMT_LEFT, ColumnFlags::None },
-		{ L"Parent HWND", DataItemType::ParentWindow, 100, LVCFMT_RIGHT, ColumnFlags::Fixed },
-		{ L"Owner HWND", DataItemType::OwnerWindow, 100, LVCFMT_RIGHT, ColumnFlags::Fixed },
-		{ L"Next HWND", DataItemType::NextWindow, 100, LVCFMT_RIGHT, ColumnFlags::Fixed },
-		{ L"Previous HWND", DataItemType::PrevWindow, 100, LVCFMT_RIGHT, ColumnFlags::Fixed },
-		{ L"First Child HWND", DataItemType::FirstChildWindow, 100, LVCFMT_RIGHT, ColumnFlags::Fixed },
+		{ L"Parent HWND", DataItemType::ParentWindow, 100, LVCFMT_RIGHT, ColumnFlags::Fixed | ColumnFlags::Visible },
+		{ L"Owner HWND", DataItemType::OwnerWindow, 100, LVCFMT_RIGHT, ColumnFlags::Fixed | ColumnFlags::Visible },
+		{ L"Next HWND", DataItemType::NextWindow, 100, LVCFMT_RIGHT, ColumnFlags::Fixed | ColumnFlags::Visible },
+		{ L"Prev HWND", DataItemType::PrevWindow, 100, LVCFMT_RIGHT, ColumnFlags::Fixed | ColumnFlags::Visible },
+		{ L"Child HWND", DataItemType::FirstChildWindow, 100, LVCFMT_RIGHT, ColumnFlags::Fixed | ColumnFlags::Visible },
 		{ L"WndProc", DataItemType::WindowProc, 100, LVCFMT_RIGHT, ColumnFlags::Fixed },
-		{ L"User Data", DataItemType::UserData, 100, LVCFMT_RIGHT, ColumnFlags::Fixed },
-		{ L"ID", DataItemType::ID, 80, LVCFMT_RIGHT, ColumnFlags::Fixed },
+		{ L"User Data", DataItemType::UserData, 100, LVCFMT_RIGHT },
+		{ L"ID", DataItemType::ID, 80, LVCFMT_RIGHT },
 		{ L"Class Atom", DataItemType::ClassAtom, 90, LVCFMT_RIGHT },
 		{ L"Class Style", DataItemType::ClassStyle, 80, LVCFMT_RIGHT, ColumnFlags::Fixed },
 		{ L"Class Extra Bytes", DataItemType::ClassExtra, 70, LVCFMT_RIGHT, ColumnFlags::Fixed },
@@ -126,6 +126,8 @@ CString CWindowsListView::GetColumnText(HWND, int row, int col) const {
 
 		case DataItemType::Text:
 			win.GetWindowText(text);
+			if (text.GetLength() > 256)
+				text = text.Left(256) + L"...";
 			break;
 
 		case DataItemType::WindowProc:
@@ -190,11 +192,18 @@ void CWindowsListView::DoSort(const SortInfo* si) {
 			case DataItemType::ClassName: return SortHelper::SortStrings(WindowHelper::GetWindowClassName(h1.hWnd), WindowHelper::GetWindowClassName(h2.hWnd), si->SortAscending);
 			case DataItemType::Text: return SortHelper::SortStrings(WindowHelper::GetWindowText(h1.hWnd), WindowHelper::GetWindowText(h2.hWnd), si->SortAscending);
 			case DataItemType::Handle: return SortHelper::SortNumbers(h1.hWnd, h2.hWnd, si->SortAscending);
+			case DataItemType::FirstChildWindow: return SortHelper::SortNumbers(::GetWindow(h1.hWnd, GW_CHILD), ::GetWindow(h2.hWnd, GW_CHILD), si->SortAscending);
+			case DataItemType::PrevWindow: return SortHelper::SortNumbers(::GetWindow(h1.hWnd, GW_HWNDPREV), ::GetWindow(h2.hWnd, GW_HWNDPREV), si->SortAscending);
+			case DataItemType::NextWindow: return SortHelper::SortNumbers(::GetWindow(h1.hWnd, GW_HWNDNEXT), ::GetWindow(h2.hWnd, GW_HWNDNEXT), si->SortAscending);
+			case DataItemType::OwnerWindow: return SortHelper::SortNumbers(::GetWindow(h1.hWnd, GW_OWNER), ::GetWindow(h2.hWnd, GW_OWNER), si->SortAscending);
+			case DataItemType::ParentWindow: return SortHelper::SortNumbers(::GetParent(h1.hWnd), ::GetParent(h2.hWnd), si->SortAscending);
 			case DataItemType::Style: return SortHelper::SortNumbers(CWindow(h1.hWnd).GetStyle(), CWindow(h2.hWnd).GetStyle(), si->SortAscending);
 			case DataItemType::ExtendedStyle: return SortHelper::SortNumbers(CWindow(h1.hWnd).GetExStyle(), CWindow(h2.hWnd).GetExStyle(), si->SortAscending);
 			case DataItemType::ThreadId: return SortHelper::SortNumbers(h1.ThreadId, h2.ThreadId, si->SortAscending);
 			case DataItemType::ProcessId: return SortHelper::SortNumbers(h1.ProcessId, h2.ProcessId, si->SortAscending);
 			case DataItemType::ProcessName: return SortHelper::SortStrings(h1.ProcessName, h2.ProcessName, si->SortAscending);
+			case DataItemType::ID: return SortHelper::SortNumbers(WindowHelper::GetID(h1.hWnd), WindowHelper::GetID(h2.hWnd), si->SortAscending);
+			case DataItemType::UserData: return SortHelper::SortNumbers(WindowHelper::GetUserData(h1.hWnd), WindowHelper::GetUserData(h2.hWnd), si->SortAscending);
 		}
 		return false;
 		});
