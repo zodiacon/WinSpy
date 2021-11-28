@@ -53,10 +53,12 @@ void CWindowGeneralPage::UpdateData() {
 	FillStyleList(clsStyle, WindowHelper::GetClassStyleArray(), IDC_CLASSSTYLE, L"", nullptr);
 }
 
-void CWindowGeneralPage::FillStyleList(DWORD style, std::pair<StyleItem const*, int> styles, UINT id, PCWSTR prefix, PCWSTR defaultStyle) {
+void CWindowGeneralPage::FillStyleList(DWORD style, std::pair<StyleItem const*, int> styles, UINT id, PCWSTR prefix, PCWSTR defaultStyle, bool clear) {
 	auto const [items, count] = styles;
 	CListBox lb(GetDlgItem(id));
 	ATLASSERT(lb);
+	if(clear)
+		lb.ResetContent();
 
 	CString text;
 	for (int i = 0; i < count; i++) {
@@ -95,11 +97,12 @@ void CWindowGeneralPage::FillSpecificControlStyles() {
 		{ STATUSCLASSNAME, WindowHelper::GetStatusBarStyleArray(), L"" },
 		{ TOOLBARCLASSNAME, WindowHelper::GetToolBarStyleArray(), L"" },
 		{ REBARCLASSNAME, WindowHelper::GetRebarStyleArray(), L"" },
+		{ WC_SCROLLBAR, WindowHelper::GetScrollBarStyleArray(), L"SBS_HORZ" },
 	};
 
 	for (auto& item : controls) {
 		if (_wcsicmp(name, item.className) == 0 || _wcsicmp(name, ATLPrefix + item.className) == 0) {
-			FillStyleList(style, item.items, IDC_STYLES, L"", item.def);
+			FillStyleList(style, item.items, IDC_STYLES, L"", item.def, false);
 			break;
 		}
 	}

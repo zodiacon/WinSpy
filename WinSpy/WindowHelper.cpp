@@ -371,6 +371,19 @@ std::pair<StyleItem const*, int> WindowHelper::GetToolTipStyleArray() {
 	return std::make_pair(styles, (int)_countof(styles));
 }
 
+std::pair<StyleItem const*, int> WindowHelper::GetScrollBarStyleArray() {
+	static const StyleItem styles[] = {
+		PAIR_STR(SBS_VERT),
+		PAIR_STR(SBS_SIZEBOX),
+		PAIR_STR(SBS_SIZEGRIP),
+		PAIR_STR(SBS_RIGHTALIGN),
+		PAIR_STR(SBS_BOTTOMALIGN),
+		PAIR_STR(SBS_TOPALIGN),
+		PAIR_STR(SBS_LEFTALIGN),
+	};
+	return std::make_pair(styles, (int)_countof(styles));
+}
+
 std::pair<StyleItem const*, int> WindowHelper::GetStatusBarStyleArray() {
 	static const StyleItem styles[] = {
 		PAIR_STR(SBARS_SIZEGRIP),

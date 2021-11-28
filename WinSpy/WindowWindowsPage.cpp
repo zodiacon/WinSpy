@@ -22,7 +22,7 @@ void CWindowWindowsPage::UpdateData() {
             SetDlgItemText(item.idHandle, L"(none)    ");
             continue;
         }
-        text.Format(L"<a>0x%X</a>", (ULONG_PTR)item.win.m_hWnd);
+        text.Format(L"<a>0x%zX</a>", (ULONG_PTR)item.win.m_hWnd);
         SetDlgItemText(item.idHandle, text);
         if (::GetClassName(item.win, text.GetBufferSetLength(128), 128))
             SetDlgItemText(item.idClass, text);

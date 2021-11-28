@@ -50,6 +50,7 @@ struct WindowHelper abstract final {
 	static std::pair<StyleItem const*, int> GetStatusBarStyleArray();
 	static std::pair<StyleItem const*, int> GetToolBarStyleArray();
 	static std::pair<StyleItem const*, int> GetRebarStyleArray();
+	static std::pair<StyleItem const*, int> GetScrollBarStyleArray();
 };
 
 
