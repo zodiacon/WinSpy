@@ -60,26 +60,26 @@ LRESULT CWindowsListView::OnCreate(UINT, WPARAM, LPARAM, BOOL&) {
 
 LRESULT CWindowsListView::OnWindowShow(WORD, WORD, HWND, BOOL&) {
 	CWindow win(m_Items[m_List.GetSelectionMark()].hWnd);
-	win.ShowWindow(SW_SHOW);
+	win.ShowWindowAsync(SW_SHOW);
 
 	return 0;
 }
 
 LRESULT CWindowsListView::OnWindowHide(WORD, WORD, HWND, BOOL&) {
 	ATLASSERT(m_SelectedHwnd);
-	m_SelectedHwnd.ShowWindow(SW_HIDE);
+	m_SelectedHwnd.ShowWindowAsync(SW_HIDE);
 	return 0;
 }
 
 LRESULT CWindowsListView::OnWindowMinimize(WORD, WORD, HWND, BOOL&) {
 	CWindow win(m_Items[m_List.GetSelectionMark()].hWnd);
-	win.ShowWindow(SW_MINIMIZE);
+	win.ShowWindowAsync(SW_MINIMIZE);
 	return 0;
 }
 
 LRESULT CWindowsListView::OnWindowMaximize(WORD, WORD, HWND, BOOL&) {
 	CWindow win(m_Items[m_List.GetSelectionMark()].hWnd);
-	win.ShowWindow(SW_MAXIMIZE);
+	win.ShowWindowAsync(SW_MAXIMIZE);
 
 	return 0;
 }
@@ -386,7 +386,7 @@ LRESULT CWindowsListView::OnToggleChildWindows(WORD, WORD, HWND, BOOL&) {
 
 LRESULT CWindowsListView::OnWindowRestore(WORD, WORD, HWND, BOOL&) {
 	CWindow win(m_Items[m_List.GetSelectionMark()].hWnd);
-	win.ShowWindow(SW_RESTORE);
+	win.ShowWindowAsync(SW_RESTORE);
 	return 0;
 }
 

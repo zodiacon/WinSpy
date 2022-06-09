@@ -11,6 +11,7 @@
 #include "SortHelper.h"
 #include "MessagesView.h"
 
+
 BOOL CWindowsView::PreTranslateMessage(MSG* pMsg) {
 	pMsg;
 	return FALSE;
@@ -265,39 +266,39 @@ LRESULT CWindowsView::OnNodeSelected(int, LPNMHDR hdr, BOOL&) {
 
 LRESULT CWindowsView::OnWindowShow(WORD, WORD, HWND, BOOL&) {
 	if (m_SelectedHwnd)
-		m_SelectedHwnd.ShowWindow(SW_SHOW);
+		m_SelectedHwnd.ShowWindowAsync(SW_SHOW);
 
 	return 0;
 }
 
 LRESULT CWindowsView::OnWindowHide(WORD, WORD, HWND, BOOL&) {
 	if (m_SelectedHwnd)
-		m_SelectedHwnd.ShowWindow(SW_HIDE);
+		m_SelectedHwnd.ShowWindowAsync(SW_HIDE);
 	return 0;
 }
 
 LRESULT CWindowsView::OnWindowClose(WORD, WORD, HWND, BOOL&) {
 	if (m_SelectedHwnd)
-		m_SelectedHwnd.SendMessage(WM_CLOSE);
+		m_SelectedHwnd.PostMessage(WM_CLOSE);
 	return 0;
 }
 
 LRESULT CWindowsView::OnWindowMinimize(WORD, WORD, HWND, BOOL&) {
 	if (m_SelectedHwnd)
-		m_SelectedHwnd.ShowWindow(SW_MINIMIZE);
+		m_SelectedHwnd.ShowWindowAsync(SW_MINIMIZE);
 	return 0;
 }
 
 LRESULT CWindowsView::OnWindowMaximize(WORD, WORD, HWND, BOOL&) {
 	if (m_SelectedHwnd)
-		m_SelectedHwnd.ShowWindow(SW_MAXIMIZE);
+		m_SelectedHwnd.ShowWindowAsync(SW_MAXIMIZE);
 
 	return 0;
 }
 
 LRESULT CWindowsView::OnWindowRestore(WORD, WORD, HWND, BOOL&) {
 	if (m_SelectedHwnd)
-		m_SelectedHwnd.ShowWindow(SW_RESTORE);
+		m_SelectedHwnd.ShowWindowAsync(SW_RESTORE);
 	return 0;
 }
 
