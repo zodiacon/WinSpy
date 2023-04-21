@@ -15,8 +15,8 @@ public:
 	CWindowsListView(IMainFrame* frame) : m_pFrame(frame) {}
 
 	CString GetColumnText(HWND, int row, int col) const;
-	int GetRowImage(HWND, int row) const;
-	bool IsSortable(int col) const;
+	int GetRowImage(HWND, int row, int col) const;
+	bool IsSortable(HWND, int col) const;
 	void DoSort(const SortInfo* si);
 	bool OnRightClickList(HWND, int row, int col, CPoint const&);
 	bool OnDoubleClickList(HWND, int row, int col, CPoint const&);

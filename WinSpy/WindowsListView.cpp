@@ -167,7 +167,7 @@ CString CWindowsListView::GetColumnText(HWND, int row, int col) const {
 	return text;
 }
 
-int CWindowsListView::GetRowImage(HWND, int row) const {
+int CWindowsListView::GetRowImage(HWND, int row, int col) const {
 	auto& item = m_Items[row];
 	auto h = item.hWnd;
 	auto& icons = WindowHelper::GetIconMap();
@@ -189,21 +189,21 @@ void CWindowsListView::DoSort(const SortInfo* si) {
 
 	std::sort(m_Items.begin(), m_Items.end(), [&](const auto& h1, const auto& h2) -> bool {
 		switch (GetColumnManager(m_List)->GetColumnTag<DataItemType>(si->SortColumn)) {
-			case DataItemType::ClassName: return SortHelper::SortStrings(WindowHelper::GetWindowClassName(h1.hWnd), WindowHelper::GetWindowClassName(h2.hWnd), si->SortAscending);
-			case DataItemType::Text: return SortHelper::SortStrings(WindowHelper::GetWindowText(h1.hWnd), WindowHelper::GetWindowText(h2.hWnd), si->SortAscending);
-			case DataItemType::Handle: return SortHelper::SortNumbers(h1.hWnd, h2.hWnd, si->SortAscending);
-			case DataItemType::FirstChildWindow: return SortHelper::SortNumbers(::GetWindow(h1.hWnd, GW_CHILD), ::GetWindow(h2.hWnd, GW_CHILD), si->SortAscending);
-			case DataItemType::PrevWindow: return SortHelper::SortNumbers(::GetWindow(h1.hWnd, GW_HWNDPREV), ::GetWindow(h2.hWnd, GW_HWNDPREV), si->SortAscending);
-			case DataItemType::NextWindow: return SortHelper::SortNumbers(::GetWindow(h1.hWnd, GW_HWNDNEXT), ::GetWindow(h2.hWnd, GW_HWNDNEXT), si->SortAscending);
-			case DataItemType::OwnerWindow: return SortHelper::SortNumbers(::GetWindow(h1.hWnd, GW_OWNER), ::GetWindow(h2.hWnd, GW_OWNER), si->SortAscending);
-			case DataItemType::ParentWindow: return SortHelper::SortNumbers(::GetParent(h1.hWnd), ::GetParent(h2.hWnd), si->SortAscending);
-			case DataItemType::Style: return SortHelper::SortNumbers(CWindow(h1.hWnd).GetStyle(), CWindow(h2.hWnd).GetStyle(), si->SortAscending);
-			case DataItemType::ExtendedStyle: return SortHelper::SortNumbers(CWindow(h1.hWnd).GetExStyle(), CWindow(h2.hWnd).GetExStyle(), si->SortAscending);
-			case DataItemType::ThreadId: return SortHelper::SortNumbers(h1.ThreadId, h2.ThreadId, si->SortAscending);
-			case DataItemType::ProcessId: return SortHelper::SortNumbers(h1.ProcessId, h2.ProcessId, si->SortAscending);
-			case DataItemType::ProcessName: return SortHelper::SortStrings(h1.ProcessName, h2.ProcessName, si->SortAscending);
-			case DataItemType::ID: return SortHelper::SortNumbers(WindowHelper::GetID(h1.hWnd), WindowHelper::GetID(h2.hWnd), si->SortAscending);
-			case DataItemType::UserData: return SortHelper::SortNumbers(WindowHelper::GetUserData(h1.hWnd), WindowHelper::GetUserData(h2.hWnd), si->SortAscending);
+			case DataItemType::ClassName: return SortHelper::Sort(WindowHelper::GetWindowClassName(h1.hWnd), WindowHelper::GetWindowClassName(h2.hWnd), si->SortAscending);
+			case DataItemType::Text: return SortHelper::Sort(WindowHelper::GetWindowText(h1.hWnd), WindowHelper::GetWindowText(h2.hWnd), si->SortAscending);
+			case DataItemType::Handle: return SortHelper::Sort(h1.hWnd, h2.hWnd, si->SortAscending);
+			case DataItemType::FirstChildWindow: return SortHelper::Sort(::GetWindow(h1.hWnd, GW_CHILD), ::GetWindow(h2.hWnd, GW_CHILD), si->SortAscending);
+			case DataItemType::PrevWindow: return SortHelper::Sort(::GetWindow(h1.hWnd, GW_HWNDPREV), ::GetWindow(h2.hWnd, GW_HWNDPREV), si->SortAscending);
+			case DataItemType::NextWindow: return SortHelper::Sort(::GetWindow(h1.hWnd, GW_HWNDNEXT), ::GetWindow(h2.hWnd, GW_HWNDNEXT), si->SortAscending);
+			case DataItemType::OwnerWindow: return SortHelper::Sort(::GetWindow(h1.hWnd, GW_OWNER), ::GetWindow(h2.hWnd, GW_OWNER), si->SortAscending);
+			case DataItemType::ParentWindow: return SortHelper::Sort(::GetParent(h1.hWnd), ::GetParent(h2.hWnd), si->SortAscending);
+			case DataItemType::Style: return SortHelper::Sort(CWindow(h1.hWnd).GetStyle(), CWindow(h2.hWnd).GetStyle(), si->SortAscending);
+			case DataItemType::ExtendedStyle: return SortHelper::Sort(CWindow(h1.hWnd).GetExStyle(), CWindow(h2.hWnd).GetExStyle(), si->SortAscending);
+			case DataItemType::ThreadId: return SortHelper::Sort(h1.ThreadId, h2.ThreadId, si->SortAscending);
+			case DataItemType::ProcessId: return SortHelper::Sort(h1.ProcessId, h2.ProcessId, si->SortAscending);
+			case DataItemType::ProcessName: return SortHelper::Sort(h1.ProcessName, h2.ProcessName, si->SortAscending);
+			case DataItemType::ID: return SortHelper::Sort(WindowHelper::GetID(h1.hWnd), WindowHelper::GetID(h2.hWnd), si->SortAscending);
+			case DataItemType::UserData: return SortHelper::Sort(WindowHelper::GetUserData(h1.hWnd), WindowHelper::GetUserData(h2.hWnd), si->SortAscending);
 		}
 		return false;
 		});
@@ -222,7 +222,7 @@ bool CWindowsListView::OnRightClickList(HWND, int row, int col, CPoint const& pt
 	return false;
 }
 
-bool CWindowsListView::IsSortable(int col) const {
+bool CWindowsListView::IsSortable(HWND, int col) const {
 	return true;
 }
 

@@ -181,7 +181,7 @@ bool WindowHelper::ThreadHasWindows(DWORD tid) {
 
 int WindowHelper::ShowWindowProperties(HWND hWnd) {
 	CString text;
-	text.Format(L"Window 0x%X Proerties", PtrToUlong(hWnd));
+	text.Format(L"Window 0x%X Properties", PtrToUlong(hWnd));
 	CPropertySheet sheet((PCWSTR)text);
 	sheet.m_psh.dwFlags |= PSH_NOAPPLYNOW | PSH_NOCONTEXTHELP;
 	CWindowGeneralPage general(hWnd);
