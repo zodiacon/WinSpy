@@ -222,6 +222,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AboutDlg.cpp" />
+    <ClCompile Include="HookHelper.cpp" />
     <ClCompile Include="IconHelper.cpp" />
     <ClCompile Include="ImageIconCache.cpp" />
     <ClCompile Include="MessageDecoder.cpp" />
@@ -248,6 +249,7 @@
   <ItemGroup>
     <ClInclude Include="AboutDlg.h" />
     <ClInclude Include="DialogHelper.h" />
+    <ClInclude Include="HookHelper.h" />
     <ClInclude Include="IconHelper.h" />
     <ClInclude Include="ImageIconCache.h" />
     <ClInclude Include="MessageDecoder.h" />
@@ -298,9 +300,6 @@
     <Image Include="res\WinSpy.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\WinSpyHook\WinSpyHook.vcxproj">
-      <Project>{1ca31fee-1f81-4c94-9205-d908841958dd}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\WTLHelper\WTLHelper.vcxproj">
       <Project>{ae53419f-a769-4548-8e15-e311904df7df}</Project>
     </ProjectReference>

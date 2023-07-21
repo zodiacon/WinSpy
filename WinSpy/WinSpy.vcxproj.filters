@@ -81,6 +81,9 @@
     <ClCompile Include="MessageDecoder.cpp">
       <Filter>Helpers</Filter>
     </ClCompile>
+    <ClCompile Include="HookHelper.cpp">
+      <Filter>Helpers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainFrm.h">
@@ -150,6 +153,9 @@
       <Filter>Helpers</Filter>
     </ClInclude>
     <ClInclude Include="MessageDecoder.h">
+      <Filter>Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="HookHelper.h">
       <Filter>Helpers</Filter>
     </ClInclude>
   </ItemGroup>

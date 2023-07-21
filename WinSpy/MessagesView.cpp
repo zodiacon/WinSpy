@@ -4,6 +4,7 @@
 #include "FormatHelper.h"
 #include "WindowHelper.h"
 #include "MessageDecoder.h"
+#include "HookHelper.h"
 
 bool CMessagesView::CaptureWindow(HWND hWnd) {
 	if (!m_hReadyEvent)
@@ -32,7 +33,7 @@ bool CMessagesView::CaptureWindow(HWND hWnd) {
 	config.TargetWnd = hWnd;
 	config.Options = HookOptions::Window | HookOptions::ChildWindows;
 	config.ThreadId = m_CaptureTid;
-	return AddHook(WH_GETMESSAGE, config);
+	return HookHelper::AddHook(WH_GETMESSAGE, config);
 }
 
 void CMessagesView::HookCallbackMsg(DWORD hookType, HookDataHeader* header) {
@@ -167,7 +168,7 @@ LRESULT CMessagesView::OnDestroy(UINT, WPARAM, LPARAM, BOOL&) {
 	if (m_hThread) {
 		::PostThreadMessage(::GetThreadId(m_hThread), WM_QUIT, 0, 0);
 		::CloseHandle(m_hThread);
-		RemoveHook(m_CaptureTid);
+		HookHelper::RemoveHook(m_CaptureTid);
 	}
 	if (m_hReadyEvent)
 		::CloseHandle(m_hReadyEvent);

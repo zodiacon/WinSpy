@@ -227,7 +227,7 @@ CAPTION "About WinSpy"
 FONT 9, "Segoe UI", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,70,64,48,14
-    CTEXT           "WinSpy v0.2\n\n©2020-2021 Pavel Yosifovich",IDC_STATIC,46,14,103,32
+    CTEXT           "WinSpy v0.25\n\n©2020-2023 Pavel Yosifovich",IDC_STATIC,46,14,103,32
     ICON            IDR_MAINFRAME,IDC_STATIC,6,6,20,20
 END
 
@@ -401,8 +401,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,2,0,0
- PRODUCTVERSION 0,2,0,0
+ FILEVERSION 0,2,5,0
+ PRODUCTVERSION 0,2,5,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -417,13 +417,14 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
+            VALUE "CompanyName", "Scorpio Software"
             VALUE "FileDescription", "WinSpy - UI Windows Properties and Messages"
-            VALUE "FileVersion", "0.2.0.0"
+            VALUE "FileVersion", "0.2.5.0"
             VALUE "InternalName", "WinSpy"
-            VALUE "LegalCopyright", "©2021 Pavel Yosifovich"
+            VALUE "LegalCopyright", "©2021-2023 Pavel Yosifovich"
             VALUE "OriginalFilename", "WinSpy.exe"
-            VALUE "ProductName", "WinSpy v0.2"
-            VALUE "ProductVersion", "0.2.0.0"
+            VALUE "ProductName", "WinSpy"
+            VALUE "ProductVersion", "0.2.5.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -482,7 +483,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDR_MAINFRAME           "WinSpy v0.2 ©Pavel Yosifovich "
+    IDR_MAINFRAME           "WinSpy v0.25"
     IDS_TITLE               "WinSpy"
 END
 
