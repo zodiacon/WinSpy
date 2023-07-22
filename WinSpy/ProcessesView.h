@@ -11,7 +11,6 @@ class CProcessesView :
 public:
 	CProcessesView(IMainFrame* frame) : CViewBase(frame), m_WindowsView(frame) {}
 
-	void OnFinalMessage(HWND) override;
 	void OnActivate(bool active);
 
 protected:

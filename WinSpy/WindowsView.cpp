@@ -27,10 +27,6 @@ void CWindowsView::OnActivate(bool activate) {
 	}
 }
 
-void CWindowsView::OnFinalMessage(HWND /*hWnd*/) {
-	delete this;
-}
-
 void CWindowsView::UpdateUI() {
 	auto& ui = GetFrame()->GetUIUpdate();
 	if (::GetFocus() == m_Tree) {
@@ -342,7 +338,7 @@ LRESULT CWindowsView::OnTreeNodeRightClick(HTREEITEM hItem, CPoint const& pt) {
 	CMenu menu;
 	menu.LoadMenu(IDR_CONTEXT);
 
-	return GetFrame()->ShowContextMenu(menu.GetSubMenu(0), pt);
+	return GetFrame()->ShowPopupMenu(menu.GetSubMenu(0), pt);
 }
 
 LRESULT CWindowsView::OnWindowFlash(WORD, WORD, HWND, BOOL&) {

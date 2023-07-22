@@ -19,8 +19,6 @@ public:
 	void OnActivate(bool activate);
 	LRESULT OnTreeNodeDoubleClick(HTREEITEM hItem, CPoint const& pt);
 
-	void OnFinalMessage(HWND /*hWnd*/) override;
-
 protected:
 	enum { IDC_TREE = 123 };
 

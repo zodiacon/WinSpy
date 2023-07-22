@@ -8,7 +8,7 @@ LRESULT CProcessesView::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	m_hWndClient = m_Splitter.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
 
 	m_Tree.Create(m_Splitter, rcDefault, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
-		TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS | TVS_SHOWSELALWAYS, WS_EX_CLIENTEDGE, IDC_TREE);
+		TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS | TVS_SHOWSELALWAYS, 0, IDC_TREE);
 	m_WindowsView.Create(m_Splitter, rcDefault, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
 	m_Tree.SetExtendedStyle(TVS_EX_DOUBLEBUFFER, TVS_EX_DOUBLEBUFFER);
 
@@ -29,10 +29,6 @@ void CProcessesView::OnActivate(bool active) {
 	}
 }
 
-
-void CProcessesView::OnFinalMessage(HWND) {
-	delete this;
-}
 
 LRESULT CProcessesView::OnTimer(UINT /*uMsg*/, WPARAM id, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 	if (id == 3) {
@@ -187,7 +183,7 @@ LRESULT CProcessesView::OnTreeNodeRightClick(HTREEITEM hItem, CPoint const& pt) 
 
 	CMenu menu;
 	menu.LoadMenu(IDR_CONTEXT);
-	return GetFrame()->ShowContextMenu(menu.GetSubMenu(index), pt);
+	return GetFrame()->ShowPopupMenu(menu.GetSubMenu(index), pt);
 }
 
 LRESULT CProcessesView::OnWindowShow(WORD, WORD, HWND, BOOL&) {

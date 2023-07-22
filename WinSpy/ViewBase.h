@@ -21,6 +21,10 @@ protected:
 		return m_pFrame;
 	}
 
+	void OnFinalMessage(HWND) override {
+		delete this;
+	}
+
 	BOOL OnIdle() override {
 		CAutoUpdateUI<T>::UIUpdateToolBar();
 		return FALSE;

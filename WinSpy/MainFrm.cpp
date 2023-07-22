@@ -34,15 +34,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		menu.GetSubMenu(0).DeleteMenu(0, MF_BYPOSITION);
 		menu.GetSubMenu(0).DeleteMenu(0, MF_BYPOSITION);
 	}
-	// create command bar window
-	HWND hWndCmdBar = m_CmdBar.Create(m_hWnd, rcDefault, NULL, ATL_SIMPLE_CMDBAR_PANE_STYLE);
-	// attach menu
-	m_CmdBar.AttachMenu(GetMenu());
-	// remove old menu
-	SetMenu(nullptr);
-
-	m_CmdBar.SetAlphaImages(true);
-	InitCommandBar();
+	InitMenu();
 
 	CToolBarCtrl tb;
 	auto hWndToolBar = tb.Create(m_hWnd, nullptr, nullptr, ATL_SIMPLE_TOOLBAR_PANE_STYLE | TBSTYLE_LIST, 0, ATL_IDW_TOOLBAR);
@@ -50,7 +42,6 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	InitToolBar(tb);
 
 	CreateSimpleReBar(ATL_SIMPLE_REBAR_NOBORDER_STYLE);
-	AddSimpleReBarBand(hWndCmdBar);
 	AddSimpleReBarBand(hWndToolBar, nullptr, TRUE);
 
 	CReBarCtrl rb(m_hWndToolBar);
@@ -58,11 +49,10 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 
 	CreateSimpleStatusBar();
 
-	m_view.m_bTabCloseButton = false;
+	//m_view.m_bTabCloseButton = false;
 	m_hWndClient = m_view.Create(m_hWnd, rcDefault, nullptr,
 		WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
 
-	UIAddMenu(m_CmdBar.GetMenu());
 	UIAddToolBar(hWndToolBar);
 	UISetCheck(ID_VIEW_TOOLBAR, 1);
 	UISetCheck(ID_VIEW_STATUS_BAR, 1);
@@ -75,7 +65,6 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	pLoop->AddMessageFilter(this);
 	pLoop->AddIdleHandler(this);
 
-	CMenuHandle menuMain = m_CmdBar.GetMenu();
 	CImageList images;
 	images.Create(16, 16, ILC_COLOR32, 4, 4);
 	UINT icons[] = { IDI_WINDOWS, IDI_PROCESSES, IDI_MESSAGES };
@@ -83,8 +72,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		images.AddIcon(AtlLoadIconImage(icon, 0, 16, 16));
 	}
 	m_view.SetImageList(images);
-
-	m_view.SetWindowMenu(menuMain.GetSubMenu(WINDOW_MENU_POSITION));
+	m_view.SetWindowMenu(((CMenuHandle)GetMenu()).GetSubMenu(WINDOW_MENU_POSITION));
 
 	PostMessage(WM_COMMAND, ID_VIEW_ALLWINDOWS);
 
@@ -211,8 +199,8 @@ CUpdateUIBase& CMainFrame::GetUIUpdate() {
 	return *this;
 }
 
-UINT CMainFrame::ShowContextMenu(HMENU hMenu, const POINT& pt, DWORD flags) {
-	return (UINT)m_CmdBar.TrackPopupMenu(hMenu, flags, pt.x, pt.y);
+UINT CMainFrame::ShowPopupMenu(HMENU hMenu, const POINT& pt, DWORD flags) {
+	return (UINT)ShowContextMenu(hMenu, pt.x, pt.y, flags);
 }
 
 CMessagesView* CMainFrame::CreateMessagesView() {
@@ -259,7 +247,9 @@ void CMainFrame::InitToolBar(CToolBarCtrl& tb) {
 	}
 }
 
-void CMainFrame::InitCommandBar() {
+void CMainFrame::InitMenu() {
+	AddMenu(GetMenu());
+
 	struct {
 		UINT id, icon;
 		HICON hIcon = nullptr;
@@ -282,7 +272,10 @@ void CMainFrame::InitCommandBar() {
 		{ ID_WINDOW_BRINGTOFRONT, IDI_SENDTOFRONT },
 	};
 	for (auto& cmd : cmds) {
-		m_CmdBar.AddIcon(cmd.icon ? AtlLoadIconImage(cmd.icon, 0, 16, 16) : cmd.hIcon, cmd.id);
+		if (cmd.icon)
+			AddCommand(cmd.id, cmd.icon);
+		else
+			AddCommand(cmd.id, cmd.hIcon);
 	}
 }
 

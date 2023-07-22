@@ -213,7 +213,7 @@ bool CWindowsListView::OnRightClickList(HWND, int row, int col, CPoint const& pt
 	CMenu menu;
 	menu.LoadMenu(IDR_CONTEXT);
 	m_ContextMenuOpen = true;
-	auto cmd = m_pFrame->ShowContextMenu(menu.GetSubMenu(0), pt, TPM_RETURNCMD);
+	auto cmd = m_pFrame->ShowPopupMenu(menu.GetSubMenu(0), pt, TPM_RETURNCMD);
 	m_ContextMenuOpen = false;
 	if (cmd) {
 		LRESULT result;
