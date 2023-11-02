@@ -13,6 +13,7 @@
 #include "ProcessesView.h"
 #include "SecurityHelper.h"
 #include "MessagesView.h"
+#include "AutomationTreeView.h"
 
 const int WINDOW_MENU_POSITION = 5;
 
@@ -67,7 +68,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 
 	CImageList images;
 	images.Create(16, 16, ILC_COLOR32, 4, 4);
-	UINT icons[] = { IDI_WINDOWS, IDI_PROCESSES, IDI_MESSAGES };
+	UINT icons[] = { IDI_WINDOWS, IDI_PROCESSES, IDI_MESSAGES, IDI_AUTOMATION };
 	for (auto icon : icons) {
 		images.AddIcon(AtlLoadIconImage(icon, 0, 16, 16));
 	}
@@ -195,6 +196,14 @@ LRESULT CMainFrame::OnRunAsAdmin(WORD, WORD, HWND, BOOL&) {
 	return 0;
 }
 
+LRESULT CMainFrame::OnViewAutomationTree(WORD, WORD, HWND, BOOL&) {
+	auto pView = new CAutomationTreeView(this);
+	pView->Create(m_view, rcDefault, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
+	m_view.AddPage(pView->m_hWnd, L"UI Automation", 2, pView);
+	pView->OnActivate(true);
+	return 0;
+}
+
 CUpdateUIBase& CMainFrame::GetUIUpdate() {
 	return *this;
 }
@@ -206,7 +215,7 @@ UINT CMainFrame::ShowPopupMenu(HMENU hMenu, const POINT& pt, DWORD flags) {
 CMessagesView* CMainFrame::CreateMessagesView() {
 	auto pView = new CMessagesView(this);
 	pView->Create(m_view, rcDefault, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
-	m_view.AddPage(pView->m_hWnd, _T("Messages"), 2, pView);
+	m_view.AddPage(pView->m_hWnd, L"Messages", 2, pView);
 	pView->OnActivate(true);
 
 	return pView;

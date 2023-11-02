@@ -73,6 +73,7 @@ BEGIN
         MENUITEM "&Windows Tree",               ID_VIEW_ALLWINDOWS
         MENUITEM "&Processes Tree",             ID_VIEW_ALLPROCESSES
         MENUITEM "Windows &List",               ID_VIEW_WINDOWSLIST
+        MENUITEM "&Automation Tree",            ID_VIEW_AUTOMATIONTREE
         MENUITEM SEPARATOR
         MENUITEM "&Hidden Windows",             ID_VIEW_HIDDENWINDOWS
         MENUITEM "EmptyTitle Windows",          ID_VIEW_EMPTYTITLEWINDOWS
@@ -195,7 +196,7 @@ IDI_WINDOW_NOTEXT       ICON                    "res\\window-notext.ico"
 
 IDI_WINDOW_MINIMIZE     ICON                    "res\\Minimize.ico"
 
-IDI_WINDOW_SENDTOBACK   ICON                    "D:\\Dev\\WinSpy\\WinSpy\\res\\WindowSendToBack.ico"
+IDI_WINDOW_SENDTOBACK   ICON                    "res\\WindowSendToBack.ico"
 
 IDI_TARGET              ICON                    "res\\Target.ico"
 
@@ -214,6 +215,8 @@ IDI_WINDOWSEARCH        ICON                    "res\\WindowSearch.ico"
 IDI_SENDTOFRONT         ICON                    "res\\WindowSendToFront.ico"
 
 IDI_RESTORE             ICON                    "res\\restore.ico"
+
+IDI_AUTOMATION          ICON                    "res\\Automation.ico"
 
 
 /////////////////////////////////////////////////////////////////////////////

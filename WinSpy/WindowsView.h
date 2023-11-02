@@ -7,6 +7,7 @@
 #include "TreeViewManager.h"
 #include "ViewBase.h"
 #include "WindowsListView.h"
+#include <CustomSplitterWindow.h>
 
 class CWindowsView : 
 	public CViewBase<CWindowsView>,
@@ -92,7 +93,7 @@ private:
 
 	enum { MessageOnlyWindowsNode = 1 };
 
-	CSplitterWindow m_Splitter;
+	CCustomSplitterWindow m_Splitter;
 	CWindowsListView m_WindowsView;
 	//CTreeViewFrame m_TreeFrame;
 	CTreeViewCtrlEx m_Tree;

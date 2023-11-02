@@ -84,6 +84,9 @@
     <ClCompile Include="HookHelper.cpp">
       <Filter>Helpers</Filter>
     </ClCompile>
+    <ClCompile Include="AutomationTreeView.cpp">
+      <Filter>Views</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainFrm.h">
@@ -158,6 +161,9 @@
     <ClInclude Include="HookHelper.h">
       <Filter>Helpers</Filter>
     </ClInclude>
+    <ClInclude Include="AutomationTreeView.h">
+      <Filter>Views</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WinSpy.rc">
@@ -229,6 +235,9 @@
       <Filter>Resource Files\Icons</Filter>
     </Image>
     <Image Include="res\restore.ico">
+      <Filter>Resource Files\Icons</Filter>
+    </Image>
+    <Image Include="res\Automation.ico">
       <Filter>Resource Files\Icons</Filter>
     </Image>
   </ItemGroup>

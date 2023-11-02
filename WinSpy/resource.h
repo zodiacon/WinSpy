@@ -29,6 +29,8 @@
 #define IDI_WINDOWSEARCH                225
 #define IDI_SENDTOFRONT                 227
 #define IDI_RESTORE                     228
+#define IDI_ICON1                       229
+#define IDI_AUTOMATION                  229
 #define IDC_HANDLE                      1000
 #define IDC_CLASSNAME                   1001
 #define IDC_HANDLE2                     1001
@@ -92,13 +94,14 @@
 #define ID_PROCESS_PROPERTIES           32802
 #define ID_THREAD_PROPERTIES            32803
 #define ID_WINDOW_MESSAGES              32804
+#define ID_VIEW_AUTOMATIONTREE          32805
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        229
-#define _APS_NEXT_COMMAND_VALUE         32805
+#define _APS_NEXT_RESOURCE_VALUE        230
+#define _APS_NEXT_COMMAND_VALUE         32806
 #define _APS_NEXT_CONTROL_VALUE         1019
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

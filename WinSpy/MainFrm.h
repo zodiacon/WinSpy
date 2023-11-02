@@ -25,6 +25,7 @@ public:
 		//NOTIFY_CODE_HANDLER(TBVN_TABCLOSEBTN, OnTabCloseButton)
 		COMMAND_ID_HANDLER(ID_VIEW_ALLWINDOWS, OnViewAllWindows)
 		COMMAND_ID_HANDLER(ID_VIEW_ALLPROCESSES, OnViewAllProcesses)
+		COMMAND_ID_HANDLER(ID_VIEW_AUTOMATIONTREE, OnViewAutomationTree)
 		COMMAND_ID_HANDLER(ID_VIEW_TOOLBAR, OnViewToolBar)
 		COMMAND_ID_HANDLER(ID_VIEW_STATUS_BAR, OnViewStatusBar)
 		COMMAND_ID_HANDLER(ID_APP_ABOUT, OnAppAbout)
@@ -79,6 +80,7 @@ private:
 	LRESULT OnFindWindow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnRunAsAdmin(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnTabCloseButton(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
+	LRESULT OnViewAutomationTree(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	int m_ActivePage = -1;
 	CCustomTabView m_view;
