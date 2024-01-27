@@ -422,7 +422,10 @@ LRESULT CWindowsListView::OnToggleHiddenWindows(WORD, WORD, HWND, BOOL&) {
 }
 
 bool CWindowsListView::OnDoubleClickList(HWND, int row, int col, CPoint const&) {
-	WindowHelper::ShowWindowProperties(m_Items[row].hWnd);
-	return true;
+	if (row >= 0) {
+		WindowHelper::ShowWindowProperties(m_Items[row].hWnd);
+		return true;
+	}
+	return false;
 }
 

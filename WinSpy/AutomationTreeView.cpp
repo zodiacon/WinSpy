@@ -59,6 +59,9 @@ HTREEITEM CAutomationTreeView::AddElement(IUIAutomationElement* e, HTREEITEM hPa
 }
 
 void CAutomationTreeView::EnumChildElements(IUIAutomationTreeWalker* pWalker, IUIAutomationElement* root, HTREEITEM hParent, HTREEITEM hAfter, int depth) {
+	if (depth > 4)
+		return;
+
 	CComPtr<IUIAutomationElement> spElem;
 	pWalker->GetFirstChildElement(root, &spElem);
 	int pid = 0;

@@ -196,6 +196,10 @@ LRESULT CMainFrame::OnRunAsAdmin(WORD, WORD, HWND, BOOL&) {
 	return 0;
 }
 
+LRESULT CMainFrame::OnTabCloseButton(int, LPNMHDR, BOOL&) {
+	return 0;
+}
+
 LRESULT CMainFrame::OnViewAutomationTree(WORD, WORD, HWND, BOOL&) {
 	auto pView = new CAutomationTreeView(this);
 	pView->Create(m_view, rcDefault, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
