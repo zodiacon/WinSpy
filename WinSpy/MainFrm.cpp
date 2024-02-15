@@ -213,7 +213,7 @@ CUpdateUIBase& CMainFrame::GetUIUpdate() {
 }
 
 UINT CMainFrame::ShowPopupMenu(HMENU hMenu, const POINT& pt, DWORD flags) {
-	return (UINT)ShowContextMenu(hMenu, pt.x, pt.y, flags);
+	return (UINT)ShowContextMenu(hMenu, 0, pt.x, pt.y);
 }
 
 CMessagesView* CMainFrame::CreateMessagesView() {

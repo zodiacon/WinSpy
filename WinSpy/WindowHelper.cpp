@@ -113,7 +113,7 @@ void WindowHelper::HighlightBorder(HWND hWnd, bool highlight) {
 	rgn.CreateRectRgn(0, 0, 1, 1);
 	rgn.CombineRgn(rgn1, rgn2, RGN_DIFF);
 	if (!highlight) {
-		::RedrawWindow(hWnd, nullptr, rgn, RDW_INTERNALPAINT | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN | RDW_FRAME);
+		::RedrawWindow(hWnd, nullptr, rgn, RDW_INTERNALPAINT | RDW_INVALIDATE | RDW_UPDATENOW | RDW_FRAME);
 		return;
 	}
 
