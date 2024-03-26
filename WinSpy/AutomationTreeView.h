@@ -27,7 +27,7 @@ protected:
 		MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		NOTIFY_CODE_HANDLER(TVN_ITEMEXPANDING, OnNodeExpanding)
 		NOTIFY_CODE_HANDLER(TVN_ITEMEXPANDED, OnNodeExpanded)
-		//NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnNodeSelected)
+		NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnNodeSelected)
 		NOTIFY_CODE_HANDLER(TVN_DELETEITEM, OnNodeDeleted)
 		CHAIN_MSG_MAP(CTreeViewHelper<CAutomationTreeView>)
 		CHAIN_MSG_MAP(CVirtualListView<CAutomationTreeView>)
@@ -43,17 +43,25 @@ private:
 
 	void InitTree();
 	void UpdateUI();
+	void UpdateProperties(IUIAutomationElement* elem);
+	static std::wstring FormatValue(IUIAutomation* pUI, VARIANT const& value);
 
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnNodeExpanding(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
 	LRESULT OnNodeExpanded(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
 	LRESULT OnNodeSelected(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
 	LRESULT OnRefresh(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnWindowProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnNodeDeleted(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
+
+	struct ItemData {
+		PCWSTR Name;
+		std::wstring Value;
+	};
 
 	CCustomSplitterWindow m_Splitter;
 	CTreeViewCtrl m_Tree;
 	CListViewCtrl m_List;
 	CComPtr<IUIAutomationTreeWalker> m_spUIWalker;
+	CComPtr<IUIAutomation> m_spUI;
+	std::vector<ItemData> m_Properties;
 };

@@ -404,8 +404,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,2,5,0
- PRODUCTVERSION 0,2,5,0
+ FILEVERSION 0,3,0,0
+ PRODUCTVERSION 0,3,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -422,12 +422,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Scorpio Software"
             VALUE "FileDescription", "WinSpy - UI Windows Properties and Messages"
-            VALUE "FileVersion", "0.2.5.0"
+            VALUE "FileVersion", "0.3.0.0"
             VALUE "InternalName", "WinSpy"
-            VALUE "LegalCopyright", "©2021-2023 Pavel Yosifovich"
+            VALUE "LegalCopyright", "©2021-2024 Pavel Yosifovich"
             VALUE "OriginalFilename", "WinSpy.exe"
             VALUE "ProductName", "WinSpy"
-            VALUE "ProductVersion", "0.2.5.0"
+            VALUE "ProductVersion", "0.3.0.0"
         END
     END
     BLOCK "VarFileInfo"
