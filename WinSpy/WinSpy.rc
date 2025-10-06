@@ -230,7 +230,7 @@ CAPTION "About WinSpy"
 FONT 9, "Segoe UI", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,70,64,48,14
-    CTEXT           "WinSpy v0.25\n\n©2020-2023 Pavel Yosifovich",IDC_STATIC,46,14,103,32
+    CTEXT           "WinSpy v0.3\n\n©2020-2024 Pavel Yosifovich",IDC_STATIC,46,14,103,32
     ICON            IDR_MAINFRAME,IDC_STATIC,6,6,20,20
 END
 
@@ -486,7 +486,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDR_MAINFRAME           "WinSpy v0.25"
+    IDR_MAINFRAME           "WinSpy v0.3"
     IDS_TITLE               "WinSpy"
 END
 
