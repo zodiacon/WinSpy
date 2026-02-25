@@ -5,6 +5,9 @@
 #include "resource.h"
 #include "MainFrm.h"
 #include <ThemeHelper.h>
+#include <WtlHelper.h>
+
+#include "DarkMode/DarkModeSubclass.h"
 
 CAppModule _Module;
 
@@ -35,7 +38,9 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 
 	hRes = _Module.Init(nullptr, hInstance);
 	ATLASSERT(SUCCEEDED(hRes));
-	ThemeHelper::Init();
+	//ThemeHelper::Init();
+
+	WTLHelper::InitDarkMode(DarkMode::DarkModeType::classic);
 
 	int nRet = Run(lpstrCmdLine, nCmdShow);
 

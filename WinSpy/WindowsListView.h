@@ -47,8 +47,8 @@ protected:
 	BEGIN_MSG_MAP(CWindowsListView)
 		MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		NOTIFY_CODE_HANDLER(LVN_ITEMCHANGED, OnItemChanged)
-		CHAIN_MSG_MAP(CVirtualListView<CWindowsListView>)
-		CHAIN_MSG_MAP(CCustomDraw<CWindowsListView>)
+		CHAIN_MSG_MAP(CVirtualListView)
+		CHAIN_MSG_MAP(CCustomDraw)
 		CHAIN_MSG_MAP(BaseFrame)
 
 	ALT_MSG_MAP(1)

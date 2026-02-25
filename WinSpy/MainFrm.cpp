@@ -35,7 +35,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		menu.GetSubMenu(0).DeleteMenu(0, MF_BYPOSITION);
 		menu.GetSubMenu(0).DeleteMenu(0, MF_BYPOSITION);
 	}
-	InitMenu();
+	InitMenuNew(GetMenu());
 
 	CToolBarCtrl tb;
 	auto hWndToolBar = tb.Create(m_hWnd, nullptr, nullptr, ATL_SIMPLE_TOOLBAR_PANE_STYLE | TBSTYLE_LIST, 0, ATL_IDW_TOOLBAR);
@@ -55,6 +55,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
 
 	UIAddToolBar(hWndToolBar);
+	UIAddMenu(GetMenu());
 	UISetCheck(ID_VIEW_TOOLBAR, 1);
 	UISetCheck(ID_VIEW_STATUS_BAR, 1);
 
@@ -208,12 +209,29 @@ LRESULT CMainFrame::OnViewAutomationTree(WORD, WORD, HWND, BOOL&) {
 	return 0;
 }
 
+LRESULT CMainFrame::OnThemeChange(WORD, WORD id, HWND, BOOL&) {
+	auto mode = DarkMode::DarkModeType::classic;
+	switch (id - ID_THEME_LIGHT) {
+		case 0: mode = DarkMode::DarkModeType::light; break;
+		case 1: mode = DarkMode::DarkModeType::dark; break;
+
+	}
+	WTLHelper::SwitchToMode(mode, m_hWnd);
+	UpdateColors();
+	InitMenuNew(GetMenu());
+	DrawMenuBar();
+	UISetRadioMenuItem(id, ID_THEME_LIGHT, ID_THEME_SYSTEM);
+
+	return 0;
+}
+
 CUpdateUIBase& CMainFrame::GetUIUpdate() {
 	return *this;
 }
 
 UINT CMainFrame::ShowPopupMenu(HMENU hMenu, const POINT& pt, DWORD flags) {
-	return (UINT)ShowContextMenu(hMenu, 0, pt.x, pt.y);
+	InitMenuNew(hMenu);
+	return (UINT)::TrackPopupMenu(hMenu, flags, pt.x, pt.y, 0, m_hWnd, nullptr);
 }
 
 CMessagesView* CMainFrame::CreateMessagesView() {
@@ -290,6 +308,28 @@ void CMainFrame::InitMenu() {
 		else
 			AddCommand(cmd.id, cmd.hIcon);
 	}
+}
+
+void CMainFrame::InitMenuNew(HMENU menu) {
+	MenuItemData items[] {
+		{ ID_FILE_RUNASADMINISTRATOR, 0, IconHelper::GetShieldIcon() },
+		{ ID_VIEW_REFRESH, IDI_REFRESH },
+		{ ID_VIEW_ALLWINDOWS, IDI_WINDOWS },
+		{ ID_VIEW_HIDDENWINDOWS, IDI_WINDOW_HIDDEN },
+		{ ID_VIEW_EMPTYTITLEWINDOWS, IDI_WINDOW_NOTEXT },
+		{ ID_WINDOW_CLOSE, IDI_WINDOW_CLOSE },
+		{ ID_STATE_CLOSE, IDI_WINDOW_CLOSE },
+		{ ID_WINDOW_MINIMIZE, IDI_WINDOW_MINIMIZE },
+		{ ID_WINDOW_MAXIMIZE, IDI_WINDOW_MAXIMIZE },
+		{ ID_VIEW_ALLPROCESSES, IDI_PROCESSES },
+		{ ID_WINDOW_PROPERTIES, IDI_WINPROP },
+		{ ID_PROCESS_PROPERTIES, IDI_PROCESS_INFO },
+		{ ID_WINDOW_FIND, IDI_WINDOWSEARCH },
+		{ ID_WINDOW_RESTORE, IDI_RESTORE },
+		{ ID_TREE_SENDTOBACK, IDI_WINDOW_SENDTOBACK },
+		{ ID_WINDOW_BRINGTOFRONT, IDI_SENDTOFRONT },
+	};
+	WTLHelper::InitMenu(menu, items, _countof(items));
 }
 
 LRESULT CMainFrame::OnTabActivated(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/) {

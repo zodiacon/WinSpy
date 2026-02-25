@@ -270,7 +270,7 @@ void CWindowsListView::UpdateList(HWND hWnd) {
 		m_Items.push_back(WindowHelper::GetWindowInfo(m_SelectedHwnd));
 		AddChildWindows(m_Items, m_SelectedHwnd, true);
 	}
-	m_List.SetItemCountEx((int)m_Items.size(), LVSICF_NOSCROLL);
+	m_List.SetItemCountEx((int)m_Items.size(), LVSICF_NOSCROLL | LVSICF_NOINVALIDATEALL);
 	UpdateList();
 }
 
@@ -366,8 +366,7 @@ CString CWindowsListView::GetDetails(const DataItem& item) const {
 }
 
 void CWindowsListView::UpdateList() {
-	DoSort(GetSortInfo(m_List));
-	m_List.RedrawItems(m_List.GetTopIndex(), m_List.GetCountPerPage() + m_List.GetTopIndex());
+	Sort(GetSortInfo(m_List));
 }
 
 LRESULT CWindowsListView::OnToggleEmptyTitleWindows(WORD, WORD, HWND, BOOL&) {

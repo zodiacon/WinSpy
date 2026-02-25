@@ -103,6 +103,13 @@ BEGIN
     BEGIN
         MENUITEM "&Always On Top",              ID_OPTIONS_ALWAYSONTOP
         MENUITEM "&Fonts...",                   ID_OPTIONS_FONTS
+        POPUP "&Theme"
+        BEGIN
+            MENUITEM "&Light",                      ID_THEME_LIGHT
+            MENUITEM "&Dark",                       ID_THEME_DARK
+            MENUITEM "&Classic",                    ID_THEME_CLASSIC
+            MENUITEM "&System",                     ID_THEME_SYSTEM
+        END
     END
     POPUP "&Tab"
     BEGIN
@@ -265,7 +272,7 @@ BEGIN
     LTEXT           "Handle:",IDC_STATIC,7,9,26,8
     EDITTEXT        IDC_HANDLE,35,7,69,14,ES_AUTOHSCROLL
     LTEXT           "Class:",IDC_STATIC,10,30,20,8
-    EDITTEXT        IDC_CLASSNAME,35,27,306,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_CLASSNAME,35,27,306,14,ES_AUTOHSCROLL | ES_READONLY
     LTEXT           "Text:",IDC_STATIC,12,50,18,8
     EDITTEXT        IDC_TEXT,35,48,388,14,ES_AUTOHSCROLL
     LTEXT           "Thread:",IDC_STATIC,116,9,26,8
