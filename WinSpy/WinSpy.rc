@@ -231,13 +231,13 @@ IDI_AUTOMATION          ICON                    "res\\Automation.ico"
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOGEX 0, 0, 187, 85
+IDD_ABOUTBOX DIALOGEX 0, 0, 187, 74
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About WinSpy"
 FONT 9, "Segoe UI", 0, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,70,64,48,14
-    CTEXT           "WinSpy v0.3\n\n©2020-2024 Pavel Yosifovich",IDC_STATIC,46,14,103,32
+    DEFPUSHBUTTON   "OK",IDOK,70,53,48,14
+    CTEXT           "WinSpy v0.4\n\n©2020-2026 Pavel Yosifovich",IDC_STATIC,46,14,103,32
     ICON            IDR_MAINFRAME,IDC_STATIC,6,6,20,20
 END
 
@@ -351,7 +351,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 180
         TOPMARGIN, 7
-        BOTTOMMARGIN, 78
+        BOTTOMMARGIN, 67
     END
 
     IDD_FINDWINDOW, DIALOG
@@ -411,8 +411,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,3,0,0
- PRODUCTVERSION 0,3,0,0
+ FILEVERSION 0,4,0,0
+ PRODUCTVERSION 0,4,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -429,12 +429,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Scorpio Software"
             VALUE "FileDescription", "WinSpy - UI Windows Properties and Messages"
-            VALUE "FileVersion", "0.3.0.0"
+            VALUE "FileVersion", "0.4"
             VALUE "InternalName", "WinSpy"
-            VALUE "LegalCopyright", "©2021-2024 Pavel Yosifovich"
+            VALUE "LegalCopyright", "©2021-2026 Pavel Yosifovich"
             VALUE "OriginalFilename", "WinSpy.exe"
             VALUE "ProductName", "WinSpy"
-            VALUE "ProductVersion", "0.3.0.0"
+            VALUE "ProductVersion", "0.4"
         END
     END
     BLOCK "VarFileInfo"
@@ -493,7 +493,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDR_MAINFRAME           "WinSpy v0.3"
+    IDR_MAINFRAME           "WinSpy v0.4"
     IDS_TITLE               "WinSpy"
 END
 
