@@ -98,8 +98,8 @@
 #define ID_OPTIONS_THEME                32806
 #define ID_THEME_LIGHT                  32807
 #define ID_THEME_DARK                   32808
-#define ID_THEME_CLASSIC                32809
-#define ID_THEME_SYSTEM                 32810
+#define ID_THEME_CLASSIC                32810
+#define ID_THEME_SYSTEM                 32809
 
 // Next default values for new objects
 // 

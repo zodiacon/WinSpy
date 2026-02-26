@@ -76,7 +76,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	m_view.SetImageList(images);
 	m_view.SetWindowMenu(((CMenuHandle)GetMenu()).GetSubMenu(WINDOW_MENU_POSITION));
 
-	UISetRadioMenuItem(ID_THEME_LIGHT + (int)WTLHelper::DarkModeType(), ID_THEME_LIGHT, ID_THEME_SYSTEM);
+	UISetRadioMenuItem(ID_THEME_LIGHT + (int)WTLHelper::DarkModeType(), ID_THEME_LIGHT, ID_THEME_CLASSIC);
 	PostMessage(WM_COMMAND, ID_VIEW_ALLWINDOWS);
 
 	return 0;
@@ -211,17 +211,13 @@ LRESULT CMainFrame::OnViewAutomationTree(WORD, WORD, HWND, BOOL&) {
 }
 
 LRESULT CMainFrame::OnThemeChange(WORD, WORD id, HWND, BOOL&) {
-	auto mode = DarkMode::DarkModeType::classic;
-	switch (id - ID_THEME_LIGHT) {
-		case 0: mode = DarkMode::DarkModeType::light; break;
-		case 1: mode = DarkMode::DarkModeType::dark; break;
-
+	auto mode = id - ID_THEME_LIGHT;
+	if (WTLHelper::SwitchToMode((DarkMode::DarkModeType)mode, m_hWnd)) {
+		UpdateColors();
+		InitMenuNew(GetMenu());
+		DrawMenuBar();
 	}
-	WTLHelper::SwitchToMode(mode, m_hWnd);
-	UpdateColors();
-	InitMenuNew(GetMenu());
-	DrawMenuBar();
-	UISetRadioMenuItem(id, ID_THEME_LIGHT, ID_THEME_SYSTEM);
+	UISetRadioMenuItem(id, ID_THEME_LIGHT, ID_THEME_CLASSIC);
 
 	return 0;
 }
