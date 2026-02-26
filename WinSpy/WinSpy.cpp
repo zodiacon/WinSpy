@@ -40,7 +40,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 	ATLASSERT(SUCCEEDED(hRes));
 	//ThemeHelper::Init();
 
-	WTLHelper::InitDarkMode(DarkMode::DarkModeType::classic);
+	WTLHelper::InitDarkMode(WTLHelper::IsSystemInDarkMode() ?DarkMode::DarkModeType::dark : DarkMode::DarkModeType::classic);
 
 	int nRet = Run(lpstrCmdLine, nCmdShow);
 

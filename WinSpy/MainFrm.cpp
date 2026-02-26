@@ -76,6 +76,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	m_view.SetImageList(images);
 	m_view.SetWindowMenu(((CMenuHandle)GetMenu()).GetSubMenu(WINDOW_MENU_POSITION));
 
+	UISetRadioMenuItem(ID_THEME_LIGHT + (int)WTLHelper::DarkModeType(), ID_THEME_LIGHT, ID_THEME_SYSTEM);
 	PostMessage(WM_COMMAND, ID_VIEW_ALLWINDOWS);
 
 	return 0;
