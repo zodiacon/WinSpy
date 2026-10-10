@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "AutomationTreeView.h"
 #include "WindowHelper.h"
+#include "AppSettings.h"
 
 #pragma comment(lib, "oleacc")
 
@@ -21,10 +22,16 @@ LRESULT CAutomationTreeView::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /
 	m_Tree.SetImageList(WindowHelper::GetImageList(), TVSIL_NORMAL);
 
 	m_Splitter.SetSplitterPanes(m_Tree, m_List);
-	m_Splitter.SetSplitterPosPct(35);
+	m_Splitter.SetSplitterPosPct(AppSettings::Get().AutomationSplitter());
 
 	InitTree();
 
+	return 0;
+}
+
+LRESULT CAutomationTreeView::OnDestroy(UINT, WPARAM, LPARAM, BOOL& bHandled) {
+	AppSettings::Get().AutomationSplitter(m_Splitter.GetSplitterPosPct());
+	bHandled = FALSE;
 	return 0;
 }
 

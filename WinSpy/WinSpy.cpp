@@ -16,12 +16,26 @@ int Run(LPCTSTR /*lpstrCmdLine*/ = nullptr, int nCmdShow = SW_SHOWDEFAULT) {
 
 	CMainFrame wndMain;
 
-	if (wndMain.CreateEx() == nullptr) {
+	//
+	// Always On Top is a creation style rather than a SetWindowPos(HWND_TOPMOST) later: Windows ignores that call
+	// from a process that was started without being brought to the foreground (by a script, for instance)
+	//
+	DWORD exStyle = CMainFrame::GetWndExStyle(0) | (AppSettings::Get().AlwaysOnTop() ? WS_EX_TOPMOST : 0);
+	if (wndMain.CreateEx(nullptr, nullptr, 0, exStyle) == nullptr) {
 		ATLTRACE(_T("Main window creation failed!\n"));
 		return 0;
 	}
 
-	wndMain.ShowWindow(nCmdShow);
+	// where the window was when WinSpy was last closed, if that place is still on a screen
+	auto wp = AppSettings::Get().MainWindowPlacement();
+	if (wp.length == sizeof(wp) && ::MonitorFromRect(&wp.rcNormalPosition, MONITOR_DEFAULTTONULL)) {
+		if (wp.showCmd == SW_SHOWMINIMIZED)
+			wp.showCmd = SW_SHOWNORMAL;
+		wndMain.SetWindowPlacement(&wp);
+	}
+	else {
+		wndMain.ShowWindow(nCmdShow);
+	}
 
 	int nRet = theLoop.Run();
 
@@ -30,6 +44,10 @@ int Run(LPCTSTR /*lpstrCmdLine*/ = nullptr, int nCmdShow = SW_SHOWDEFAULT) {
 }
 
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow) {
+	// per-monitor (v2) DPI aware, so the coordinates WinSpy shows and works with are the real ones;
+	// set here rather than in the manifest, as the project's DPI awareness option offers only the first version
+	::SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+
 	HRESULT hRes = ::CoInitialize(nullptr);
 	ATLASSERT(SUCCEEDED(hRes));
 
@@ -46,6 +64,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 		WTLHelper::InitDarkMode(dark ? DarkModeKind::Dark : DarkModeKind::Classic);
 
 	int nRet = Run(lpstrCmdLine, nCmdShow);
+	// now: the views keep their state as they are destroyed, which is after the main window's WM_DESTROY
+	AppSettings::Get().Save();
 
 	_Module.Term();
 	::CoUninitialize();

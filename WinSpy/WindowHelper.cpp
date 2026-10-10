@@ -109,26 +109,59 @@ bool WindowHelper::Flash(HWND hWnd) {
 	return ::FlashWindowEx(&info);
 }
 
-CString WindowHelper::GetDpiAwareness(HWND hWnd) {
-	// Windows 10 1607 and later, so looked up rather than linked to
-	static auto hUser = ::GetModuleHandle(L"user32");
-	static auto getContext = (decltype(::GetWindowDpiAwarenessContext)*)::GetProcAddress(hUser, "GetWindowDpiAwarenessContext");
-	static auto getAwareness = (decltype(::GetAwarenessFromDpiAwarenessContext)*)::GetProcAddress(hUser, "GetAwarenessFromDpiAwarenessContext");
-	static auto areEqual = (decltype(::AreDpiAwarenessContextsEqual)*)::GetProcAddress(hUser, "AreDpiAwarenessContextsEqual");
-	static auto getDpi = (decltype(::GetDpiForWindow)*)::GetProcAddress(hUser, "GetDpiForWindow");
-	if (!getContext || !getAwareness || !areEqual || !getDpi)
-		return L"";
+int WindowHelper::DpiScale(int size) {
+	return ::MulDiv(size, ::GetDpiForSystem(), USER_DEFAULT_SCREEN_DPI);
+}
 
-	auto context = getContext(hWnd);
+CString WindowHelper::GetColumnsLayout(CListViewCtrl& list) {
+	// "width:order," for each column
+	int count = list.GetHeader().GetItemCount();
+	std::vector<int> order(count);
+	list.GetColumnOrderArray(count, order.data());
+	CString text, item;
+	for (int i = 0; i < count; i++) {
+		item.Format(L"%d:%d,", list.GetColumnWidth(i), order[i]);
+		text += item;
+	}
+	return text;
+}
+
+void WindowHelper::SetColumnsLayout(CListViewCtrl& list, CString const& layout) {
+	std::vector<int> widths, order;
+	int start = 0;
+	for (auto token = layout.Tokenize(L",", start); start >= 0; token = layout.Tokenize(L",", start)) {
+		int colon = token.Find(L':');
+		if (colon < 0)
+			return;
+		widths.push_back(_wtoi(token.Left(colon)));
+		order.push_back(_wtoi(token.Mid(colon + 1)));
+	}
+
+	int count = list.GetHeader().GetItemCount();
+	if ((int)widths.size() != count)
+		return;
+	auto sorted = order;
+	std::sort(sorted.begin(), sorted.end());
+	for (int i = 0; i < count; i++)
+		if (sorted[i] != i)
+			return;
+
+	for (int i = 0; i < count; i++)
+		list.SetColumnWidth(i, widths[i]);
+	list.SetColumnOrderArray(count, order.data());
+}
+
+CString WindowHelper::GetDpiAwareness(HWND hWnd) {
+	auto context = ::GetWindowDpiAwarenessContext(hWnd);
 	if (!context)
 		return L"";
 	PCWSTR name;
-	if (areEqual(context, DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2))
+	if (::AreDpiAwarenessContextsEqual(context, DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2))
 		name = L"Per-Monitor v2";
-	else if (areEqual(context, DPI_AWARENESS_CONTEXT_UNAWARE_GDISCALED))
+	else if (::AreDpiAwarenessContextsEqual(context, DPI_AWARENESS_CONTEXT_UNAWARE_GDISCALED))
 		name = L"Unaware (GDI Scaled)";
 	else {
-		switch (getAwareness(context)) {
+		switch (::GetAwarenessFromDpiAwarenessContext(context)) {
 			case DPI_AWARENESS_UNAWARE: name = L"Unaware"; break;
 			case DPI_AWARENESS_SYSTEM_AWARE: name = L"System"; break;
 			case DPI_AWARENESS_PER_MONITOR_AWARE: name = L"Per-Monitor"; break;
@@ -136,7 +169,7 @@ CString WindowHelper::GetDpiAwareness(HWND hWnd) {
 		}
 	}
 	CString text;
-	text.Format(L"%s (%u)", name, getDpi(hWnd));
+	text.Format(L"%s (%u)", name, ::GetDpiForWindow(hWnd));
 	return text;
 }
 
@@ -234,8 +267,9 @@ std::unordered_map<HWND, int>& WindowHelper::GetIconMap() {
 CImageList& WindowHelper::GetImageList() {
 	static CImageList images;
 	if (!images) {
-		images.Create(16, 16, ILC_COLOR32, 64, 16);
-		images.AddIcon(AtlLoadIconImage(IDI_WINDOW, 0, 16, 16));
+		int size = DpiScale(16);
+		images.Create(size, size, ILC_COLOR32, 64, 16);
+		images.AddIcon(AtlLoadIconImage(IDI_WINDOW, 0, size, size));
 	}
 	return images;
 }

@@ -42,6 +42,7 @@ public:
 		MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
 		MESSAGE_HANDLER(WM_HOTKEY, OnHotKey)
+		MESSAGE_HANDLER(WM_DPICHANGED, OnDpiChanged)
 		CHAIN_MSG_MAP(CAutoUpdateUI<CMainFrame>)
 		CHAIN_MSG_MAP(CFrameWindowImpl<CMainFrame>)
 		COMMAND_RANGE_HANDLER(1, 0xffff, OnCommandToActiveView)
@@ -64,6 +65,7 @@ private:
 	// adds a tab (and gives its trees and lists the chosen font)
 	void AddView(HWND hView, PCWSTR title, int image, void* data);
 	void ApplyFont(HWND hRoot);
+	void CreateViewFont();
 
 // Handler prototypes (uncomment arguments if needed):
 //	LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -94,11 +96,12 @@ private:
 	LRESULT OnFonts(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnCopy(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnHotKey(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	LRESULT OnDpiChanged(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 
 	// Ctrl+Alt+F12, anywhere: the window under the mouse cursor is located in a windows tree
 	enum { HotKeyLocate = 1 };
 
 	HWND m_hActivePage{ nullptr };
-	CFont m_Font;		// the trees' and lists' (none: their default)
+	CFont m_Font;		// the trees' and lists', for the window's DPI
 	CNativeCustomTabView m_view;
 };

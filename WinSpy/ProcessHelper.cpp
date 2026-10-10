@@ -53,6 +53,7 @@ ProcessesInfo ProcessHelper::EnumProcessesAndThreads(EnumProcessesOptions option
 		pi.Threads.reserve(pe.cntThreads);
 		pi.ProcessName = pe.szExeFile;
 		auto hProcess = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pi.ProcessId);
+		pi.Accessible = hProcess != nullptr;
 		if (hProcess) {
 			WCHAR path[MAX_PATH];
 			DWORD size = _countof(path);
@@ -281,11 +282,8 @@ void ProcessHelper::ShowThreadProperties(DWORD tid, HWND hParent) {
 		text.Format(L"%s (%u)", (PCWSTR)GetProcessImageName(pid), pid);
 		props.push_back({ L"Process", text });
 
-		// GetThreadDescription is Windows 10 1607 and later
-		using GetThreadDescriptionFn = HRESULT(WINAPI*)(HANDLE, PWSTR*);
-		static auto getDescription = (GetThreadDescriptionFn)::GetProcAddress(::GetModuleHandle(L"kernel32"), "GetThreadDescription");
 		PWSTR description = nullptr;
-		if (getDescription && SUCCEEDED(getDescription(hThread, &description)) && description) {
+		if (SUCCEEDED(::GetThreadDescription(hThread, &description)) && description) {
 			if (*description)
 				props.push_back({ L"Description", description });
 			::LocalFree(description);

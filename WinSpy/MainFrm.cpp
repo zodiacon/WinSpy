@@ -37,6 +37,9 @@ BOOL CMainFrame::OnIdle() {
 
 LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 	if (SecurityHelper::IsRunningElevated()) {
+		CString title;
+		GetWindowText(title);
+		SetWindowText(title + L" (Administrator)");
 		CMenuHandle menu = GetMenu();
 		menu.GetSubMenu(0).DeleteMenu(0, MF_BYPOSITION);
 		menu.GetSubMenu(0).DeleteMenu(0, MF_BYPOSITION);
@@ -45,12 +48,10 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	UIAddMenu(GetMenu());
 	UISetCheck(ID_OPTIONS_DARKMODE, WTLHelper::IsDarkMode());
 
-	if (AppSettings::Get().AlwaysOnTop()) {
-		SetWindowPos(HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+	// the window is created topmost (see Run in WinSpy.cpp)
+	if (AppSettings::Get().AlwaysOnTop())
 		UISetCheck(ID_OPTIONS_ALWAYSONTOP, TRUE);
-	}
-	if (auto lf = AppSettings::Get().ViewFont(); lf.lfFaceName[0])
-		m_Font.CreateFontIndirect(&lf);
+	CreateViewFont();
 
 	CToolBarCtrl tb;
 	auto hWndToolBar = tb.Create(m_hWnd, nullptr, nullptr, ATL_SIMPLE_TOOLBAR_PANE_STYLE | TBSTYLE_LIST, 0, ATL_IDW_TOOLBAR);
@@ -84,10 +85,11 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	pLoop->AddIdleHandler(this);
 
 	CImageList images;
-	images.Create(16, 16, ILC_COLOR32, 4, 4);
+	int size = WindowHelper::DpiScale(16);
+	images.Create(size, size, ILC_COLOR32, 4, 4);
 	UINT icons[] = { IDI_WINDOWS, IDI_PROCESSES, IDI_MESSAGES, IDI_AUTOMATION };
 	for (auto icon : icons) {
-		images.AddIcon(AtlLoadIconImage(icon, 0, 16, 16));
+		images.AddIcon(AtlLoadIconImage(icon, 0, size, size));
 	}
 	m_view.SetImageList(images);
 	m_view.SetWindowMenu(((CMenuHandle)GetMenu()).GetSubMenu(WINDOW_MENU_POSITION));
@@ -105,7 +107,9 @@ LRESULT CMainFrame::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	pLoop->RemoveIdleHandler(this);
 
 	::UnregisterHotKey(m_hWnd, HotKeyLocate);
-	AppSettings::Get().Save();
+	WINDOWPLACEMENT wp{ sizeof(wp) };
+	if (GetWindowPlacement(&wp))
+		AppSettings::Get().MainWindowPlacement(wp);
 
 	bHandled = FALSE;
 	return 1;
@@ -236,8 +240,29 @@ UINT CMainFrame::ShowPopupMenu(HMENU hMenu, const POINT& pt, DWORD flags) {
 
 void CMainFrame::AddView(HWND hView, PCWSTR title, int image, void* data) {
 	m_view.AddPage(hView, title, image, data);
+	ApplyFont(hView);
+}
+
+void CMainFrame::CreateViewFont() {
+	// the chosen font (kept at 96 DPI) or the system's (the one trees and lists have by default), for this window's DPI
+	auto dpi = GetDpiForWindow(m_hWnd);
+	LOGFONT lf = AppSettings::Get().ViewFont();
+	if (lf.lfFaceName[0])
+		lf.lfHeight = ::MulDiv(lf.lfHeight, dpi, USER_DEFAULT_SCREEN_DPI);
+	else
+		::SystemParametersInfoForDpi(SPI_GETICONTITLELOGFONT, sizeof(lf), &lf, 0, dpi);
 	if (m_Font)
-		ApplyFont(hView);
+		m_Font.DeleteObject();
+	m_Font.CreateFontIndirect(&lf);
+}
+
+LRESULT CMainFrame::OnDpiChanged(UINT, WPARAM, LPARAM lParam, BOOL&) {
+	// per-monitor DPI awareness: the window is moved and sized as Windows suggests, and the text is made anew
+	auto rc = reinterpret_cast<RECT const*>(lParam);
+	SetWindowPos(nullptr, rc, SWP_NOZORDER | SWP_NOACTIVATE);
+	CreateViewFont();
+	ApplyFont(m_view);
+	return 0;
 }
 
 void CMainFrame::ApplyFont(HWND hRoot) {
@@ -268,17 +293,19 @@ LRESULT CMainFrame::OnAlwaysOnTop(WORD, WORD, HWND, BOOL&) {
 }
 
 LRESULT CMainFrame::OnFonts(WORD, WORD, HWND, BOOL&) {
-	LOGFONT lf = AppSettings::Get().ViewFont();
-	if (lf.lfFaceName[0] == 0)
-		::GetObject(AtlGetDefaultGuiFont(), sizeof(lf), &lf);
+	// the current font; the setting keeps it at 96 DPI
+	auto dpi = GetDpiForWindow(m_hWnd);
+	LOGFONT lf;
+	m_Font.GetLogFont(lf);
 
 	CFontDialog dlg(&lf, CF_SCREENFONTS | CF_INITTOLOGFONTSTRUCT);
 	if (dlg.DoModal(m_hWnd) != IDOK)
 		return 0;
 
-	AppSettings::Get().ViewFont(dlg.m_lf);
-	m_Font.DeleteObject();
-	m_Font.CreateFontIndirect(&dlg.m_lf);
+	lf = dlg.m_lf;
+	lf.lfHeight = ::MulDiv(lf.lfHeight, USER_DEFAULT_SCREEN_DPI, dpi);
+	AppSettings::Get().ViewFont(lf);
+	CreateViewFont();
 	ApplyFont(m_view);
 	return 0;
 }
@@ -415,7 +442,8 @@ void CMainFrame::CloseTab(CWindow* win) {
 
 void CMainFrame::InitToolBar(CToolBarCtrl& tb) {
 	CImageList tbImages;
-	tbImages.Create(24, 24, ILC_COLOR32, 8, 4);
+	int size = WindowHelper::DpiScale(24);
+	tbImages.Create(size, size, ILC_COLOR32, 8, 4);
 	tb.SetImageList(tbImages);
 
 	struct {
@@ -438,7 +466,7 @@ void CMainFrame::InitToolBar(CToolBarCtrl& tb) {
 		if (b.id == 0)
 			tb.AddSeparator(0);
 		else {
-			int image = tbImages.AddIcon(AtlLoadIconImage(b.image, 0, 24, 24));
+			int image = tbImages.AddIcon(AtlLoadIconImage(b.image, 0, size, size));
 			tb.AddButton(b.id, b.style, TBSTATE_ENABLED, image, b.text, 0);
 		}
 	}

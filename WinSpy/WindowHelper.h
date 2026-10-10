@@ -25,7 +25,13 @@ struct WindowHelper final {
 	static bool Flash(HWND hWnd);
 	// flashes a red border around the window a few times (without blocking)
 	static void HighlightWindow(HWND hWnd);
-	// "Per-Monitor v2 (144)" and the like; empty before Windows 10 1607
+	// a size in pixels at 96 DPI, for the system DPI (icons, image lists and such are made once, at that DPI)
+	static int DpiScale(int size);
+	// a list view's column widths and order, as text (for the settings)
+	static CString GetColumnsLayout(CListViewCtrl& list);
+	// ignored if the list's columns are not the ones the layout was made of
+	static void SetColumnsLayout(CListViewCtrl& list, CString const& layout);
+	// "Per-Monitor v2 (144)" and the like
 	static CString GetDpiAwareness(HWND hWnd);
 	// No, App, Shell or Inherited (DWM hides cloaked windows though they are "visible")
 	static CString GetCloakedState(HWND hWnd);

@@ -4,6 +4,7 @@
 #include "FormatHelper.h"
 #include "SortHelper.h"
 #include "ProcessHelper.h"
+#include "AppSettings.h"
 #include <WTLHelper.h>
 
 void CWindowsListView::SetSelectedHwnd(HWND hWnd) {
@@ -57,9 +58,18 @@ LRESULT CWindowsListView::OnCreate(UINT, WPARAM, LPARAM, BOOL&) {
 	}
 
 	cm->UpdateColumns();
+	WindowHelper::SetColumnsLayout(m_List, AppSettings::Get().WindowsListColumns().c_str());
 
+	m_ShowHiddenWindows = AppSettings::Get().ListShowHidden() != 0;
+	m_ShowNoTitleWindows = AppSettings::Get().ListShowNoTitle() != 0;
 
     return 0;
+}
+
+LRESULT CWindowsListView::OnDestroy(UINT, WPARAM, LPARAM, BOOL& bHandled) {
+	AppSettings::Get().WindowsListColumns(std::wstring(WindowHelper::GetColumnsLayout(m_List)));
+	bHandled = FALSE;
+	return 0;
 }
 
 bool CWindowsListView::IsListed(HWND hWnd) const {
@@ -448,6 +458,7 @@ void CWindowsListView::UpdateList() {
 
 LRESULT CWindowsListView::OnToggleEmptyTitleWindows(WORD, WORD, HWND, BOOL&) {
 	m_ShowNoTitleWindows = !m_ShowNoTitleWindows;
+	AppSettings::Get().ListShowNoTitle(m_ShowNoTitleWindows);
 	Refresh();
 
 	return 0;
@@ -467,6 +478,7 @@ LRESULT CWindowsListView::OnItemChanged(int, LPNMHDR, BOOL&) {
 
 LRESULT CWindowsListView::OnToggleHiddenWindows(WORD, WORD, HWND, BOOL&) {
 	m_ShowHiddenWindows = !m_ShowHiddenWindows;
+	AppSettings::Get().ListShowHidden(m_ShowHiddenWindows);
 	Refresh();
 
 	return 0;

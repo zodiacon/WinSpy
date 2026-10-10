@@ -2,6 +2,7 @@
 #include "resource.h"
 #include "ProcessesView.h"
 #include "ImageIconCache.h"
+#include "AppSettings.h"
 
 LRESULT CProcessesView::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
 	m_Splitter.SetSplitterExtendedStyle(SPLIT_FLATBAR | SPLIT_PROPORTIONAL);
@@ -16,10 +17,18 @@ LRESULT CProcessesView::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 
 	m_Splitter.SetSplitterPanes(m_Tree, m_WindowsView);
 	UpdateLayout();
-	m_Splitter.SetSplitterPosPct(35);
+	m_Splitter.SetSplitterPosPct(AppSettings::Get().ProcessesSplitter());
 
+	m_ShowHiddenWindows = AppSettings::Get().ProcessesShowHidden() != 0;
+	m_ShowNoTitleWindows = AppSettings::Get().ProcessesShowNoTitle() != 0;
 	InitTree();
 
+	return 0;
+}
+
+LRESULT CProcessesView::OnDestroy(UINT, WPARAM, LPARAM, BOOL& bHandled) {
+	AppSettings::Get().ProcessesSplitter(m_Splitter.GetSplitterPosPct());
+	bHandled = FALSE;
 	return 0;
 }
 
@@ -56,6 +65,8 @@ void CProcessesView::InitTree() {
 	for (auto& pi : info.Processes) {
 		auto icon = ImageIconCache::Get().GetIcon(pi.FullPath);
 		text.Format(L"%s (%u)", (PCWSTR)pi.ProcessName, pi.ProcessId);
+		if (!pi.Accessible)
+			text += L" - access denied";
 		auto node = m_Tree.InsertItem(text, icon, icon, TVI_ROOT, TVI_SORT);
 		node.SetData((DWORD_PTR)ItemType::Process);
 		m_Processes.insert({ node, pi });
@@ -325,6 +336,7 @@ void CProcessesView::RemoveFromWindowMap(HTREEITEM hItem) {
 
 LRESULT CProcessesView::OnToggleHiddenWindows(WORD, WORD, HWND, BOOL&) {
 	m_ShowHiddenWindows = !m_ShowHiddenWindows;
+	AppSettings::Get().ProcessesShowHidden(m_ShowHiddenWindows);
 	UpdateUI();
 	InitTree();
 	return 0;
@@ -332,6 +344,7 @@ LRESULT CProcessesView::OnToggleHiddenWindows(WORD, WORD, HWND, BOOL&) {
 
 LRESULT CProcessesView::OnToggleEmptyTitleWindows(WORD, WORD, HWND, BOOL&) {
 	m_ShowNoTitleWindows = !m_ShowNoTitleWindows;
+	AppSettings::Get().ProcessesShowNoTitle(m_ShowNoTitleWindows);
 	UpdateUI();
 	InitTree();
 	return 0;

@@ -286,7 +286,7 @@ LRESULT CMessagesView::OnCreate(UINT, WPARAM, LPARAM, BOOL&) {
 	UISetCheck(ID_MESSAGES_AUTOSCROLL, m_AutoScroll);
 
 	// the search box, in a band of its own next to the toolbar
-	CRect rc(0, 0, 220, 22);
+	CRect rc(0, 0, WindowHelper::DpiScale(220), WindowHelper::DpiScale(22));
 	m_Search.Create(m_hWndToolBar, &rc, nullptr, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, WS_EX_CLIENTEDGE, IDC_SEARCH);
 	m_Search.SetFont(AtlGetDefaultGuiFont());
 	m_Search.SetCueBannerText(L"Search messages");
@@ -335,6 +335,7 @@ LRESULT CMessagesView::OnCreate(UINT, WPARAM, LPARAM, BOOL&) {
 	}
 
 	cm->UpdateColumns();
+	WindowHelper::SetColumnsLayout(m_List, AppSettings::Get().MessagesColumns().c_str());
 
 	// the filter last chosen
 	m_Filter.FromString(AppSettings::Get().MessageFilter().c_str());
@@ -434,6 +435,7 @@ LRESULT CMessagesView::OnFilter(WORD, WORD, HWND, BOOL&) {
 }
 
 LRESULT CMessagesView::OnDestroy(UINT, WPARAM, LPARAM, BOOL& bHandled) {
+	AppSettings::Get().MessagesColumns(std::wstring(WindowHelper::GetColumnsLayout(m_List)));
 	StopCapture();
 	if (m_hReadyEvent)
 		::CloseHandle(m_hReadyEvent);

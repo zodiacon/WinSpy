@@ -47,11 +47,17 @@ The list pane remembers its mode (window, thread, process or all) so `Refresh` r
 
 **Tree search.** The search box (Ctrl+F) rebuilds the tree with only the matching windows (class, title or handle) plus their ancestors, all expanded, without lazy placeholders. WinSpy's own windows are left out of the results. Events then only update or remove nodes; they don't add new matches.
 
+**Settings.** `AppSettings` is saved by `WinMain` after the message loop ends, not in the frame's `WM_DESTROY`. The views store their state (splitter positions, column layouts via `WindowHelper::Get/SetColumnsLayout`) in their own `WM_DESTROY`, which runs after the frame's. Toggles are saved when changed, and the window placement in `CMainFrame::OnDestroy`.
+
+**DPI.** WinSpy is per-monitor v2 DPI aware. It's set by `SetProcessDpiAwarenessContext` at the start of `WinMain`, because the project's manifest option only offers v1. Icons, image lists and toolbars are sized once for the system DPI (`WindowHelper::DpiScale`). The trees' and lists' font is made for the window's DPI and remade on `WM_DPICHANGED` (`CMainFrame::CreateViewFont`). The Fonts choice is stored at 96 DPI. The code targets Windows 10 (`_WIN32_WINNT 0x0A00` in `pch.h`).
+
+**Always On Top.** Windows ignores `SetWindowPos(HWND_TOPMOST)` from a process that was started without being brought to the foreground (by a script, say). This was verified with a plain Win32 window, so it isn't WTL's or WTLHelper's doing. That's why the saved setting is applied as `WS_EX_TOPMOST` when the frame is created (`Run` in `WinSpy.cpp`), which Windows always honors. The menu command uses `SetWindowPos`; that works because a click gives the process foreground rights.
+
 **Locate under the cursor.** Ctrl+Alt+F12 is a global hot key (`RegisterHotKey`, `CMainFrame::OnHotKey`) that locates the window under the mouse in a windows tree.
 
 **Dark mode** works the same way as in AstroStudio, through WTLHelper's DarkMode library:
 - **Startup:** `WinMain` loads `AppSettings` (`HKCU\Software\WinSpy\Settings`, or `WinSpy.ini` next to the EXE) and calls `WTLHelper::InitDarkMode` before any window is created. `DarkMode` is -1 until the user chooses, which means follow the system.
-- **Toggle:** Options ▸ Dark Mode (`ID_OPTIONS_DARKMODE`) calls `WTLHelper::SwitchToMode`, which re-themes every child and sends `WTLHelper::ThemeChangedMessage` to all descendants. Settings are saved in `CMainFrame::OnDestroy`.
+- **Toggle:** Options ▸ Dark Mode (`ID_OPTIONS_DARKMODE`) calls `WTLHelper::SwitchToMode`, which re-themes every child and sends `WTLHelper::ThemeChangedMessage` to all descendants.
 - **How it themes:** WTLHelper themes windows as they're created, using a thread hook, and detours `GetSysColor`/`GetSysColorBrush`/`FillRect`. That's why WinSpy links Detours, and why the linker warns about `detours.lib`. In custom drawing, use system colors or check `WTLHelper::IsDarkMode()`; don't hard-code light colors.
 - **Menus:** they are plain Win32 menus, not owner-drawn. Icons are set as item bitmaps by `CMainFrame::InitMenu` → `WTLHelper::InitMenu`. Those bitmaps are drawn on the current background, so `InitMenu` runs again after a mode switch, and on every context menu shown through `IMainFrame::ShowPopupMenu`. Show context menus through `ShowPopupMenu` so they get icons.
 

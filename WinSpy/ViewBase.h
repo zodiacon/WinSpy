@@ -55,7 +55,8 @@ protected:
 		tb.SetExtendedStyle(TBSTYLE_EX_MIXEDBUTTONS);
 
 		CImageList tbImages;
-		tbImages.Create(24, 24, ILC_COLOR32 | ILC_COLOR | ILC_MASK, 4, 4);
+		int size = ::MulDiv(24, ::GetDpiForSystem(), USER_DEFAULT_SCREEN_DPI);
+		tbImages.Create(size, size, ILC_COLOR32 | ILC_COLOR | ILC_MASK, 4, 4);
 		tb.SetImageList(tbImages);
 
 		for (int i = 0; i < count; i++) {
@@ -63,7 +64,7 @@ protected:
 			if (b.id == 0)
 				tb.AddSeparator(0);
 			else {
-				int image = b.image == 0 ? I_IMAGENONE : tbImages.AddIcon(AtlLoadIconImage(b.image, 0, 24, 24));
+				int image = b.image == 0 ? I_IMAGENONE : tbImages.AddIcon(AtlLoadIconImage(b.image, 0, size, size));
 				tb.AddButton(b.id, b.style | (b.text ? BTNS_SHOWTEXT : 0), TBSTATE_ENABLED, image, b.text, 0);
 			}
 		}

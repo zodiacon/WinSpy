@@ -5,6 +5,7 @@ struct ProcessInfo {
 	std::vector<DWORD> Threads;
 	CString ProcessName;
 	CString FullPath;
+	bool Accessible{ true };		// WinSpy could open it (so its details can be shown)
 };
 
 enum class EnumProcessesOptions {

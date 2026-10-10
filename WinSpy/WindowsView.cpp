@@ -9,6 +9,7 @@
 #include "ProcessHelper.h"
 #include "WindowHelper.h"
 #include "SortHelper.h"
+#include "AppSettings.h"
 
 
 BOOL CWindowsView::PreTranslateMessage(MSG* pMsg) {
@@ -246,7 +247,7 @@ LRESULT CWindowsView::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 
 	// the search box, above both panes
 	CreateSimpleReBar(ATL_SIMPLE_REBAR_NOBORDER_STYLE);
-	CRect rc(0, 0, 300, 22);
+	CRect rc(0, 0, WindowHelper::DpiScale(300), WindowHelper::DpiScale(22));
 	m_Search.Create(m_hWndToolBar, &rc, nullptr, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, WS_EX_CLIENTEDGE, IDC_SEARCH);
 	m_Search.SetFont(AtlGetDefaultGuiFont());
 	m_Search.SetCueBannerText(L"Search windows by class, title or handle (Ctrl+F)");
@@ -261,8 +262,10 @@ LRESULT CWindowsView::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 
 	m_Splitter.SetSplitterPanes(m_Tree, m_WindowsView);
 	UpdateLayout();
-	m_Splitter.SetSplitterPosPct(35);
+	m_Splitter.SetSplitterPosPct(AppSettings::Get().WindowsSplitter());
 
+	m_ShowHiddenWindows = AppSettings::Get().WindowsShowHidden() != 0;
+	m_ShowNoTitleWindows = AppSettings::Get().WindowsShowNoTitle() != 0;
 	InitTree();
 	m_WindowMap.reserve(256);
 
@@ -273,6 +276,7 @@ LRESULT CWindowsView::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 
 LRESULT CWindowsView::OnDestroy(UINT, WPARAM, LPARAM, BOOL& bHandled) {
 	WindowEvents::Unsubscribe(this);
+	AppSettings::Get().WindowsSplitter(m_Splitter.GetSplitterPosPct());
 	bHandled = FALSE;
 	return 0;
 }
@@ -491,6 +495,7 @@ LRESULT CWindowsView::OnRefresh(WORD, WORD, HWND, BOOL&) {
 
 LRESULT CWindowsView::OnToggleHiddenWindows(WORD, WORD, HWND, BOOL&) {
 	m_ShowHiddenWindows = !m_ShowHiddenWindows;
+	AppSettings::Get().WindowsShowHidden(m_ShowHiddenWindows);
 	UpdateUI();
 	InitTree();
 	return 0;
@@ -498,6 +503,7 @@ LRESULT CWindowsView::OnToggleHiddenWindows(WORD, WORD, HWND, BOOL&) {
 
 LRESULT CWindowsView::OnToggleEmptyTitleWindows(WORD, WORD, HWND, BOOL&) {
 	m_ShowNoTitleWindows = !m_ShowNoTitleWindows;
+	AppSettings::Get().WindowsShowNoTitle(m_ShowNoTitleWindows);
 	UpdateUI();
 	InitTree();
 	return 0;
