@@ -349,6 +349,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AboutDlg.cpp" />
+    <ClCompile Include="AllWindowsView.cpp" />
+    <ClCompile Include="MessageFilter.cpp" />
+    <ClCompile Include="MessageFilterDlg.cpp" />
+    <ClCompile Include="PropertiesDlg.cpp" />
+    <ClCompile Include="WindowCommands.cpp" />
     <ClCompile Include="AutomationTreeView.cpp" />
     <ClCompile Include="HookHelper.cpp" />
     <ClCompile Include="ImageIconCache.cpp" />
@@ -377,6 +382,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AboutDlg.h" />
+    <ClInclude Include="AllWindowsView.h" />
+    <ClInclude Include="MessageFilter.h" />
+    <ClInclude Include="MessageFilterDlg.h" />
+    <ClInclude Include="PropertiesDlg.h" />
+    <ClInclude Include="WindowCommands.h" />
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="AutomationTreeView.h" />
     <ClInclude Include="DialogHelper.h" />
@@ -410,6 +420,7 @@
     <Image Include="res\close-window.ico" />
     <Image Include="res\gears.ico" />
     <Image Include="res\gear_information.ico" />
+    <Image Include="res\gear_preferences.ico" />
     <Image Include="res\maximize.ico" />
     <Image Include="res\message.ico" />
     <Image Include="res\messages.ico" />

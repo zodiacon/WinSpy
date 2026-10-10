@@ -64,39 +64,6 @@ HWND CWindowsListView::GetSelectedListHwnd() const {
 	return index >= 0 && index < (int)m_Items.size() ? m_Items[index].hWnd : nullptr;
 }
 
-LRESULT CWindowsListView::OnWindowShow(WORD, WORD, HWND, BOOL&) {
-	CWindow win(GetSelectedListHwnd());
-	if (!win)
-		return 0;
-	win.ShowWindowAsync(SW_SHOW);
-
-	return 0;
-}
-
-LRESULT CWindowsListView::OnWindowHide(WORD, WORD, HWND, BOOL&) {
-	CWindow win(GetSelectedListHwnd());
-	if (win)
-		win.ShowWindowAsync(SW_HIDE);
-	return 0;
-}
-
-LRESULT CWindowsListView::OnWindowMinimize(WORD, WORD, HWND, BOOL&) {
-	CWindow win(GetSelectedListHwnd());
-	if (!win)
-		return 0;
-	win.ShowWindowAsync(SW_MINIMIZE);
-	return 0;
-}
-
-LRESULT CWindowsListView::OnWindowMaximize(WORD, WORD, HWND, BOOL&) {
-	CWindow win(GetSelectedListHwnd());
-	if (!win)
-		return 0;
-	win.ShowWindowAsync(SW_MAXIMIZE);
-
-	return 0;
-}
-
 CString CWindowsListView::GetColumnText(HWND, int row, int col) const {
 	auto& item = m_Items[row];
 	if (!::IsWindow(item.hWnd)) {
@@ -302,6 +269,7 @@ void CWindowsListView::UpdateList(HWND hWnd) {
 	if (m_ContextMenuOpen)
 		return;
 
+	m_Mode = ListMode::Window;
 	m_Items.clear();
 	m_SelectedHwnd = hWnd;
 	std::erase_if(m_NoIcon, [](auto h) { return !::IsWindow(h); });
@@ -320,6 +288,8 @@ void CWindowsListView::UpdateList(HWND hWnd) {
 }
 
 void CWindowsListView::UpdateListByThread(DWORD tid) {
+	m_Mode = ListMode::Thread;
+	m_ModeThread = tid;
 	m_SelectedHwnd.Detach();
 	m_Items.clear();
 	AddThreadWindows(tid);
@@ -329,6 +299,9 @@ void CWindowsListView::UpdateListByThread(DWORD tid) {
 }
 
 void CWindowsListView::UpdateListByProcess(ProcessInfo const& pi) {
+	m_Mode = ListMode::Process;
+	m_ModeProcess = pi;
+	m_SelectedHwnd.Detach();
 	m_Items.clear();
 	for (auto tid : pi.Threads)
 		AddThreadWindows(tid);
@@ -354,7 +327,34 @@ void CWindowsListView::AddThreadWindows(DWORD tid) {
 		}, reinterpret_cast<LPARAM>(this));
 }
 
+void CWindowsListView::UpdateListAll() {
+	m_Mode = ListMode::All;
+	m_SelectedHwnd.Detach();
+	m_Items.clear();
+	::EnumWindows([](auto hWnd, auto param) {
+		auto p = reinterpret_cast<CWindowsListView*>(param);
+		if (!p->m_ShowHiddenWindows && !::IsWindowVisible(hWnd))
+			return TRUE;
+		if (!p->m_ShowNoTitleWindows && ::GetWindowTextLength(hWnd) == 0)
+			return TRUE;
+		p->m_Items.push_back(WindowHelper::GetWindowInfo(hWnd));
+		return TRUE;
+		}, reinterpret_cast<LPARAM>(this));
+
+	m_List.SetItemCountEx((int)m_Items.size(), LVSICF_NOSCROLL);
+	UpdateList();
+}
+
 void CWindowsListView::Refresh() {
+	if (m_ContextMenuOpen)
+		return;
+
+	switch (m_Mode) {
+		case ListMode::Window: UpdateList(m_SelectedHwnd); break;
+		case ListMode::Thread: UpdateListByThread(m_ModeThread); break;
+		case ListMode::Process: UpdateListByProcess(m_ModeProcess); break;
+		case ListMode::All: UpdateListAll(); break;
+	}
 }
 
 void CWindowsListView::AddChildWindows(std::vector<WindowItem>& v, HWND hParent, bool directOnly) {
@@ -420,38 +420,16 @@ void CWindowsListView::UpdateList() {
 
 LRESULT CWindowsListView::OnToggleEmptyTitleWindows(WORD, WORD, HWND, BOOL&) {
 	m_ShowNoTitleWindows = !m_ShowNoTitleWindows;
-	UpdateList(m_SelectedHwnd);
+	Refresh();
 
 	return 0;
 }
 
 LRESULT CWindowsListView::OnToggleChildWindows(WORD, WORD, HWND, BOOL&) {
 	m_ShowChildWindows = !m_ShowChildWindows;
-	UpdateList(m_SelectedHwnd);
+	Refresh();
 
 	return 0;
-}
-
-LRESULT CWindowsListView::OnWindowRestore(WORD, WORD, HWND, BOOL&) {
-	CWindow win(GetSelectedListHwnd());
-	if (!win)
-		return 0;
-	win.ShowWindowAsync(SW_RESTORE);
-	return 0;
-}
-
-LRESULT CWindowsListView::OnWindowBringToFront(WORD, WORD, HWND, BOOL&) {
-	CWindow win(GetSelectedListHwnd());
-	if (!win)
-		return 0;
-	win.BringWindowToTop();
-	return 0;
-}
-
-LRESULT CWindowsListView::OnWindowProperties(WORD, WORD, HWND, BOOL&) {
-	if (auto hWnd = GetSelectedListHwnd())
-		WindowHelper::ShowWindowProperties(hWnd);
-	return LRESULT();
 }
 
 LRESULT CWindowsListView::OnItemChanged(int, LPNMHDR, BOOL&) {
@@ -459,16 +437,9 @@ LRESULT CWindowsListView::OnItemChanged(int, LPNMHDR, BOOL&) {
 	return 0;
 }
 
-LRESULT CWindowsListView::OnWindowFlash(WORD, WORD, HWND, BOOL&) {
-	if (auto hWnd = GetSelectedListHwnd())
-		WindowHelper::Flash(hWnd);
-
-	return 0;
-}
-
 LRESULT CWindowsListView::OnToggleHiddenWindows(WORD, WORD, HWND, BOOL&) {
 	m_ShowHiddenWindows = !m_ShowHiddenWindows;
-	UpdateList(m_SelectedHwnd);
+	Refresh();
 
 	return 0;
 }

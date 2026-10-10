@@ -15,7 +15,11 @@
 #include "MessagesView.h"
 #include "AutomationTreeView.h"
 #include "AppSettings.h"
+#include "AllWindowsView.h"
+#include "ProcessHelper.h"
 #include <WTLHelper.h>
+#include <ClipboardHelper.h>
+#include <ListViewhelper.h>
 
 const int WINDOW_MENU_POSITION = 5;
 
@@ -40,6 +44,13 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	InitMenu(GetMenu());
 	UIAddMenu(GetMenu());
 	UISetCheck(ID_OPTIONS_DARKMODE, WTLHelper::IsDarkMode());
+
+	if (AppSettings::Get().AlwaysOnTop()) {
+		SetWindowPos(HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+		UISetCheck(ID_OPTIONS_ALWAYSONTOP, TRUE);
+	}
+	if (auto lf = AppSettings::Get().ViewFont(); lf.lfFaceName[0])
+		m_Font.CreateFontIndirect(&lf);
 
 	CToolBarCtrl tb;
 	auto hWndToolBar = tb.Create(m_hWnd, nullptr, nullptr, ATL_SIMPLE_TOOLBAR_PANE_STYLE | TBSTYLE_LIST, 0, ATL_IDW_TOOLBAR);
@@ -111,7 +122,7 @@ LRESULT CMainFrame::OnViewAllWindows(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 	{
 		CWaitCursor wait;
 		pView->Create(m_view, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
-		m_view.AddPage(pView->m_hWnd, _T("Windows Tree"), 0, pView);
+		AddView(pView->m_hWnd, L"Windows Tree", 0, pView);
 	}
 
 	return 0;
@@ -122,7 +133,7 @@ LRESULT CMainFrame::OnViewAllProcesses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 	{
 		CWaitCursor wait;
 		pView->Create(m_view, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
-		m_view.AddPage(pView->m_hWnd, _T("Processes"), 1, pView);
+		AddView(pView->m_hWnd, L"Processes", 1, pView);
 	}
 
 	return 0;
@@ -207,7 +218,7 @@ LRESULT CMainFrame::OnTabCloseButton(int, LPNMHDR, BOOL&) {
 LRESULT CMainFrame::OnViewAutomationTree(WORD, WORD, HWND, BOOL&) {
 	auto pView = new CAutomationTreeView(this);
 	pView->Create(m_view, rcDefault, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
-	m_view.AddPage(pView->m_hWnd, L"UI Automation", 2, pView);
+	AddView(pView->m_hWnd, L"UI Automation", 3, pView);
 	return 0;
 }
 
@@ -220,12 +231,155 @@ UINT CMainFrame::ShowPopupMenu(HMENU hMenu, const POINT& pt, DWORD flags) {
 	return (UINT)::TrackPopupMenu(hMenu, 0, pt.x, pt.y, 0, m_hWnd, nullptr);
 }
 
-CMessagesView* CMainFrame::CreateMessagesView() {
+void CMainFrame::AddView(HWND hView, PCWSTR title, int image, void* data) {
+	m_view.AddPage(hView, title, image, data);
+	if (m_Font)
+		ApplyFont(hView);
+}
+
+void CMainFrame::ApplyFont(HWND hRoot) {
+	// the trees and the lists only (not the toolbars, tabs or status bar)
+	::EnumChildWindows(hRoot, [](auto hWnd, auto font) {
+		WCHAR className[32];
+		if (::GetClassName(hWnd, className, _countof(className))
+			&& (_wcsicmp(className, WC_TREEVIEW) == 0 || _wcsicmp(className, WC_LISTVIEW) == 0))
+			::SendMessage(hWnd, WM_SETFONT, (WPARAM)font, TRUE);
+		return TRUE;
+		}, (LPARAM)(HFONT)m_Font);
+}
+
+LRESULT CMainFrame::OnViewWindowsList(WORD, WORD, HWND, BOOL&) {
+	auto pView = new CAllWindowsView(this);
+	CWaitCursor wait;
+	pView->Create(m_view, rcDefault, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
+	AddView(pView->m_hWnd, L"Windows List", 0, pView);
+	return 0;
+}
+
+LRESULT CMainFrame::OnAlwaysOnTop(WORD, WORD, HWND, BOOL&) {
+	bool onTop = (GetExStyle() & WS_EX_TOPMOST) == 0;
+	SetWindowPos(onTop ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+	UISetCheck(ID_OPTIONS_ALWAYSONTOP, onTop);
+	AppSettings::Get().AlwaysOnTop(onTop);
+	return 0;
+}
+
+LRESULT CMainFrame::OnFonts(WORD, WORD, HWND, BOOL&) {
+	LOGFONT lf = AppSettings::Get().ViewFont();
+	if (lf.lfFaceName[0] == 0)
+		::GetObject(AtlGetDefaultGuiFont(), sizeof(lf), &lf);
+
+	CFontDialog dlg(&lf, CF_SCREENFONTS | CF_INITTOLOGFONTSTRUCT);
+	if (dlg.DoModal(m_hWnd) != IDOK)
+		return 0;
+
+	AppSettings::Get().ViewFont(dlg.m_lf);
+	m_Font.DeleteObject();
+	m_Font.CreateFontIndirect(&dlg.m_lf);
+	ApplyFont(m_view);
+	return 0;
+}
+
+LRESULT CMainFrame::OnCopy(WORD, WORD, HWND, BOOL&) {
+	// the selection of the tree or list that has the focus
+	auto hFocus = ::GetFocus();
+	WCHAR className[32];
+	if (!hFocus || !::GetClassName(hFocus, className, _countof(className)))
+		return 0;
+
+	CString text;
+	if (_wcsicmp(className, WC_TREEVIEW) == 0) {
+		CTreeViewCtrl tv(hFocus);
+		if (auto hItem = tv.GetSelectedItem())
+			tv.GetItemText(hItem, text);
+	}
+	else if (_wcsicmp(className, WC_LISTVIEW) == 0) {
+		text = ListViewHelper::GetSelectedRowsAsString(CListViewCtrl(hFocus));
+	}
+	else if (_wcsicmp(className, WC_EDIT) == 0) {
+		::SendMessage(hFocus, WM_COPY, 0, 0);
+		return 0;
+	}
+
+	if (text.IsEmpty())
+		::MessageBeep(MB_ICONWARNING);
+	else
+		ClipboardHelper::CopyText(m_hWnd, text);
+	return 0;
+}
+
+bool CMainFrame::CaptureMessages(HWND hWnd, DWORD threadId, DWORD processId) {
+	// the process the messages come from
+	DWORD pid = processId;
+	if (hWnd)
+		::GetWindowThreadProcessId(hWnd, &pid);
+	else if (threadId) {
+		auto hThread = ::OpenThread(THREAD_QUERY_LIMITED_INFORMATION, FALSE, threadId);
+		if (hThread) {
+			pid = ::GetProcessIdOfThread(hThread);
+			::CloseHandle(hThread);
+		}
+	}
+
+	if (pid == ::GetCurrentProcessId()) {
+		// its own messages would make more messages, without end
+		AtlMessageBox(m_hWnd, L"WinSpy can't capture its own messages.", IDS_TITLE, MB_ICONWARNING);
+		return false;
+	}
+
+	// the hook DLL can only be loaded into processes of its own bitness
+	auto hProcess = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+	if (hProcess) {
+		BOOL targetWow64 = FALSE, wow64 = FALSE;
+		::IsWow64Process(hProcess, &targetWow64);
+		::IsWow64Process(::GetCurrentProcess(), &wow64);
+		::CloseHandle(hProcess);
+		if (targetWow64 != wow64) {
+			AtlMessageBox(m_hWnd, targetWow64 ? L"This is a 32-bit process; this WinSpy can capture messages of 64-bit processes only."
+				: L"This is a 64-bit process; this WinSpy can capture messages of 32-bit processes only.", IDS_TITLE, MB_ICONWARNING);
+			return false;
+		}
+	}
+
+	CString title;
+	if (hWnd)
+		title.Format(L"Messages: 0x%zX", (DWORD_PTR)hWnd);
+	else if (threadId)
+		title.Format(L"Messages: Thread %u", threadId);
+	else
+		title.Format(L"Messages: %s (%u)", (PCWSTR)ProcessHelper::GetProcessImageName(pid), pid);
+
 	auto pView = new CMessagesView(this);
 	pView->Create(m_view, rcDefault, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
-	m_view.AddPage(pView->m_hWnd, L"Messages", 2, pView);
+	AddView(pView->m_hWnd, title, 2, pView);
 
-	return pView;
+	bool ok = hWnd ? pView->CaptureWindow(hWnd) : threadId ? pView->CaptureThread(threadId) : pView->CaptureProcess(processId);
+	if (!ok) {
+		AtlMessageBox(m_hWnd, L"Failed to install the message hooks (are too many captures open?)", IDS_TITLE, MB_ICONERROR);
+		CloseTab(pView);
+	}
+	return ok;
+}
+
+void CMainFrame::LocateInWindowsTree(HWND hWnd) {
+	// a windows tree tab: the active one if it is one, otherwise the first; a new one if there is none
+	int count = m_view.GetPageCount(), active = m_view.GetActivePage();
+	for (int n = 0; n < count; n++) {
+		int page = active < 0 ? n : (active + n) % count;
+		auto result = (LocateResult)::SendMessage(m_view.GetPageHWND(page), WM_LOCATE_WINDOW, 0, (LPARAM)hWnd);
+		if (result == LocateResult::NotHandled)
+			continue;
+
+		if (result == LocateResult::NotInTree)
+			AtlMessageBox(m_hWnd, L"The window is not in the tree (it may be hidden or have no title - see the View menu).", IDS_TITLE, MB_ICONINFORMATION);
+		else if (page != active)
+			m_view.SetActivePage(page);
+		return;
+	}
+
+	SendMessage(WM_COMMAND, ID_VIEW_ALLWINDOWS);
+	if (auto page = m_view.GetActivePage(); page >= 0 && (LocateResult)::SendMessage(m_view.GetPageHWND(page), WM_LOCATE_WINDOW, 0, (LPARAM)hWnd) == LocateResult::NotInTree)
+		AtlMessageBox(m_hWnd, L"The window is not in the tree (it may be hidden or have no title - see the View menu).", IDS_TITLE, MB_ICONINFORMATION);
 }
 
 void CMainFrame::CloseTab(CWindow* win) {

@@ -59,9 +59,7 @@ BEGIN
     END
     POPUP "&Edit"
     BEGIN
-        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
         MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
-        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
     END
     POPUP "&View"
     BEGIN
@@ -93,6 +91,7 @@ BEGIN
             MENUITEM "Ma&ximize",                   ID_WINDOW_MAXIMIZE
             MENUITEM "&Restore",                    ID_WINDOW_RESTORE
             MENUITEM "&Bring To Front",             ID_WINDOW_BRINGTOFRONT
+            MENUITEM "Send to &Back",               ID_TREE_SENDTOBACK
             MENUITEM "&Close",                      ID_STATE_CLOSE
             MENUITEM "&Flash",                      ID_STATE_FLASH
         END
@@ -145,9 +144,11 @@ BEGIN
             MENUITEM "Ma&ximize",                   ID_WINDOW_MAXIMIZE
             MENUITEM "&Restore",                    ID_WINDOW_RESTORE
             MENUITEM "&Bring To Front",             ID_WINDOW_BRINGTOFRONT
+            MENUITEM "Send to &Back",               ID_TREE_SENDTOBACK
             MENUITEM "&Close",                      ID_STATE_CLOSE
             MENUITEM "&Flash",                      ID_STATE_FLASH
         END
+        MENUITEM "&Messages...",                ID_WINDOW_MESSAGES
         MENUITEM SEPARATOR
         MENUITEM "&Properties...",              ID_WINDOW_PROPERTIES
         MENUITEM SEPARATOR
@@ -156,6 +157,8 @@ BEGIN
     POPUP "process"
     BEGIN
         MENUITEM "&Terminate",                  ID_PROCESS_TERMINATE
+        MENUITEM SEPARATOR
+        MENUITEM "&Messages...",                ID_WINDOW_MESSAGES
         MENUITEM SEPARATOR
         MENUITEM "&Properties...",              ID_PROCESS_PROPERTIES
     END
@@ -218,6 +221,8 @@ IDI_SENDTOFRONT         ICON                    "res\\WindowSendToFront.ico"
 IDI_RESTORE             ICON                    "res\\restore.ico"
 
 IDI_AUTOMATION          ICON                    "res\\Automation.ico"
+
+IDI_FILTER              ICON                    "res\\gear_preferences.ico"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -294,6 +299,43 @@ BEGIN
     LTEXT           "Class Style:",IDC_STATIC,320,129,38,8
     EDITTEXT        IDC_STYLECLASS,364,127,61,14,ES_AUTOHSCROLL | ES_READONLY
     LISTBOX         IDC_CLASSSTYLE,322,146,109,93,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+END
+
+IDD_PROPERTIES DIALOGEX 0, 0, 309, 226
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Properties"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,7,7,295,192
+    PUSHBUTTON      "&Copy",IDC_COPY,7,205,50,14
+    DEFPUSHBUTTON   "Close",IDOK,252,205,50,14
+END
+
+IDD_MESSAGEFILTER DIALOGEX 0, 0, 295, 214
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Message Filter"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Show",IDC_STATIC,7,7,90,58
+    CONTROL         "&Posted",IDC_POSTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,20,70,10
+    CONTROL         "&Sent",IDC_SENT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,34,70,10
+    CONTROL         "&Returned",IDC_RETURNED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,48,70,10
+    GROUPBOX        "Categories",IDC_STATIC,105,7,183,58
+    CONTROL         "&Mouse",IDC_CAT_MOUSE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,113,20,50,10
+    CONTROL         "&Keyboard",IDC_CAT_KEYBOARD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,113,34,50,10
+    CONTROL         "&Non-client",IDC_CAT_NONCLIENT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,113,48,50,10
+    CONTROL         "&Timer",IDC_CAT_TIMER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,173,20,50,10
+    CONTROL         "P&aint",IDC_CAT_PAINT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,173,34,50,10
+    CONTROL         "&Window",IDC_CAT_WINDOW,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,173,48,50,10
+    CONTROL         "&Other",IDC_CAT_OTHER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,233,20,50,10
+    LTEXT           "&Exclude these messages (names or numbers, separated by commas or spaces):",IDC_STATIC,7,74,281,8
+    EDITTEXT        IDC_EXCLUDE,7,85,281,28,ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL
+    LTEXT           "Show &only these messages (empty: all):",IDC_STATIC,7,120,281,8
+    EDITTEXT        IDC_INCLUDE,7,131,281,28,ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL
+    PUSHBUTTON      "&Hide Mouse Moves && Timers",IDC_PRESET,7,167,110,14
+    PUSHBUTTON      "Show &All",IDC_RESET,123,167,60,14
+    DEFPUSHBUTTON   "OK",IDOK,184,193,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,238,193,50,14
 END
 
 IDD_PROPWINDOWS DIALOGEX 0, 0, 401, 247
@@ -405,8 +447,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,3,0,0
- PRODUCTVERSION 0,3,0,0
+ FILEVERSION 0,5,0,0
+ PRODUCTVERSION 0,5,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -423,12 +465,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Scorpio Software"
             VALUE "FileDescription", "WinSpy - UI Windows Properties and Messages"
-            VALUE "FileVersion", "0.3.0.0"
+            VALUE "FileVersion", "0.5.0.0"
             VALUE "InternalName", "WinSpy"
-            VALUE "LegalCopyright", "©2021-2024 Pavel Yosifovich"
+            VALUE "LegalCopyright", "©2021-2026 Pavel Yosifovich"
             VALUE "OriginalFilename", "WinSpy.exe"
             VALUE "ProductName", "WinSpy"
-            VALUE "ProductVersion", "0.3.0.0"
+            VALUE "ProductVersion", "0.5.0.0"
         END
     END
     BLOCK "VarFileInfo"

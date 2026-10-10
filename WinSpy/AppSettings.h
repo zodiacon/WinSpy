@@ -9,7 +9,13 @@ struct AppSettings : Settings {
 
 	BEGIN_SETTINGS(AppSettings)
 		SETTING(DarkMode, -1, SettingType::Int32);		// 1 dark, 0 light, -1 (never chosen): as the system is
+		SETTING(AlwaysOnTop, 0, SettingType::Bool);
+		SETTING(ViewFont, LOGFONT{}, SettingType::Binary);		// the trees' and lists' font (empty face: the default one)
+		SETTING_STRING(MessageFilter, L"");		// the Messages view's filter (MessageFilter::ToString); empty: everything
 	END_SETTINGS
 
 	DEF_SETTING(DarkMode, int)
+	DEF_SETTING(AlwaysOnTop, int)
+	DEF_SETTING(ViewFont, LOGFONT)
+	DEF_SETTING_STRING(MessageFilter)
 };

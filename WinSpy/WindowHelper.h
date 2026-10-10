@@ -13,7 +13,7 @@ struct StyleItem {
 	DWORD Mask{ Value };
 };
 
-struct WindowHelper abstract final {
+struct WindowHelper final {
 	static CString WindowStyleToString(HWND hWnd);
 	static CString ClassStyleToString(HWND hWnd);
 	static CString WindowExtendedStyleToString(HWND hWnd);
@@ -23,6 +23,8 @@ struct WindowHelper abstract final {
 	static HICON GetWindowIcon(HWND hWnd);
 	static HICON GetWindowOrProcessIcon(HWND hWnd);
 	static bool Flash(HWND hWnd);
+	// flashes a red border around the window a few times (without blocking)
+	static void HighlightWindow(HWND hWnd);
 	static void HighlightBorder(HWND hWnd, bool highlight = true);
 	static CString GetWindowClassAndTitle(HWND hWnd);
 	static std::unordered_map<HWND, int>& GetIconMap();

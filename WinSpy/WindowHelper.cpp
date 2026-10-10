@@ -106,6 +106,18 @@ bool WindowHelper::Flash(HWND hWnd) {
 	return ::FlashWindowEx(&info);
 }
 
+void WindowHelper::HighlightWindow(HWND hWnd) {
+	::TrySubmitThreadpoolCallback([](auto, auto p) {
+		auto hWnd = (HWND)p;
+		for (int i = 0; i < 3; i++) {
+			HighlightBorder(hWnd);
+			::Sleep(500);
+			HighlightBorder(hWnd, false);
+			::Sleep(500);
+		}
+		}, hWnd, nullptr);
+}
+
 void WindowHelper::HighlightBorder(HWND hWnd, bool highlight) {
 	// a null window would mean drawing on the whole screen
 	if (!::IsWindow(hWnd))
@@ -787,6 +799,9 @@ CString WindowHelper::WindowMessageToString(DWORD msg) {
 		CASE_STR(WM_USER);
 		CASE_STR(WM_APP);
 		case 0x0118: return L"WM_SYSTIMER";
+		// undocumented: the themed non-client area's caption and frame
+		case 0x00AE: return L"WM_NCUAHDRAWCAPTION";
+		case 0x00AF: return L"WM_NCUAHDRAWFRAME";
 		default:
 			if (msg > WM_USER && msg < WM_APP) {
 				CString text;

@@ -190,51 +190,6 @@ LRESULT CProcessesView::OnTreeNodeRightClick(HTREEITEM hItem, CPoint const& pt) 
 	return GetFrame()->ShowPopupMenu(menu.GetSubMenu(index), pt);
 }
 
-LRESULT CProcessesView::OnWindowShow(WORD, WORD, HWND, BOOL&) {
-	if (m_SelectedHwnd)
-		m_SelectedHwnd.ShowWindow(SW_SHOW);
-
-	return 0;
-}
-
-LRESULT CProcessesView::OnWindowHide(WORD, WORD, HWND, BOOL&) {
-	if (m_SelectedHwnd)
-		m_SelectedHwnd.ShowWindow(SW_HIDE);
-	return 0;
-}
-
-LRESULT CProcessesView::OnWindowMinimize(WORD, WORD, HWND, BOOL&) {
-	if (m_SelectedHwnd)
-		m_SelectedHwnd.ShowWindow(SW_MINIMIZE);
-	return 0;
-}
-
-LRESULT CProcessesView::OnWindowMaximize(WORD, WORD, HWND, BOOL&) {
-	if (m_SelectedHwnd)
-		m_SelectedHwnd.ShowWindow(SW_MAXIMIZE);
-
-	return 0;
-}
-
-LRESULT CProcessesView::OnWindowRestore(WORD, WORD, HWND, BOOL&) {
-	if (m_SelectedHwnd)
-		m_SelectedHwnd.ShowWindow(SW_RESTORE);
-	return 0;
-}
-
-LRESULT CProcessesView::OnWindowFlash(WORD, WORD, HWND, BOOL&) {
-	if (m_SelectedHwnd)
-		WindowHelper::Flash(m_SelectedHwnd);
-
-	return 0;
-}
-
-LRESULT CProcessesView::OnWindowBringToFront(WORD, WORD, HWND, BOOL&) {
-	if (m_SelectedHwnd)
-		m_SelectedHwnd.BringWindowToTop();
-	return 0;
-}
-
 LRESULT CProcessesView::OnNodeSelected(int, LPNMHDR hdr, BOOL&) {
 	auto tv = (NMTREEVIEW*)hdr;
 	if (tv->action == TVC_BYKEYBOARD) {
@@ -252,7 +207,7 @@ LRESULT CProcessesView::OnTreeNodeDoubleClick(HTREEITEM hItem, CPoint const& pt)
 	switch (static_cast<ItemType>(data)) {
 		case ItemType::Process:
 			if (auto it = m_Processes.find(hItem); it != m_Processes.end())
-				ProcessHelper::ShowProcessProperties(it->second);
+				ProcessHelper::ShowProcessProperties(it->second, m_hWnd);
 			break;
 
 		case ItemType::Thread:
@@ -266,15 +221,65 @@ LRESULT CProcessesView::OnTreeNodeDoubleClick(HTREEITEM hItem, CPoint const& pt)
 	return 0;
 }
 
-LRESULT CProcessesView::OnWindowProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if (m_SelectedHwnd)
-		WindowHelper::ShowWindowProperties(m_SelectedHwnd);
+LRESULT CProcessesView::OnProcessProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if (auto pi = GetSelectedProcess())
+		ProcessHelper::ShowProcessProperties(*pi, m_hWnd);
 	return 0;
 }
 
-LRESULT CProcessesView::OnProcessProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if (auto it = m_Processes.find(m_Tree.GetSelectedItem()); it != m_Processes.end())
-		ProcessHelper::ShowProcessProperties(it->second);
+LRESULT CProcessesView::OnThreadProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	if (auto tid = GetSelectedThread())
+		ProcessHelper::ShowThreadProperties(tid, m_hWnd);
+	return 0;
+}
+
+LRESULT CProcessesView::OnTerminateProcess(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
+	auto pi = GetSelectedProcess();
+	if (!pi)
+		return 0;
+
+	CString text;
+	text.Format(L"Terminate %s (%u)?", (PCWSTR)pi->ProcessName, pi->ProcessId);
+	if (AtlMessageBox(m_hWnd, (PCWSTR)text, IDS_TITLE, MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2) != IDYES)
+		return 0;
+
+	if (!ProcessHelper::Terminate(pi->ProcessId)) {
+		AtlMessageBox(m_hWnd, L"Failed to terminate the process", IDS_TITLE, MB_ICONERROR);
+		return 0;
+	}
+	InitTree();
+	return 0;
+}
+
+LRESULT CProcessesView::OnCaptureMessages(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& bHandled) {
+	if (::GetFocus() != m_Tree) {
+		bHandled = FALSE;		// the list's
+		return 0;
+	}
+
+	auto data = static_cast<ItemType>(m_Selected.GetData());
+	if (data == ItemType::Process) {
+		if (auto pi = GetSelectedProcess())
+			GetFrame()->CaptureMessages(nullptr, 0, pi->ProcessId);
+	}
+	else if (data == ItemType::Thread)
+		GetFrame()->CaptureMessages(nullptr, GetSelectedThread());
+	else if (m_SelectedHwnd)
+		GetFrame()->CaptureMessages(m_SelectedHwnd);
+	return 0;
+}
+
+ProcessInfo const* CProcessesView::GetSelectedProcess() const {
+	for (auto hItem = m_Tree.GetSelectedItem(); hItem; hItem = m_Tree.GetParentItem(hItem))
+		if (auto it = m_Processes.find(hItem); it != m_Processes.end())
+			return &it->second;
+	return nullptr;
+}
+
+DWORD CProcessesView::GetSelectedThread() const {
+	for (auto hItem = m_Tree.GetSelectedItem(); hItem; hItem = m_Tree.GetParentItem(hItem))
+		if (auto it = m_Threads.find(hItem); it != m_Threads.end())
+			return it->second;
 	return 0;
 }
 

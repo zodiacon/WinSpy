@@ -96,14 +96,38 @@
 #define ID_WINDOW_MESSAGES              32804
 #define ID_VIEW_AUTOMATIONTREE          32805
 #define ID_OPTIONS_DARKMODE             32806
+#define ID_MESSAGES_FILTER              32807
+#define ID_MESSAGES_PAUSE               32808
+#define ID_MESSAGES_CLEAR               32809
+#define ID_MESSAGES_AUTOSCROLL          32810
+#define ID_MESSAGES_SAVE                32811
+#define IDD_PROPERTIES                  230
+#define IDD_MESSAGEFILTER               231
+#define IDI_FILTER                      232
+#define IDC_LIST                        1020
+#define IDC_POSTED                      1021
+#define IDC_SENT                        1022
+#define IDC_RETURNED                    1023
+#define IDC_CAT_MOUSE                   1024
+#define IDC_CAT_KEYBOARD                1025
+#define IDC_CAT_NONCLIENT               1026
+#define IDC_CAT_TIMER                   1027
+#define IDC_CAT_PAINT                   1028
+#define IDC_CAT_WINDOW                  1029
+#define IDC_CAT_OTHER                   1030
+#define IDC_EXCLUDE                     1031
+#define IDC_INCLUDE                     1032
+#define IDC_PRESET                      1033
+#define IDC_RESET                       1034
+#define IDC_COPY                        1035
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        230
-#define _APS_NEXT_COMMAND_VALUE         32807
-#define _APS_NEXT_CONTROL_VALUE         1019
+#define _APS_NEXT_RESOURCE_VALUE        233
+#define _APS_NEXT_COMMAND_VALUE         32812
+#define _APS_NEXT_CONTROL_VALUE         1036
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

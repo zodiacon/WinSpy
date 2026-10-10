@@ -4,6 +4,7 @@
 #include "WindowsListView.h"
 #include "TreeViewManager.h"
 #include "ProcessHelper.h"
+#include "WindowCommands.h"
 
 class CProcessesView : 
 	public CViewBase<CProcessesView>,
@@ -24,15 +25,16 @@ protected:
 		COMMAND_ID_HANDLER(ID_VIEW_HIDDENWINDOWS, OnToggleHiddenWindows)
 		COMMAND_ID_HANDLER(ID_VIEW_EMPTYTITLEWINDOWS, OnToggleEmptyTitleWindows)
 		NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnNodeSelected)
-		COMMAND_ID_HANDLER(ID_WINDOW_SHOW, OnWindowShow)
-		COMMAND_ID_HANDLER(ID_WINDOW_HIDE, OnWindowHide)
-		COMMAND_ID_HANDLER(ID_WINDOW_BRINGTOFRONT, OnWindowBringToFront)
-		COMMAND_ID_HANDLER(ID_WINDOW_MINIMIZE, OnWindowMinimize)
-		COMMAND_ID_HANDLER(ID_WINDOW_MAXIMIZE, OnWindowMaximize)
-		COMMAND_ID_HANDLER(ID_STATE_FLASH, OnWindowFlash)
-		COMMAND_ID_HANDLER(ID_WINDOW_RESTORE, OnWindowRestore)
-		COMMAND_ID_HANDLER(ID_WINDOW_PROPERTIES, OnWindowProperties)
 		COMMAND_ID_HANDLER(ID_PROCESS_PROPERTIES, OnProcessProperties)
+		COMMAND_ID_HANDLER(ID_THREAD_PROPERTIES, OnThreadProperties)
+		COMMAND_ID_HANDLER(ID_PROCESS_TERMINATE, OnTerminateProcess)
+		COMMAND_ID_HANDLER(ID_WINDOW_MESSAGES, OnCaptureMessages)
+		// the window commands act on the tree's window when it has the focus, otherwise the list handles them
+		if (uMsg == WM_COMMAND && ::GetFocus() == m_Tree && WindowCommands::IsWindowCommand(LOWORD(wParam))) {
+			WindowCommands::Execute(LOWORD(wParam), m_SelectedHwnd, GetFrame());
+			lResult = 0;
+			return TRUE;
+		}
 		CHAIN_MSG_MAP(CTreeViewManager<CProcessesView>)
 		CHAIN_MSG_MAP(CViewBase<CProcessesView>)
 		if (m_WindowsView) {
@@ -63,19 +65,17 @@ private:
 	LRESULT OnNodeExpanding(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
 	LRESULT OnNodeDeleted(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
 	LRESULT OnNodeSelected(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
-	LRESULT OnWindowShow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnWindowHide(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnWindowMinimize(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnWindowMaximize(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnWindowRestore(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnToggleHiddenWindows(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnRefresh(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnToggleEmptyTitleWindows(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnToggleChildWindows(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnWindowFlash(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnWindowBringToFront(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnWindowProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnProcessProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnThreadProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnTerminateProcess(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnCaptureMessages(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	// the process / thread of the selected node (or of the node it is under)
+	ProcessInfo const* GetSelectedProcess() const;
+	DWORD GetSelectedThread() const;
 
 	CWindowsListView m_WindowsView;
 	CSplitterWindow m_Splitter;

@@ -23,7 +23,9 @@ struct ProcessesInfo {
 struct ProcessHelper {
 	static CString GetProcessImageName(DWORD pid, bool fullPath = false);
 	static ProcessesInfo EnumProcessesAndThreads(EnumProcessesOptions options);
-	static void ShowProcessProperties(ProcessInfo const& pi);
+	static void ShowProcessProperties(ProcessInfo const& pi, HWND hParent);
+	static void ShowThreadProperties(DWORD tid, HWND hParent);
+	static bool Terminate(DWORD pid);
 	static void EnumProcesses();
 
 private:

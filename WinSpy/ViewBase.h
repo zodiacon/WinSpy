@@ -3,7 +3,7 @@
 #include "Interfaces.h"
 
 template<typename T, typename TBase = CFrameWindowImpl<T, CWindow, CControlWinTraits>>
-class CViewBase abstract :
+class CViewBase :
 	public TBase,
 	public CAutoUpdateUI<T>,
 	public CIdleHandler {
@@ -71,7 +71,7 @@ protected:
 		pT->CreateSimpleReBar(ATL_SIMPLE_REBAR_NOBORDER_STYLE);
 		pT->AddSimpleReBarBand(tb);
 
-		UIAddToolBar(hWndToolBar);
+		pT->UIAddToolBar(hWndToolBar);
 		_Module.GetMessageLoop()->AddIdleHandler(this);
 
 		return hWndToolBar;

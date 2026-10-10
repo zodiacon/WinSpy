@@ -3,6 +3,7 @@
 
 decltype(AddHook)* pAddHook;
 decltype(RemoveHook)* pRemoveHook;
+decltype(SetHookFilter)* pSetHookFilter;
 
 bool HookHelper::InitHookLib() {
     if (!pAddHook) {
@@ -10,6 +11,7 @@ bool HookHelper::InitHookLib() {
         if (hLib) {
             pAddHook = (decltype(pAddHook))::GetProcAddress(hLib, "AddHook");
             pRemoveHook = (decltype(pRemoveHook))::GetProcAddress(hLib, "RemoveHook");
+            pSetHookFilter = (decltype(pSetHookFilter))::GetProcAddress(hLib, "SetHookFilter");
         }
     }
     return pAddHook != nullptr;
@@ -27,4 +29,11 @@ bool __stdcall HookHelper::RemoveHook(HWND callbackWnd) {
         return false;
 
     return pRemoveHook(callbackWnd);
+}
+
+bool __stdcall HookHelper::SetHookFilter(HWND callbackWnd, DWORD hookType, BYTE const* lowMessages, BOOL highMessages) {
+    if (!InitHookLib() || !pSetHookFilter)
+        return false;
+
+    return pSetHookFilter(callbackWnd, hookType, lowMessages, highMessages);
 }

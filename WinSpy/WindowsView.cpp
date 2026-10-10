@@ -9,7 +9,6 @@
 #include "ProcessHelper.h"
 #include "WindowHelper.h"
 #include "SortHelper.h"
-#include "MessagesView.h"
 
 
 BOOL CWindowsView::PreTranslateMessage(MSG* pMsg) {
@@ -226,16 +225,46 @@ void CWindowsView::NodeSelected() {
 
 LRESULT CWindowsView::OnNodeExpanding(int, LPNMHDR hdr, BOOL&) {
 	auto tv = (NMTREEVIEW*)hdr;
-	if (tv->action == TVE_EXPAND) {
-		auto hItem = tv->itemNew.hItem;
-
-		auto child = m_Tree.GetChildItem(hItem);
-		if (child.GetData() == 0) {
-			child.Delete();
-			AddChildWindows(hItem);
-		}
-	}
+	if (tv->action == TVE_EXPAND)
+		EnsureChildren(tv->itemNew.hItem);
 	return 0;
+}
+
+void CWindowsView::EnsureChildren(HTREEITEM hItem) {
+	// the children are added when a node is first expanded (until then it has a placeholder child)
+	auto child = m_Tree.GetChildItem(hItem);
+	if (child && child.GetData() == 0) {
+		child.Delete();
+		AddChildWindows(hItem);
+	}
+}
+
+LocateResult CWindowsView::LocateWindow(HWND hWnd) {
+	if (!::IsWindow(hWnd) || !m_DesktopNode)
+		return LocateResult::NotInTree;
+
+	// the window's ancestors, from the top-level one down
+	std::vector<HWND> chain;
+	auto hDesktop = (HWND)m_DesktopNode.GetData();
+	for (auto h = hWnd; h && h != hDesktop; h = ::GetAncestor(h, GA_PARENT))
+		chain.push_back(h);
+
+	HTREEITEM hItem = m_DesktopNode;
+	for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
+		EnsureChildren(hItem);
+		auto node = m_WindowMap.find(*it);
+		if (node == m_WindowMap.end())
+			return LocateResult::NotInTree;
+		hItem = node->second;
+	}
+	m_Tree.SelectItem(hItem);
+	m_Tree.EnsureVisible(hItem);
+	m_Tree.SetFocus();
+	return LocateResult::Found;
+}
+
+LRESULT CWindowsView::OnLocateWindow(UINT, WPARAM, LPARAM lParam, BOOL&) {
+	return (LRESULT)LocateWindow(reinterpret_cast<HWND>(lParam));
 }
 
 LRESULT CWindowsView::OnNodeDeleted(int, LPNMHDR hdr, BOOL&) {
@@ -266,57 +295,6 @@ HWND CWindowsView::GetTargetWindow() const {
 	if (m_WindowsView && ::GetFocus() == m_WindowsView.m_hWndClient)
 		return m_WindowsView.GetSelectedListHwnd();
 	return m_SelectedHwnd;
-}
-
-LRESULT CWindowsView::OnWindowShow(WORD, WORD, HWND, BOOL&) {
-	CWindow target(GetTargetWindow());
-	if (target)
-		target.ShowWindowAsync(SW_SHOW);
-
-	return 0;
-}
-
-LRESULT CWindowsView::OnWindowHide(WORD, WORD, HWND, BOOL&) {
-	CWindow target(GetTargetWindow());
-	if (target)
-		target.ShowWindowAsync(SW_HIDE);
-	return 0;
-}
-
-LRESULT CWindowsView::OnWindowClose(WORD, WORD, HWND, BOOL&) {
-	CWindow target(GetTargetWindow());
-	if (target)
-		target.PostMessage(WM_CLOSE);
-	return 0;
-}
-
-LRESULT CWindowsView::OnWindowMinimize(WORD, WORD, HWND, BOOL&) {
-	CWindow target(GetTargetWindow());
-	if (target)
-		target.ShowWindowAsync(SW_MINIMIZE);
-	return 0;
-}
-
-LRESULT CWindowsView::OnWindowMaximize(WORD, WORD, HWND, BOOL&) {
-	CWindow target(GetTargetWindow());
-	if (target)
-		target.ShowWindowAsync(SW_MAXIMIZE);
-
-	return 0;
-}
-
-LRESULT CWindowsView::OnWindowRestore(WORD, WORD, HWND, BOOL&) {
-	CWindow target(GetTargetWindow());
-	if (target)
-		target.ShowWindowAsync(SW_RESTORE);
-	return 0;
-}
-
-LRESULT CWindowsView::OnWindowBringToFront(WORD, WORD, HWND, BOOL&) {
-	CWindow target(GetTargetWindow());
-	if (target)
-		target.BringWindowToTop();
-	return 0;
 }
 
 LRESULT CWindowsView::OnRefresh(WORD, WORD, HWND, BOOL&) {
@@ -356,42 +334,6 @@ LRESULT CWindowsView::OnTreeNodeRightClick(HTREEITEM hItem, CPoint const& pt) {
 	return GetFrame()->ShowPopupMenu(menu.GetSubMenu(0), pt);
 }
 
-LRESULT CWindowsView::OnWindowFlash(WORD, WORD, HWND, BOOL&) {
-	CWindow target(GetTargetWindow());
-	if (target)
-		WindowHelper::Flash(target);
-
-	return 0;
-}
-
-LRESULT CWindowsView::OnWindowHighlight(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	CWindow target(GetTargetWindow());
-	if (target) {
-		::TrySubmitThreadpoolCallback([](auto, auto p) {
-			auto hWnd = (HWND)p;
-			for (int i = 0; i < 3; i++) {
-				WindowHelper::HighlightBorder(hWnd);
-				::Sleep(500);
-				WindowHelper::HighlightBorder(hWnd, false);
-				::Sleep(500);
-			}
-			}, target, nullptr);
-	}
-	return 0;
-}
-
-LRESULT CWindowsView::OnWindowProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& handled) {
-	if (::GetFocus() != m_Tree) {
-		handled = FALSE;
-		return 0;
-	}
-
-	if (m_SelectedHwnd) {
-		WindowHelper::ShowWindowProperties(m_SelectedHwnd);
-	}
-	return 0;
-}
-
 LRESULT CWindowsView::OnTreeNodeDoubleClick(HTREEITEM hItem, CPoint const& pt) {
 	WindowHelper::ShowWindowProperties((HWND)m_Tree.GetItemData(hItem));
 	return 1;
@@ -406,17 +348,5 @@ CTreeItem CWindowsView::AddMessageOnlyWindows() {
 	m_MsgOnlyNode = m_Tree.InsertItem(L"Message Only Windows", TVI_ROOT, TVI_LAST);
 	m_MsgOnlyNode.SetData(MessageOnlyWindowsNode);
 	return m_MsgOnlyNode;
-}
-
-LRESULT CWindowsView::OnCaptureMessages(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	CWindow target(GetTargetWindow());
-	if (target) {
-		auto view = GetFrame()->CreateMessagesView();
-		if (!view->CaptureWindow(target)) {
-			AtlMessageBox(m_hWnd, L"Failed to register hook", IDS_TITLE, MB_ICONERROR);
-			GetFrame()->CloseTab(view);
-		}
-	}
-	return 0;
 }
 

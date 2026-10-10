@@ -4,6 +4,7 @@
 #include "Interfaces.h"
 #include "WindowHelper.h"
 #include "ProcessHelper.h"
+#include "WindowCommands.h"
 #include <unordered_set>
 
 class CWindowsListView : 
@@ -30,8 +31,11 @@ public:
 	void UpdateList(HWND hWnd);
 	void UpdateListByThread(DWORD tid);
 	void UpdateListByProcess(ProcessInfo const& pi);
+	// all the top-level windows
+	void UpdateListAll();
 	void UpdateUI(CUpdateUIBase& ui);
 
+	// does again what the last UpdateList* call did
 	void Refresh();
 
 	enum class DataItemType {
@@ -56,17 +60,14 @@ protected:
 	ALT_MSG_MAP(1)
 		if (::GetFocus() != m_List)
 			return FALSE;
-		COMMAND_ID_HANDLER(ID_WINDOW_SHOW, OnWindowShow)
-		COMMAND_ID_HANDLER(ID_WINDOW_HIDE, OnWindowHide)
-		COMMAND_ID_HANDLER(ID_WINDOW_BRINGTOFRONT, OnWindowBringToFront)
-		COMMAND_ID_HANDLER(ID_WINDOW_MINIMIZE, OnWindowMinimize)
-		COMMAND_ID_HANDLER(ID_WINDOW_MAXIMIZE, OnWindowMaximize)
-		COMMAND_ID_HANDLER(ID_STATE_FLASH, OnWindowFlash)
-		COMMAND_ID_HANDLER(ID_WINDOW_RESTORE, OnWindowRestore)
+		if (uMsg == WM_COMMAND && WindowCommands::IsWindowCommand(LOWORD(wParam))) {
+			WindowCommands::Execute(LOWORD(wParam), GetSelectedListHwnd(), m_pFrame);
+			lResult = 0;
+			return TRUE;
+		}
 		COMMAND_ID_HANDLER(ID_VIEW_HIDDENWINDOWS, OnToggleHiddenWindows)
 		COMMAND_ID_HANDLER(ID_VIEW_EMPTYTITLEWINDOWS, OnToggleEmptyTitleWindows)
 		COMMAND_ID_HANDLER(ID_VIEW_CHILDWINDOWS, OnToggleChildWindows)
-		COMMAND_ID_HANDLER(ID_WINDOW_PROPERTIES, OnWindowProperties)
 	END_MSG_MAP()
 
 private:
@@ -77,23 +78,24 @@ private:
 	void AddMessageOnlyWindows();
 
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
-	LRESULT OnWindowShow(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnWindowHide(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnWindowMinimize(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnWindowMaximize(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnWindowRestore(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnWindowFlash(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnRefresh(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnToggleHiddenWindows(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnToggleEmptyTitleWindows(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnToggleChildWindows(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnWindowBringToFront(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnWindowProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnItemChanged(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
 
 private:
+	enum class ListMode {
+		Window,		// a window and its children
+		Thread,
+		Process,
+		All,
+	};
 
 	CListViewCtrl m_List;
+	ListMode m_Mode{ ListMode::Window };
+	DWORD m_ModeThread{ 0 };
+	ProcessInfo m_ModeProcess;
 	std::vector<WindowItem> m_Items;
 	mutable std::unordered_set<HWND> m_NoIcon;
 	DWORD m_TotalWindows, m_TotalVisibleWindows, m_TopLevelWindows;

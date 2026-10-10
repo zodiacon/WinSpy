@@ -34,6 +34,10 @@ public:
 		COMMAND_ID_HANDLER(ID_APP_EXIT, OnFileExit)
 		COMMAND_ID_HANDLER(ID_FILE_RUNASADMINISTRATOR, OnRunAsAdmin)
 		COMMAND_ID_HANDLER(ID_OPTIONS_DARKMODE, OnToggleDarkMode)
+		COMMAND_ID_HANDLER(ID_VIEW_WINDOWSLIST, OnViewWindowsList)
+		COMMAND_ID_HANDLER(ID_OPTIONS_ALWAYSONTOP, OnAlwaysOnTop)
+		COMMAND_ID_HANDLER(ID_OPTIONS_FONTS, OnFonts)
+		COMMAND_ID_HANDLER(ID_EDIT_COPY, OnCopy)
 		MESSAGE_HANDLER(WM_MENUSELECT, OnMenuSelect)
 		MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
@@ -50,11 +54,15 @@ private:
 	HWND GetHwnd() const override {
 		return m_hWnd;
 	}
-	CMessagesView* CreateMessagesView() override;
+	bool CaptureMessages(HWND hWnd, DWORD threadId = 0, DWORD processId = 0) override;
+	void LocateInWindowsTree(HWND hWnd) override;
 	void CloseTab(CWindow* win) override;
 
 	void InitToolBar(CToolBarCtrl& tb);
 	void InitMenu(HMENU menu);
+	// adds a tab (and gives its trees and lists the chosen font)
+	void AddView(HWND hView, PCWSTR title, int image, void* data);
+	void ApplyFont(HWND hRoot);
 
 // Handler prototypes (uncomment arguments if needed):
 //	LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -80,7 +88,12 @@ private:
 	LRESULT OnTabCloseButton(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
 	LRESULT OnViewAutomationTree(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnToggleDarkMode(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnViewWindowsList(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnAlwaysOnTop(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnFonts(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnCopy(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	HWND m_hActivePage{ nullptr };
+	CFont m_Font;		// the trees' and lists' (none: their default)
 	CNativeCustomTabView m_view;
 };
