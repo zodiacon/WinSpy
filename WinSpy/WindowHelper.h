@@ -25,6 +25,10 @@ struct WindowHelper final {
 	static bool Flash(HWND hWnd);
 	// flashes a red border around the window a few times (without blocking)
 	static void HighlightWindow(HWND hWnd);
+	// "Per-Monitor v2 (144)" and the like; empty before Windows 10 1607
+	static CString GetDpiAwareness(HWND hWnd);
+	// No, App, Shell or Inherited (DWM hides cloaked windows though they are "visible")
+	static CString GetCloakedState(HWND hWnd);
 	static void HighlightBorder(HWND hWnd, bool highlight = true);
 	static CString GetWindowClassAndTitle(HWND hWnd);
 	static std::unordered_map<HWND, int>& GetIconMap();
@@ -57,4 +61,21 @@ struct WindowHelper final {
 	static std::pair<StyleItem const*, int> GetScrollBarStyleArray();
 };
 
+//
+// windows being created, destroyed, shown, hidden, renamed or reparented anywhere (except in WinSpy itself)
+//
+struct IWindowEventSink {
+	virtual void OnWindowEvent(DWORD event, HWND hWnd) = 0;
+};
 
+struct WindowEvents final {
+	// the WinEvent hooks are set while there are sinks; the events come on this (the UI) thread, through its message loop
+	static void Subscribe(IWindowEventSink* sink);
+	static void Unsubscribe(IWindowEventSink* sink);
+
+private:
+	static void CALLBACK OnEvent(HWINEVENTHOOK, DWORD event, HWND hWnd, LONG idObject, LONG idChild, DWORD, DWORD);
+
+	inline static std::vector<IWindowEventSink*> s_Sinks;
+	inline static std::vector<HWINEVENTHOOK> s_Hooks;
+};

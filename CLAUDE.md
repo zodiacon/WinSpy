@@ -40,6 +40,15 @@ Views talk back to the frame only through the `IMainFrame` interface (`Interface
 
 The list pane remembers its mode (window, thread, process or all) so `Refresh` repeats the last query. Locate in Tree sends `WM_LOCATE_WINDOW` to each tab; `CWindowsView` answers it.
 
+**Live updates.** `WindowEvents` (in `WindowHelper.*`) sets out-of-context `SetWinEventHook`s, skipping WinSpy's own process, while any `IWindowEventSink` is subscribed. It reports create, destroy, show, hide, name change and parent change for whole windows.
+- `CWindowsView` batches the events (a short timer) and updates, adds or removes tree nodes. A collapsed node whose children haven't been added yet just gets its "+" placeholder.
+- The list pane is refreshed only when the events touch what it shows. Nothing polls, so changes that raise no event (such as styles) show up on View ▸ Refresh or when the tab is activated again.
+- `CAllWindowsView` refreshes on top-level window events.
+
+**Tree search.** The search box (Ctrl+F) rebuilds the tree with only the matching windows (class, title or handle) plus their ancestors, all expanded, without lazy placeholders. WinSpy's own windows are left out of the results. Events then only update or remove nodes; they don't add new matches.
+
+**Locate under the cursor.** Ctrl+Alt+F12 is a global hot key (`RegisterHotKey`, `CMainFrame::OnHotKey`) that locates the window under the mouse in a windows tree.
+
 **Dark mode** works the same way as in AstroStudio, through WTLHelper's DarkMode library:
 - **Startup:** `WinMain` loads `AppSettings` (`HKCU\Software\WinSpy\Settings`, or `WinSpy.ini` next to the EXE) and calls `WTLHelper::InitDarkMode` before any window is created. `DarkMode` is -1 until the user chooses, which means follow the system.
 - **Toggle:** Options ▸ Dark Mode (`ID_OPTIONS_DARKMODE`) calls `WTLHelper::SwitchToMode`, which re-themes every child and sends `WTLHelper::ThemeChangedMessage` to all descendants. Settings are saved in `CMainFrame::OnDestroy`.

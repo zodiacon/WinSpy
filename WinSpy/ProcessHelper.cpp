@@ -183,6 +183,17 @@ namespace {
 		return CString(us->Buffer, us->Length / sizeof(WCHAR));
 	}
 
+	CString IntegrityLevel(HANDLE hToken) {
+		BYTE buffer[256];
+		DWORD len;
+		if (!::GetTokenInformation(hToken, TokenIntegrityLevel, buffer, sizeof(buffer), &len))
+			return L"";
+		auto sid = reinterpret_cast<TOKEN_MANDATORY_LABEL*>(buffer)->Label.Sid;
+		auto rid = *::GetSidSubAuthority(sid, *::GetSidSubAuthorityCount(sid) - 1);
+		return rid >= SECURITY_MANDATORY_SYSTEM_RID ? L"System" : rid >= SECURITY_MANDATORY_HIGH_RID ? L"High" :
+			rid >= SECURITY_MANDATORY_MEDIUM_RID ? L"Medium" : rid >= SECURITY_MANDATORY_LOW_RID ? L"Low" : L"Untrusted";
+	}
+
 	void AddTokenProperties(HANDLE hProcess, CPropertiesDlg::Properties& props) {
 		HANDLE hToken;
 		if (!::OpenProcessToken(hProcess, TOKEN_QUERY, &hToken))
@@ -199,13 +210,8 @@ namespace {
 				props.push_back({ L"User", CString(domain) + L"\\" + name });
 		}
 
-		if (::GetTokenInformation(hToken, TokenIntegrityLevel, buffer, sizeof(buffer), &len)) {
-			auto sid = reinterpret_cast<TOKEN_MANDATORY_LABEL*>(buffer)->Label.Sid;
-			auto rid = *::GetSidSubAuthority(sid, *::GetSidSubAuthorityCount(sid) - 1);
-			PCWSTR level = rid >= SECURITY_MANDATORY_SYSTEM_RID ? L"System" : rid >= SECURITY_MANDATORY_HIGH_RID ? L"High" :
-				rid >= SECURITY_MANDATORY_MEDIUM_RID ? L"Medium" : rid >= SECURITY_MANDATORY_LOW_RID ? L"Low" : L"Untrusted";
+		if (auto level = IntegrityLevel(hToken); !level.IsEmpty())
 			props.push_back({ L"Integrity Level", level });
-		}
 
 		TOKEN_ELEVATION elevation;
 		if (::GetTokenInformation(hToken, TokenElevation, &elevation, sizeof(elevation), &len))
@@ -325,6 +331,18 @@ void ProcessHelper::ShowThreadProperties(DWORD tid, HWND hParent) {
 	text.Format(L"Thread %u", tid);
 	CPropertiesDlg dlg(text, std::move(props));
 	dlg.DoModal(hParent);
+}
+
+CString ProcessHelper::GetIntegrityLevel(DWORD pid) {
+	auto hProcess = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+	if (!hProcess)
+		return L"(Access denied)";
+	CHandle process(hProcess);
+	HANDLE hToken;
+	if (!::OpenProcessToken(hProcess, TOKEN_QUERY, &hToken))
+		return L"(Access denied)";
+	CHandle token(hToken);
+	return IntegrityLevel(hToken);
 }
 
 bool ProcessHelper::Terminate(DWORD pid) {

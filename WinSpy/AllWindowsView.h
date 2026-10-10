@@ -6,7 +6,9 @@
 //
 // View > Windows List: all the top-level windows in one sortable list
 //
-class CAllWindowsView : public CViewBase<CAllWindowsView> {
+class CAllWindowsView :
+	public CViewBase<CAllWindowsView>,
+	public IWindowEventSink {
 public:
 	CAllWindowsView(IMainFrame* frame) : CViewBase(frame), m_List(frame) {}
 
@@ -15,6 +17,7 @@ public:
 protected:
 	BEGIN_MSG_MAP(CAllWindowsView)
 		MESSAGE_HANDLER(WM_CREATE, OnCreate)
+		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
 		MESSAGE_HANDLER(WM_TIMER, OnTimer)
 		MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
 		COMMAND_ID_HANDLER(ID_VIEW_REFRESH, OnRefresh)
@@ -23,10 +26,15 @@ protected:
 	END_MSG_MAP()
 
 private:
+	// IWindowEventSink
+	void OnWindowEvent(DWORD event, HWND hWnd) override;
+
 	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	LRESULT OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnTimer(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnSetFocus(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnRefresh(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	CWindowsListView m_List;
+	bool m_RefreshPending{ false };
 };

@@ -17,6 +17,9 @@ public:
 	CWindowsListView(IMainFrame* frame) : m_pFrame(frame) {}
 
 	HWND GetSelectedListHwnd() const;
+	bool IsListed(HWND hWnd) const;
+	// a process's integrity level, looked up once
+	CString const& GetIntegrity(DWORD pid) const;
 	CString GetColumnText(HWND, int row, int col) const;
 	int GetRowImage(HWND, int row, int col) const;
 	bool IsSortable(HWND, int col) const;
@@ -43,6 +46,7 @@ public:
 		ProcessId, ThreadId, ParentWindow, FirstChildWindow, NextWindow, PrevWindow, OwnerWindow,
 		WindowProc, UserData, ID, Rectangle,
 		ClassAtom, ClassStyle, ClassExtra, WindowExtra,
+		DpiAwareness, Integrity, Cloaked,
 	};
 	struct DataItem {
 		CString Property;
@@ -98,6 +102,7 @@ private:
 	ProcessInfo m_ModeProcess;
 	std::vector<WindowItem> m_Items;
 	mutable std::unordered_set<HWND> m_NoIcon;
+	mutable std::unordered_map<DWORD, CString> m_Integrity;		// by process ID (opening a process on every repaint is costly)
 	DWORD m_TotalWindows, m_TotalVisibleWindows, m_TopLevelWindows;
 	CWindow m_SelectedHwnd;
 	IMainFrame* m_pFrame;

@@ -46,6 +46,7 @@ protected:
 		COMMAND_ID_HANDLER(ID_MESSAGES_AUTOSCROLL, OnAutoScroll)
 		COMMAND_ID_HANDLER(ID_MESSAGES_SAVE, OnSave)
 		COMMAND_HANDLER(IDC_SEARCH, EN_CHANGE, OnSearchChanged)
+		COMMAND_ID_HANDLER(ID_EDIT_FIND, OnFind)
 		CHAIN_MSG_MAP(CVirtualListView<CMessagesView>)
 		CHAIN_MSG_MAP(CViewBase<CMessagesView>)
 	END_MSG_MAP()
@@ -103,6 +104,7 @@ private:
 	LRESULT OnAutoScroll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnSave(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnSearchChanged(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnFind(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	// the oldest messages are dropped beyond this
 	static constexpr size_t MaxMessages = 100000;

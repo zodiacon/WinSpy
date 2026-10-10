@@ -26,6 +26,7 @@ struct ProcessHelper {
 	static void ShowProcessProperties(ProcessInfo const& pi, HWND hParent);
 	static void ShowThreadProperties(DWORD tid, HWND hParent);
 	static bool Terminate(DWORD pid);
+	static CString GetIntegrityLevel(DWORD pid);
 	static void EnumProcesses();
 
 private:

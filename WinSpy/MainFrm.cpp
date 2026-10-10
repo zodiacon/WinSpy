@@ -63,7 +63,9 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	CReBarCtrl rb(m_hWndToolBar);
 	rb.LockBands(true);
 
-	CreateSimpleStatusBar();
+	CreateSimpleStatusBar(L"Ready - Ctrl+Alt+F12 anywhere locates the window under the mouse cursor");
+	// (another program may have the keys already; WinSpy works without them)
+	::RegisterHotKey(m_hWnd, HotKeyLocate, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, VK_F12);
 
 	//m_view.m_bTabCloseButton = false;
 	m_hWndClient = m_view.Create(m_hWnd, rcDefault, nullptr,
@@ -102,6 +104,7 @@ LRESULT CMainFrame::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	pLoop->RemoveMessageFilter(this);
 	pLoop->RemoveIdleHandler(this);
 
+	::UnregisterHotKey(m_hWnd, HotKeyLocate);
 	AppSettings::Get().Save();
 
 	bHandled = FALSE;
@@ -305,6 +308,30 @@ LRESULT CMainFrame::OnCopy(WORD, WORD, HWND, BOOL&) {
 		::MessageBeep(MB_ICONWARNING);
 	else
 		ClipboardHelper::CopyText(m_hWnd, text);
+	return 0;
+}
+
+LRESULT CMainFrame::OnHotKey(UINT, WPARAM id, LPARAM, BOOL&) {
+	if (id != HotKeyLocate)
+		return 0;
+
+	POINT pt;
+	::GetCursorPos(&pt);
+	auto hWnd = ::WindowFromPoint(pt);
+	DWORD pid = 0;
+	if (hWnd)
+		::GetWindowThreadProcessId(hWnd, &pid);
+	if (!hWnd || pid == ::GetCurrentProcessId()) {
+		::MessageBeep(MB_ICONWARNING);
+		return 0;
+	}
+
+	// a hot key lets WinSpy come to the foreground
+	if (IsIconic())
+		ShowWindow(SW_RESTORE);
+	::SetForegroundWindow(m_hWnd);
+	WindowHelper::HighlightWindow(hWnd);
+	LocateInWindowsTree(hWnd);
 	return 0;
 }
 

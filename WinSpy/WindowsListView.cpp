@@ -34,7 +34,10 @@ LRESULT CWindowsListView::OnCreate(UINT, WPARAM, LPARAM, BOOL&) {
 		{ L"PID", DataItemType::ProcessId, 70, LVCFMT_RIGHT },
 		{ L"Process Name", DataItemType::ProcessName, 120 },
 		{ L"TID", DataItemType::ThreadId, 70, LVCFMT_RIGHT },
-		{ L"Rectangle", DataItemType::Rectangle, 170, LVCFMT_LEFT, ColumnFlags::None },
+		{ L"Rectangle", DataItemType::Rectangle, 200 },
+		{ L"DPI Awareness", DataItemType::DpiAwareness, 140 },
+		{ L"Integrity", DataItemType::Integrity, 80 },
+		{ L"Cloaked", DataItemType::Cloaked, 70 },
 		{ L"Parent HWND", DataItemType::ParentWindow, 100, LVCFMT_RIGHT, ColumnFlags::Fixed | ColumnFlags::Visible },
 		{ L"Owner HWND", DataItemType::OwnerWindow, 100, LVCFMT_RIGHT, ColumnFlags::Fixed | ColumnFlags::Visible },
 		{ L"Next HWND", DataItemType::NextWindow, 100, LVCFMT_RIGHT, ColumnFlags::Fixed | ColumnFlags::Visible },
@@ -57,6 +60,10 @@ LRESULT CWindowsListView::OnCreate(UINT, WPARAM, LPARAM, BOOL&) {
 
 
     return 0;
+}
+
+bool CWindowsListView::IsListed(HWND hWnd) const {
+	return std::any_of(m_Items.begin(), m_Items.end(), [=](auto& item) { return item.hWnd == hWnd; });
 }
 
 HWND CWindowsListView::GetSelectedListHwnd() const {
@@ -96,6 +103,15 @@ CString CWindowsListView::GetColumnText(HWND, int row, int col) const {
 
 		case DataItemType::Rectangle:
 			return WindowHelper::WindowRectToString(h);
+
+		case DataItemType::DpiAwareness:
+			return WindowHelper::GetDpiAwareness(h);
+
+		case DataItemType::Cloaked:
+			return WindowHelper::GetCloakedState(h);
+
+		case DataItemType::Integrity:
+			return GetIntegrity(item.ProcessId);
 
 		case DataItemType::ExtendedStyle:
 			text.Format(L"0x%08X", win.GetExStyle());
@@ -147,6 +163,13 @@ CString CWindowsListView::GetColumnText(HWND, int row, int col) const {
 	return text;
 }
 
+CString const& CWindowsListView::GetIntegrity(DWORD pid) const {
+	auto it = m_Integrity.find(pid);
+	if (it == m_Integrity.end())
+		it = m_Integrity.insert({ pid, ProcessHelper::GetIntegrityLevel(pid) }).first;
+	return it->second;
+}
+
 int CWindowsListView::GetRowImage(HWND, int row, int col) const {
 	auto& item = m_Items[row];
 	auto h = item.hWnd;
@@ -183,12 +206,16 @@ void CWindowsListView::DoSort(const SortInfo* si) {
 		ULONG_PTR Value{ 0 };
 	};
 	auto type = GetColumnManager(m_List)->GetColumnTag<DataItemType>(si->SortColumn);
-	auto getKey = [type](WindowItem const& item) -> Key {
+	auto getKey = [this, type](WindowItem const& item) -> Key {
 		auto h = item.hWnd;
 		switch (type) {
 			case DataItemType::ClassName: return { WindowHelper::GetWindowClassName(h) };
 			case DataItemType::Text: return { WindowHelper::GetWindowText(h) };
 			case DataItemType::ProcessName: return { item.ProcessName };
+			case DataItemType::Rectangle: return { WindowHelper::WindowRectToString(h) };
+			case DataItemType::DpiAwareness: return { WindowHelper::GetDpiAwareness(h) };
+			case DataItemType::Cloaked: return { WindowHelper::GetCloakedState(h) };
+			case DataItemType::Integrity: return { GetIntegrity(item.ProcessId) };
 			case DataItemType::Handle: return { {}, (ULONG_PTR)h };
 			case DataItemType::FirstChildWindow: return { {}, (ULONG_PTR)::GetWindow(h, GW_CHILD) };
 			case DataItemType::PrevWindow: return { {}, (ULONG_PTR)::GetWindow(h, GW_HWNDPREV) };
@@ -204,7 +231,8 @@ void CWindowsListView::DoSort(const SortInfo* si) {
 		}
 		return {};
 	};
-	bool text = type == DataItemType::ClassName || type == DataItemType::Text || type == DataItemType::ProcessName;
+	bool text = type == DataItemType::ClassName || type == DataItemType::Text || type == DataItemType::ProcessName
+		|| type == DataItemType::Rectangle || type == DataItemType::DpiAwareness || type == DataItemType::Cloaked || type == DataItemType::Integrity;
 
 	std::vector<std::pair<Key, WindowItem>> items;
 	items.reserve(m_Items.size());

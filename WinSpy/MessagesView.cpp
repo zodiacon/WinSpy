@@ -383,6 +383,12 @@ LRESULT CMessagesView::OnSearchChanged(WORD, WORD, HWND, BOOL&) {
 	return 0;
 }
 
+LRESULT CMessagesView::OnFind(WORD, WORD, HWND, BOOL&) {
+	m_Search.SetFocus();
+	m_Search.SetSelAll();
+	return 0;
+}
+
 LRESULT CMessagesView::OnPause(WORD, WORD, HWND, BOOL&) {
 	m_Paused = !m_Paused;
 	UISetCheck(ID_MESSAGES_PAUSE, m_Paused.load());

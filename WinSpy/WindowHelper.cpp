@@ -5,6 +5,9 @@
 #include "FormatHelper.h"
 #include "WindowGeneralPage.h"
 #include "WindowWindowsPage.h"
+#include <dwmapi.h>
+
+#pragma comment(lib, "dwmapi.lib")
 
 #define CASE_STR(x) case x: return L#x 
 #define PAIR_STR(x) { x, L#x }
@@ -104,6 +107,53 @@ bool WindowHelper::Flash(HWND hWnd) {
 	info.uCount = 3;
 	info.hwnd = hWnd;
 	return ::FlashWindowEx(&info);
+}
+
+CString WindowHelper::GetDpiAwareness(HWND hWnd) {
+	// Windows 10 1607 and later, so looked up rather than linked to
+	static auto hUser = ::GetModuleHandle(L"user32");
+	static auto getContext = (decltype(::GetWindowDpiAwarenessContext)*)::GetProcAddress(hUser, "GetWindowDpiAwarenessContext");
+	static auto getAwareness = (decltype(::GetAwarenessFromDpiAwarenessContext)*)::GetProcAddress(hUser, "GetAwarenessFromDpiAwarenessContext");
+	static auto areEqual = (decltype(::AreDpiAwarenessContextsEqual)*)::GetProcAddress(hUser, "AreDpiAwarenessContextsEqual");
+	static auto getDpi = (decltype(::GetDpiForWindow)*)::GetProcAddress(hUser, "GetDpiForWindow");
+	if (!getContext || !getAwareness || !areEqual || !getDpi)
+		return L"";
+
+	auto context = getContext(hWnd);
+	if (!context)
+		return L"";
+	PCWSTR name;
+	if (areEqual(context, DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2))
+		name = L"Per-Monitor v2";
+	else if (areEqual(context, DPI_AWARENESS_CONTEXT_UNAWARE_GDISCALED))
+		name = L"Unaware (GDI Scaled)";
+	else {
+		switch (getAwareness(context)) {
+			case DPI_AWARENESS_UNAWARE: name = L"Unaware"; break;
+			case DPI_AWARENESS_SYSTEM_AWARE: name = L"System"; break;
+			case DPI_AWARENESS_PER_MONITOR_AWARE: name = L"Per-Monitor"; break;
+			default: name = L"?"; break;
+		}
+	}
+	CString text;
+	text.Format(L"%s (%u)", name, getDpi(hWnd));
+	return text;
+}
+
+CString WindowHelper::GetCloakedState(HWND hWnd) {
+	// DWMWA_CLOAKED (Windows 8 and later)
+	DWORD cloaked = 0;
+	if (FAILED(::DwmGetWindowAttribute(hWnd, 14, &cloaked, sizeof(cloaked))))
+		return L"";
+	switch (cloaked) {
+		case 0: return L"No";
+		case 1: return L"App";		// DWM_CLOAKED_APP
+		case 2: return L"Shell";	// DWM_CLOAKED_SHELL
+		case 4: return L"Inherited";	// DWM_CLOAKED_INHERITED
+	}
+	CString text;
+	text.Format(L"0x%X", cloaked);
+	return text;
 }
 
 void WindowHelper::HighlightWindow(HWND hWnd) {
@@ -826,3 +876,37 @@ ULONG_PTR WindowHelper::GetUserData(HWND hWnd) {
 	return ::GetWindowLongPtr(hWnd, GWLP_USERDATA);
 }
 
+void WindowEvents::Subscribe(IWindowEventSink* sink) {
+	if (s_Sinks.empty()) {
+		// narrow ranges: EVENT_OBJECT_LOCATIONCHANGE, between them, comes all the time
+		static const std::pair<DWORD, DWORD> ranges[] = {
+			{ EVENT_OBJECT_CREATE, EVENT_OBJECT_HIDE },
+			{ EVENT_OBJECT_NAMECHANGE, EVENT_OBJECT_NAMECHANGE },
+			{ EVENT_OBJECT_PARENTCHANGE, EVENT_OBJECT_PARENTCHANGE },
+		};
+		for (auto [first, last] : ranges)
+			if (auto hHook = ::SetWinEventHook(first, last, nullptr, OnEvent, 0, 0, WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS))
+				s_Hooks.push_back(hHook);
+	}
+	s_Sinks.push_back(sink);
+}
+
+void WindowEvents::Unsubscribe(IWindowEventSink* sink) {
+	std::erase(s_Sinks, sink);
+	if (s_Sinks.empty()) {
+		for (auto hHook : s_Hooks)
+			::UnhookWinEvent(hHook);
+		s_Hooks.clear();
+	}
+}
+
+void CALLBACK WindowEvents::OnEvent(HWINEVENTHOOK, DWORD event, HWND hWnd, LONG idObject, LONG idChild, DWORD, DWORD) {
+	// the window itself, not one of its parts
+	if (!hWnd || idObject != OBJID_WINDOW || idChild != CHILDID_SELF)
+		return;
+
+	// a copy: a sink may unsubscribe while handling the event
+	auto sinks = s_Sinks;
+	for (auto sink : sinks)
+		sink->OnWindowEvent(event, hWnd);
+}
