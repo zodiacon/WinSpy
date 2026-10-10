@@ -8,12 +8,14 @@
 #include "WindowsView.h"
 #include "MainFrm.h"
 #include "FindWindowDlg.h"
-#include "IconHelper.h"
+#include <IconHelper.h>
 #include "ImageIconCache.h"
 #include "ProcessesView.h"
 #include "SecurityHelper.h"
 #include "MessagesView.h"
 #include "AutomationTreeView.h"
+#include "AppSettings.h"
+#include <WTLHelper.h>
 
 const int WINDOW_MENU_POSITION = 5;
 
@@ -35,7 +37,9 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 		menu.GetSubMenu(0).DeleteMenu(0, MF_BYPOSITION);
 		menu.GetSubMenu(0).DeleteMenu(0, MF_BYPOSITION);
 	}
-	InitMenu();
+	InitMenu(GetMenu());
+	UIAddMenu(GetMenu());
+	UISetCheck(ID_OPTIONS_DARKMODE, WTLHelper::IsDarkMode());
 
 	CToolBarCtrl tb;
 	auto hWndToolBar = tb.Create(m_hWnd, nullptr, nullptr, ATL_SIMPLE_TOOLBAR_PANE_STYLE | TBSTYLE_LIST, 0, ATL_IDW_TOOLBAR);
@@ -86,6 +90,8 @@ LRESULT CMainFrame::OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*
 	ATLASSERT(pLoop != NULL);
 	pLoop->RemoveMessageFilter(this);
 	pLoop->RemoveIdleHandler(this);
+
+	AppSettings::Get().Save();
 
 	bHandled = FALSE;
 	return 1;
@@ -213,7 +219,8 @@ CUpdateUIBase& CMainFrame::GetUIUpdate() {
 }
 
 UINT CMainFrame::ShowPopupMenu(HMENU hMenu, const POINT& pt, DWORD flags) {
-	return (UINT)ShowContextMenu(hMenu, 0, pt.x, pt.y);
+	InitMenu(hMenu);
+	return (UINT)::TrackPopupMenu(hMenu, flags, pt.x, pt.y, 0, m_hWnd, nullptr);
 }
 
 CMessagesView* CMainFrame::CreateMessagesView() {
@@ -260,14 +267,10 @@ void CMainFrame::InitToolBar(CToolBarCtrl& tb) {
 	}
 }
 
-void CMainFrame::InitMenu() {
-	AddMenu(GetMenu());
-
-	struct {
-		UINT id, icon;
-		HICON hIcon = nullptr;
-	} cmds[] = {
-		{ ID_FILE_RUNASADMINISTRATOR, 0, IconHelper::GetShieldIcon() },
+void CMainFrame::InitMenu(HMENU menu) {
+	static HICON hShieldIcon = IconHelper::GetShieldIcon();
+	MenuItemData cmds[] = {
+		{ ID_FILE_RUNASADMINISTRATOR, 0, hShieldIcon },
 		{ ID_VIEW_REFRESH, IDI_REFRESH },
 		{ ID_VIEW_ALLWINDOWS, IDI_WINDOWS },
 		{ ID_VIEW_HIDDENWINDOWS, IDI_WINDOW_HIDDEN },
@@ -284,12 +287,16 @@ void CMainFrame::InitMenu() {
 		{ ID_TREE_SENDTOBACK, IDI_WINDOW_SENDTOBACK },
 		{ ID_WINDOW_BRINGTOFRONT, IDI_SENDTOFRONT },
 	};
-	for (auto& cmd : cmds) {
-		if (cmd.icon)
-			AddCommand(cmd.id, cmd.icon);
-		else
-			AddCommand(cmd.id, cmd.hIcon);
-	}
+	WTLHelper::InitMenu(menu, cmds, _countof(cmds));
+}
+
+LRESULT CMainFrame::OnToggleDarkMode(WORD, WORD, HWND, BOOL&) {
+	WTLHelper::SwitchToMode(WTLHelper::IsDarkMode() ? DarkModeKind::Classic : DarkModeKind::Dark, m_hWnd);
+	AppSettings::Get().DarkMode(WTLHelper::IsDarkMode() ? 1 : 0);
+	InitMenu(GetMenu());
+	DrawMenuBar();
+	UISetCheck(ID_OPTIONS_DARKMODE, WTLHelper::IsDarkMode());
+	return 0;
 }
 
 LRESULT CMainFrame::OnTabActivated(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/) {

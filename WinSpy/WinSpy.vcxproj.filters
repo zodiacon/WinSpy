@@ -57,9 +57,6 @@
     <ClCompile Include="WindowsListView.cpp">
       <Filter>Views</Filter>
     </ClCompile>
-    <ClCompile Include="IconHelper.cpp">
-      <Filter>Helpers</Filter>
-    </ClCompile>
     <ClCompile Include="ProcessesView.cpp">
       <Filter>Views</Filter>
     </ClCompile>
@@ -90,6 +87,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainFrm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AppSettings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AboutDlg.h">
@@ -130,9 +130,6 @@
     </ClInclude>
     <ClInclude Include="WindowsListView.h">
       <Filter>Views</Filter>
-    </ClInclude>
-    <ClInclude Include="IconHelper.h">
-      <Filter>Helpers</Filter>
     </ClInclude>
     <ClInclude Include="ImageIconCache.h">
       <Filter>Helpers</Filter>

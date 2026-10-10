@@ -5,14 +5,12 @@
 #pragma once
 
 #include "Interfaces.h"
-#include <CustomTabView.h>
-#include <OwnerDrawnMenu.h>
+#include <NativeCustomTabView.h>
 
-class CMainFrame : 
-	public CFrameWindowImpl<CMainFrame>, 
+class CMainFrame :
+	public CFrameWindowImpl<CMainFrame>,
 	public CAutoUpdateUI<CMainFrame>,
-	public COwnerDrawnMenu<CMainFrame>,
-	public CMessageFilter, 
+	public CMessageFilter,
 	public CIdleHandler,
 	public IMainFrame {
 public:
@@ -35,6 +33,7 @@ public:
 		COMMAND_RANGE_HANDLER(ID_WINDOW_TABFIRST, ID_WINDOW_TABLAST, OnWindowActivate)
 		COMMAND_ID_HANDLER(ID_APP_EXIT, OnFileExit)
 		COMMAND_ID_HANDLER(ID_FILE_RUNASADMINISTRATOR, OnRunAsAdmin)
+		COMMAND_ID_HANDLER(ID_OPTIONS_DARKMODE, OnToggleDarkMode)
 		MESSAGE_HANDLER(WM_MENUSELECT, OnMenuSelect)
 		MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
@@ -42,7 +41,6 @@ public:
 		CHAIN_MSG_MAP(CFrameWindowImpl<CMainFrame>)
 		COMMAND_RANGE_HANDLER(1, 0xffff, OnCommandToActiveView)
 		NOTIFY_CODE_HANDLER(TBVN_PAGEACTIVATED, OnTabActivated)
-		CHAIN_MSG_MAP(COwnerDrawnMenu<CMainFrame>)
 	END_MSG_MAP()
 
 private:
@@ -56,7 +54,7 @@ private:
 	void CloseTab(CWindow* win) override;
 
 	void InitToolBar(CToolBarCtrl& tb);
-	void InitMenu();
+	void InitMenu(HMENU menu);
 
 // Handler prototypes (uncomment arguments if needed):
 //	LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -81,7 +79,8 @@ private:
 	LRESULT OnRunAsAdmin(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnTabCloseButton(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/);
 	LRESULT OnViewAutomationTree(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnToggleDarkMode(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	int m_ActivePage = -1;
-	CCustomTabView m_view;
+	CNativeCustomTabView m_view;
 };

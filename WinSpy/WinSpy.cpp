@@ -4,9 +4,11 @@
 #include "pch.h"
 #include "resource.h"
 #include "MainFrm.h"
-#include <ThemeHelper.h>
+#include <WTLHelper.h>
+#include "AppSettings.h"
 
 CAppModule _Module;
+AppSettings g_Settings;
 
 int Run(LPCTSTR /*lpstrCmdLine*/ = nullptr, int nCmdShow = SW_SHOWDEFAULT) {
 	CMessageLoop theLoop;
@@ -35,7 +37,13 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 
 	hRes = _Module.Init(nullptr, hInstance);
 	ATLASSERT(SUCCEEDED(hRes));
-	ThemeHelper::Init();
+	AppSettings::Get().Load(AppSettings::RegistryKey);
+	// dark or not as the user last chose, and as the system is until then
+	int dark = AppSettings::Get().DarkMode();
+	if (dark < 0)
+		WTLHelper::InitDarkMode();
+	else
+		WTLHelper::InitDarkMode(dark ? DarkModeKind::Dark : DarkModeKind::Classic);
 
 	int nRet = Run(lpstrCmdLine, nCmdShow);
 

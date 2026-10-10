@@ -4,6 +4,7 @@
 #include "FormatHelper.h"
 #include "SortHelper.h"
 #include "ProcessHelper.h"
+#include <WTLHelper.h>
 
 void CWindowsListView::SetSelectedHwnd(HWND hWnd) {
 	m_SelectedHwnd.Detach();
@@ -238,7 +239,9 @@ DWORD CWindowsListView::OnItemPrePaint(int, LPNMCUSTOMDRAW cd) {
 
 	auto& h = m_Items[(int)cd->dwItemSpec];
 	auto lv = (LPNMLVCUSTOMDRAW)cd;
-	lv->clrTextBk = m_SelectedHwnd == nullptr || ::IsWindowVisible(h.hWnd) ? CLR_INVALID : RGB(224, 224, 224);
+	// hidden windows are shaded
+	lv->clrTextBk = m_SelectedHwnd == nullptr || ::IsWindowVisible(h.hWnd) ? CLR_INVALID
+		: WTLHelper::IsDarkMode() ? RGB(64, 64, 64) : RGB(224, 224, 224);
 
 	return CDRF_DODEFAULT;
 }
