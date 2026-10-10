@@ -200,7 +200,7 @@ CTreeItem CWindowsView::AddNode(HWND hWnd, HTREEITEM hParent, bool force) {
 		if (auto it = icons.find(hWnd); it == icons.end()) {
 			hIcon = WindowHelper::GetWindowOrProcessIcon(hWnd);
 			if (hIcon) {
-				icons.insert({ hWnd, image = WindowHelper::GetImageList().AddIcon(hIcon) });
+				icons.insert({ hWnd, image = WindowHelper::AddIcon(hIcon) });
 			}
 		}
 		else {
@@ -249,7 +249,7 @@ LRESULT CWindowsView::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	CreateSimpleReBar(ATL_SIMPLE_REBAR_NOBORDER_STYLE);
 	CRect rc(0, 0, WindowHelper::DpiScale(300), WindowHelper::DpiScale(22));
 	m_Search.Create(m_hWndToolBar, &rc, nullptr, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, WS_EX_CLIENTEDGE, IDC_SEARCH);
-	m_Search.SetFont(AtlGetDefaultGuiFont());
+	m_Search.SetFont(WindowHelper::GetUIFont());
 	m_Search.SetCueBannerText(L"Search windows by class, title or handle (Ctrl+F)");
 	AddSimpleReBarBand(m_Search, nullptr, FALSE, 0, TRUE);
 

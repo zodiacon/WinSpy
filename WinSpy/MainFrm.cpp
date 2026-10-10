@@ -36,6 +36,9 @@ BOOL CMainFrame::OnIdle() {
 }
 
 LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
+	// sizes are for the monitor the window is on (not necessarily the primary one)
+	WindowHelper::SetDpi(GetDpiForWindow(m_hWnd));
+
 	if (SecurityHelper::IsRunningElevated()) {
 		CString title;
 		GetWindowText(title);
@@ -65,6 +68,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	rb.LockBands(true);
 
 	CreateSimpleStatusBar(L"Ready - Ctrl+Alt+F12 anywhere locates the window (or UI Automation element) under the mouse cursor");
+	::SendMessage(m_hWndStatusBar, WM_SETFONT, (WPARAM)WindowHelper::GetUIFont(), FALSE);
 	// (another program may have the keys already; WinSpy works without them)
 	::RegisterHotKey(m_hWnd, HotKeyLocate, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, VK_F12);
 
@@ -84,14 +88,8 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	pLoop->AddMessageFilter(this);
 	pLoop->AddIdleHandler(this);
 
-	CImageList images;
-	int size = WindowHelper::DpiScale(16);
-	images.Create(size, size, ILC_COLOR32, 4, 4);
-	UINT icons[] = { IDI_WINDOWS, IDI_PROCESSES, IDI_MESSAGES, IDI_AUTOMATION };
-	for (auto icon : icons) {
-		images.AddIcon(AtlLoadIconImage(icon, 0, size, size));
-	}
-	m_view.SetImageList(images);
+	m_view.SetFont(WindowHelper::GetUIFont());
+	SetTabImages();
 	m_view.SetWindowMenu(((CMenuHandle)GetMenu()).GetSubMenu(WINDOW_MENU_POSITION));
 
 	PostMessage(WM_COMMAND, ID_VIEW_ALLWINDOWS);
@@ -256,22 +254,68 @@ void CMainFrame::CreateViewFont() {
 	m_Font.CreateFontIndirect(&lf);
 }
 
-LRESULT CMainFrame::OnDpiChanged(UINT, WPARAM, LPARAM lParam, BOOL&) {
-	// per-monitor DPI awareness: the window is moved and sized as Windows suggests, and the text is made anew
-	auto rc = reinterpret_cast<RECT const*>(lParam);
-	SetWindowPos(nullptr, rc, SWP_NOZORDER | SWP_NOACTIVATE);
+LRESULT CMainFrame::OnDpiChanged(UINT, WPARAM wParam, LPARAM lParam, BOOL&) {
+	// per-monitor DPI awareness: what is sized by DPI is made anew (the views do their toolbars and search boxes
+	// when they get WM_DPICHANGED_AFTERPARENT, after this), and the window is moved and sized as Windows suggests
+	auto oldDpi = WindowHelper::GetDpi();
+	UINT dpi = HIWORD(wParam);
+	WindowHelper::SetDpi(dpi);
+
+	SetToolBarImages();
+	SetTabImages();
+	m_view.SetFont(WindowHelper::GetUIFont());
+	::SendMessage(m_hWndStatusBar, WM_SETFONT, (WPARAM)WindowHelper::GetUIFont(), TRUE);
+	WindowHelper::ScaleColumns(m_view, oldDpi, dpi);
 	CreateViewFont();
 	ApplyFont(m_view);
+
+	auto rc = reinterpret_cast<RECT const*>(lParam);
+	SetWindowPos(nullptr, rc, SWP_NOZORDER | SWP_NOACTIVATE);
+	UpdateLayout();
 	return 0;
+}
+
+void CMainFrame::SetTabImages() {
+	int size = WindowHelper::DpiScale(16);
+	CImageList images;
+	images.Create(size, size, ILC_COLOR32, 4, 4);
+	UINT icons[] = { IDI_WINDOWS, IDI_PROCESSES, IDI_MESSAGES, IDI_AUTOMATION };
+	for (auto icon : icons)
+		images.AddIcon(AtlLoadIconImage(icon, 0, size, size));
+	CImageList old = m_view.SetImageList(images);
+	if (old)
+		old.Destroy();
+}
+
+void CMainFrame::SetToolBarImages() {
+	CToolBarCtrl tb(m_hMainToolBar);
+	int size = WindowHelper::DpiScale(24);
+	CImageList images;
+	images.Create(size, size, ILC_COLOR32, 8, 4);
+	for (auto icon : m_ToolBarIcons)
+		images.AddIcon(AtlLoadIconImage(icon, 0, size, size));
+	CImageList old = tb.SetImageList(images);
+	if (old)
+		old.Destroy();
+	if (m_hWndToolBar)
+		WindowHelper::FitToolBarBand(m_hWndToolBar, tb);
 }
 
 void CMainFrame::ApplyFont(HWND hRoot) {
 	// the trees and the lists only (not the toolbars, tabs or status bar)
 	::EnumChildWindows(hRoot, [](auto hWnd, auto font) {
 		WCHAR className[32];
-		if (::GetClassName(hWnd, className, _countof(className))
-			&& (_wcsicmp(className, WC_TREEVIEW) == 0 || _wcsicmp(className, WC_LISTVIEW) == 0))
+		if (!::GetClassName(hWnd, className, _countof(className)))
+			return TRUE;
+		if (_wcsicmp(className, WC_TREEVIEW) == 0) {
 			::SendMessage(hWnd, WM_SETFONT, (WPARAM)font, TRUE);
+			// given again, for the rows' height (the icons may have been made at another size)
+			TreeView_SetImageList(hWnd, TreeView_GetImageList(hWnd, TVSIL_NORMAL), TVSIL_NORMAL);
+		}
+		else if (_wcsicmp(className, WC_LISTVIEW) == 0) {
+			::SendMessage(hWnd, WM_SETFONT, (WPARAM)font, TRUE);
+			ListView_SetImageList(hWnd, ListView_GetImageList(hWnd, LVSIL_SMALL), LVSIL_SMALL);
+		}
 		return TRUE;
 		}, (LPARAM)(HFONT)m_Font);
 }
@@ -469,10 +513,7 @@ void CMainFrame::CloseTab(CWindow* win) {
 }
 
 void CMainFrame::InitToolBar(CToolBarCtrl& tb) {
-	CImageList tbImages;
-	int size = WindowHelper::DpiScale(24);
-	tbImages.Create(size, size, ILC_COLOR32, 8, 4);
-	tb.SetImageList(tbImages);
+	m_hMainToolBar = tb;
 
 	struct {
 		UINT id;
@@ -490,13 +531,18 @@ void CMainFrame::InitToolBar(CToolBarCtrl& tb) {
 		{ ID_VIEW_EMPTYTITLEWINDOWS, IDI_WINDOW_NOTEXT },
 		{ ID_WINDOW_PROPERTIES, IDI_WINPROP },
 	};
+	// the images' icons are kept, for making them at another DPI
+	for (auto& b : buttons)
+		if (b.id)
+			m_ToolBarIcons.push_back(b.image);
+	SetToolBarImages();
+
+	int image = 0;
 	for (auto& b : buttons) {
 		if (b.id == 0)
 			tb.AddSeparator(0);
-		else {
-			int image = tbImages.AddIcon(AtlLoadIconImage(b.image, 0, size, size));
-			tb.AddButton(b.id, b.style, TBSTATE_ENABLED, image, b.text, 0);
-		}
+		else
+			tb.AddButton(b.id, b.style, TBSTATE_ENABLED, image++, b.text, 0);
 	}
 }
 

@@ -135,13 +135,14 @@
 #define ID_AUTOMATION_DEFAULTACTION     32819
 #define ID_AUTOMATION_SETFOCUS          32820
 #define ID_AUTOMATION_SCROLLINTOVIEW    32821
+#define ID_AUTOMATION_LIVE              32822
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        236
-#define _APS_NEXT_COMMAND_VALUE         32822
+#define _APS_NEXT_COMMAND_VALUE         32823
 #define _APS_NEXT_CONTROL_VALUE         1038
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

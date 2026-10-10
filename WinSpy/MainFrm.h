@@ -62,6 +62,9 @@ private:
 	void CloseTab(CWindow* win) override;
 
 	void InitToolBar(CToolBarCtrl& tb);
+	// the toolbar's and the tabs' images, for WindowHelper::GetDpi()
+	void SetToolBarImages();
+	void SetTabImages();
 	void InitMenu(HMENU menu);
 	// adds a tab (and gives its trees and lists the chosen font)
 	void AddView(HWND hView, PCWSTR title, int image, void* data);
@@ -104,6 +107,8 @@ private:
 	enum { HotKeyLocate = 1 };
 
 	HWND m_hActivePage{ nullptr };
+	HWND m_hMainToolBar{ nullptr };
+	std::vector<int> m_ToolBarIcons;	// by image index
 	CFont m_Font;		// the trees' and lists', for the window's DPI
 	CNativeCustomTabView m_view;
 };

@@ -288,7 +288,7 @@ LRESULT CMessagesView::OnCreate(UINT, WPARAM, LPARAM, BOOL&) {
 	// the search box, in a band of its own next to the toolbar
 	CRect rc(0, 0, WindowHelper::DpiScale(220), WindowHelper::DpiScale(22));
 	m_Search.Create(m_hWndToolBar, &rc, nullptr, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, WS_EX_CLIENTEDGE, IDC_SEARCH);
-	m_Search.SetFont(AtlGetDefaultGuiFont());
+	m_Search.SetFont(WindowHelper::GetUIFont());
 	m_Search.SetCueBannerText(L"Search messages");
 	AddSimpleReBarBand(m_Search, nullptr, FALSE, 220);
 
@@ -331,7 +331,7 @@ LRESULT CMessagesView::OnCreate(UINT, WPARAM, LPARAM, BOOL&) {
 	};
 
 	for (auto& col : columns) {
-		cm->AddColumn(col.text, col.format, col.width, col.type, col.flags);
+		cm->AddColumn(col.text, col.format, WindowHelper::DpiScale(col.width), col.type, col.flags);
 	}
 
 	cm->UpdateColumns();

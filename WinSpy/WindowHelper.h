@@ -29,10 +29,23 @@ struct WindowHelper final {
 	static void HighlightWindow(HWND hWnd);
 	// the same around a rectangle on the screen (a UI Automation element's, say); the calling thread must pump messages
 	static void HighlightRect(RECT const& rc);
-	// a size in pixels at 96 DPI, for the system DPI (icons, image lists and such are made once, at that DPI)
+	// a size in pixels at 96 DPI, for the main window's DPI (GetDpi)
 	static int DpiScale(int size);
-	// a list view's column widths and order, as text (for the settings)
+	// the DPI of the main window's monitor (the system's until SetDpi is called)
+	static UINT GetDpi();
+	// the main window is on a monitor with this DPI: the window icons are made again at its size (with the same
+	// indices, so the trees and lists only need to be given the image list again)
+	static void SetDpi(UINT dpi);
+	// adds an icon to the window icons' image list (GetImageList); a copy is kept for making it again at another DPI
+	static int AddIcon(HICON hIcon);
+	// the UI (message) font for GetDpi(), for search boxes, toolbars, the tabs and the status bar
+	static HFONT GetUIFont();
+	// the rebar band of a toolbar made as big as all its buttons (after its images or font changed)
+	static void FitToolBarBand(HWND hReBar, HWND hToolBar);
+	// a list view's column widths (at 96 DPI) and order, as text (for the settings)
 	static CString GetColumnsLayout(CListViewCtrl& list);
+	// all the list views' columns under the window made wider or narrower, from one DPI to another
+	static void ScaleColumns(HWND hRoot, UINT oldDpi, UINT newDpi);
 	// ignored if the list's columns are not the ones the layout was made of
 	static void SetColumnsLayout(CListViewCtrl& list, CString const& layout);
 	// "Per-Monitor v2 (144)" and the like

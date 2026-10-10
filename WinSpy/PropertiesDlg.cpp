@@ -8,8 +8,10 @@ LRESULT CPropertiesDlg::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 
 	CListViewCtrl list(GetDlgItem(IDC_LIST));
 	list.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER | LVS_EX_INFOTIP);
-	list.InsertColumn(0, L"Property", LVCFMT_LEFT, 140);
-	list.InsertColumn(1, L"Value", LVCFMT_LEFT, 300);
+	// (the dialog may be on another monitor than the main window)
+	auto dpi = ::GetDpiForWindow(m_hWnd);
+	list.InsertColumn(0, L"Property", LVCFMT_LEFT, ::MulDiv(140, dpi, USER_DEFAULT_SCREEN_DPI));
+	list.InsertColumn(1, L"Value", LVCFMT_LEFT, ::MulDiv(300, dpi, USER_DEFAULT_SCREEN_DPI));
 
 	int i = 0;
 	for (auto& [name, value] : m_Properties) {

@@ -54,7 +54,7 @@ LRESULT CWindowsListView::OnCreate(UINT, WPARAM, LPARAM, BOOL&) {
 	};
 
 	for (auto& col : columns) {
-		cm->AddColumn(col.text, col.format, col.width, col.type, col.flags);
+		cm->AddColumn(col.text, col.format, WindowHelper::DpiScale(col.width), col.type, col.flags);
 	}
 
 	cm->UpdateColumns();
@@ -195,7 +195,7 @@ int CWindowsListView::GetRowImage(HWND, int row, int col) const {
 
 	auto hIcon = WindowHelper::GetWindowIcon(h);
 	if (hIcon) {
-		int image = WindowHelper::GetImageList().AddIcon(hIcon);
+		int image = WindowHelper::AddIcon(hIcon);
 		icons.insert({ h, image });
 		return image;
 	}

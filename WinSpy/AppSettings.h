@@ -19,6 +19,7 @@ struct AppSettings : Settings {
 		SETTING(WindowsSplitter, 35, SettingType::Int32);
 		SETTING(ProcessesSplitter, 35, SettingType::Int32);
 		SETTING(AutomationSplitter, 35, SettingType::Int32);
+		SETTING(AutomationLive, 1, SettingType::Bool);		// the UI Automation tree follows changes (its events)
 		// View > Hidden Windows / Empty Title Windows, in each kind of tree and in the lists
 		SETTING(WindowsShowHidden, 0, SettingType::Bool);
 		SETTING(WindowsShowNoTitle, 1, SettingType::Bool);
@@ -40,6 +41,7 @@ struct AppSettings : Settings {
 	DEF_SETTING(WindowsSplitter, int)
 	DEF_SETTING(ProcessesSplitter, int)
 	DEF_SETTING(AutomationSplitter, int)
+	DEF_SETTING(AutomationLive, int)
 	DEF_SETTING(WindowsShowHidden, int)
 	DEF_SETTING(WindowsShowNoTitle, int)
 	DEF_SETTING(ProcessesShowHidden, int)

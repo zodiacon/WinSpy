@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "ImageIconCache.h"
 #include "resource.h"
+#include "WindowHelper.h"
 
 int ImageIconCache::GetIcon(const CString& path, HICON* phIcon) const {
 	if (path.IsEmpty() || path.Find(L'\\') < 0)
@@ -21,7 +22,7 @@ int ImageIconCache::GetIcon(const CString& path, HICON* phIcon) const {
 	auto hIcon = ::ExtractAssociatedIcon(_Module.GetModuleInstance(), spath.GetBufferSetLength(MAX_PATH), &index);
 
 	if (hIcon) {
-		int index = _images.AddIcon(hIcon);
+		int index = WindowHelper::AddIcon(hIcon);
 		if (phIcon)
 			*phIcon = hIcon;
 		else
@@ -45,7 +46,7 @@ ImageIconCache::ImageIconCache() {
 
 void ImageIconCache::SetImageList(HIMAGELIST hil) {
 	_images.Attach(hil);
-	_defIcon = _images.AddIcon(AtlLoadSysIcon(IDI_APPLICATION));
+	_defIcon = WindowHelper::AddIcon(AtlLoadSysIcon(IDI_APPLICATION));
 }
 
 HIMAGELIST ImageIconCache::GetImageList() const {

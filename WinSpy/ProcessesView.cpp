@@ -194,7 +194,7 @@ CTreeItem CProcessesView::AddNode(HWND hWnd, HTREEITEM hParent) {
 		if (auto it = icons.find(hWnd); it == icons.end()) {
 			hIcon = WindowHelper::GetWindowOrProcessIcon(hWnd);
 			if (hIcon) {
-				icons.insert({ hWnd, image = WindowHelper::GetImageList().AddIcon(hIcon) });
+				icons.insert({ hWnd, image = WindowHelper::AddIcon(hIcon) });
 			}
 		}
 		else {

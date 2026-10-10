@@ -9,8 +9,19 @@
 #include "AppSettings.h"
 #include <ResizablePropertySheet.h>
 #include <IconPropertySheet.h>
+#include <ShellScalingApi.h>
+
+#pragma comment(lib, "shcore")
 
 namespace {
+	UINT s_Dpi;		// the main window's (0: not set, the system's)
+
+	// the window icons' sources, by their index in the image list (index 0 is the default, from the resources)
+	std::vector<HICON>& GetIconSources() {
+		static std::vector<HICON> s_Sources;
+		return s_Sources;
+	}
+
 	// the window properties: resizable, with full color tab icons
 	class CWindowPropertiesSheet :
 		public CIconPropertySheetImpl<CWindowPropertiesSheet, CResizablePropertySheetImpl<CWindowPropertiesSheet>> {
@@ -27,7 +38,10 @@ namespace {
 
 		bool Show(RECT const& rc) {
 			CRect rcWindow(rc);
-			int width = ::MulDiv(3, ::GetDpiForSystem(), USER_DEFAULT_SCREEN_DPI);
+			// as thick as the monitor's DPI makes it
+			UINT dpiX = USER_DEFAULT_SCREEN_DPI, dpiY;
+			::GetDpiForMonitor(::MonitorFromRect(&rc, MONITOR_DEFAULTTONEAREST), MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
+			int width = ::MulDiv(3, dpiX, USER_DEFAULT_SCREEN_DPI);
 			rcWindow.InflateRect(width, width);
 			if (!Create(nullptr, rcWindow))
 				return false;
@@ -179,23 +193,121 @@ bool WindowHelper::Flash(HWND hWnd) {
 }
 
 int WindowHelper::DpiScale(int size) {
-	return ::MulDiv(size, ::GetDpiForSystem(), USER_DEFAULT_SCREEN_DPI);
+	return ::MulDiv(size, GetDpi(), USER_DEFAULT_SCREEN_DPI);
+}
+
+UINT WindowHelper::GetDpi() {
+	return s_Dpi ? s_Dpi : ::GetDpiForSystem();
+}
+
+void WindowHelper::SetDpi(UINT dpi) {
+	if (dpi == 0 || dpi == GetDpi()) {
+		s_Dpi = dpi;
+		return;
+	}
+	s_Dpi = dpi;
+
+	// setting the size removes the images: they are added again in the same order
+	auto& images = GetImageList();
+	int count = images.GetImageCount();
+	int size = DpiScale(16);
+	images.SetIconSize(size, size);
+	auto hDefault = AtlLoadIconImage(IDI_WINDOW, 0, size, size);
+	images.AddIcon(hDefault);
+	auto& sources = GetIconSources();
+	for (int i = 1; i < count; i++)
+		images.AddIcon(i < (int)sources.size() && sources[i] ? sources[i] : hDefault);
+	::DestroyIcon(hDefault);
+}
+
+int WindowHelper::AddIcon(HICON hIcon) {
+	int index = GetImageList().AddIcon(hIcon);
+	if (index > 0) {
+		auto& sources = GetIconSources();
+		if ((int)sources.size() <= index)
+			sources.resize(index + 1);
+		sources[index] = ::CopyIcon(hIcon);
+	}
+	return index;
+}
+
+HFONT WindowHelper::GetUIFont() {
+	// one for each DPI used (they are not deleted: a control may still have the last one)
+	static std::unordered_map<UINT, HFONT> s_Fonts;
+	auto dpi = GetDpi();
+	if (auto it = s_Fonts.find(dpi); it != s_Fonts.end())
+		return it->second;
+
+	NONCLIENTMETRICS ncm{ sizeof(ncm) };
+	::SystemParametersInfoForDpi(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0, dpi);
+	auto hFont = ::CreateFontIndirect(&ncm.lfMessageFont);
+	s_Fonts[dpi] = hFont;
+	return hFont;
+}
+
+void WindowHelper::FitToolBarBand(HWND hReBar, HWND hToolBar) {
+	CToolBarCtrl tb(hToolBar);
+	tb.AutoSize();
+	SIZE size;
+	tb.GetMaxSize(&size);
+	CReBarCtrl rb(hReBar);
+	int count = rb.GetBandCount();
+	for (int i = 0; i < count; i++) {
+		REBARBANDINFO rbbi{ sizeof(rbbi) };
+		rbbi.fMask = RBBIM_CHILD | RBBIM_CHILDSIZE;
+		rb.GetBandInfo(i, &rbbi);
+		if (rbbi.hwndChild != hToolBar)
+			continue;
+		rbbi.fMask = RBBIM_CHILDSIZE | RBBIM_IDEALSIZE | RBBIM_SIZE;
+		rbbi.cxMinChild = rbbi.cx = rbbi.cxIdeal = size.cx;
+		rbbi.cyMinChild = size.cy;
+		rb.SetBandInfo(i, &rbbi);
+	}
+}
+
+void WindowHelper::ScaleColumns(HWND hRoot, UINT oldDpi, UINT newDpi) {
+	auto scale = [](HWND hWnd, UINT oldDpi, UINT newDpi) {
+		WCHAR className[32];
+		if (!::GetClassName(hWnd, className, _countof(className)) || _wcsicmp(className, WC_LISTVIEW) != 0)
+			return;
+		CListViewCtrl list(hWnd);
+		int count = list.GetHeader().GetItemCount();
+		for (int i = 0; i < count; i++)
+			list.SetColumnWidth(i, ::MulDiv(list.GetColumnWidth(i), newDpi, oldDpi));
+		};
+	struct Params {
+		decltype(scale)& Scale;
+		UINT OldDpi, NewDpi;
+	} params{ scale, oldDpi, newDpi };
+	::EnumChildWindows(hRoot, [](auto hWnd, auto p) {
+		auto params = reinterpret_cast<Params*>(p);
+		params->Scale(hWnd, params->OldDpi, params->NewDpi);
+		return TRUE;
+		}, reinterpret_cast<LPARAM>(&params));
 }
 
 CString WindowHelper::GetColumnsLayout(CListViewCtrl& list) {
-	// "width:order," for each column
+	// "96;" then "width:order," for each column, the widths at 96 DPI
 	int count = list.GetHeader().GetItemCount();
 	std::vector<int> order(count);
 	list.GetColumnOrderArray(count, order.data());
-	CString text, item;
+	auto dpi = ::GetDpiForWindow(list);
+	CString text(L"96;"), item;
 	for (int i = 0; i < count; i++) {
-		item.Format(L"%d:%d,", list.GetColumnWidth(i), order[i]);
+		item.Format(L"%d:%d,", ::MulDiv(list.GetColumnWidth(i), USER_DEFAULT_SCREEN_DPI, dpi), order[i]);
 		text += item;
 	}
 	return text;
 }
 
-void WindowHelper::SetColumnsLayout(CListViewCtrl& list, CString const& layout) {
+void WindowHelper::SetColumnsLayout(CListViewCtrl& list, CString const& saved) {
+	// the widths are at 96 DPI ("96;" first), or (saved by an earlier version) in pixels at the system DPI
+	UINT layoutDpi = ::GetDpiForSystem();
+	CString layout(saved);
+	if (layout.Left(3) == L"96;") {
+		layoutDpi = USER_DEFAULT_SCREEN_DPI;
+		layout = layout.Mid(3);
+	}
 	std::vector<int> widths, order;
 	int start = 0;
 	for (auto token = layout.Tokenize(L",", start); start >= 0; token = layout.Tokenize(L",", start)) {
@@ -215,8 +327,9 @@ void WindowHelper::SetColumnsLayout(CListViewCtrl& list, CString const& layout) 
 		if (sorted[i] != i)
 			return;
 
+	auto dpi = ::GetDpiForWindow(list);
 	for (int i = 0; i < count; i++)
-		list.SetColumnWidth(i, widths[i]);
+		list.SetColumnWidth(i, ::MulDiv(widths[i], dpi, layoutDpi));
 	list.SetColumnOrderArray(count, order.data());
 }
 
