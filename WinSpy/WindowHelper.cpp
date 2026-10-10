@@ -29,7 +29,7 @@ CString WindowHelper::ClassStyleToString(HWND hWnd) {
 	auto style = ::GetClassLongPtr(hWnd, GCL_STYLE);
 	CString text;
 
-	auto const [styles, count] = GetWindowStyleArray();
+	auto const [styles, count] = GetClassStyleArray();
 	for (int i = 0; i < count; i++) {
 		auto& item = styles[i];
 		if ((style & item.Value) == item.Value)
@@ -45,7 +45,7 @@ CString WindowHelper::WindowExtendedStyleToString(HWND hWnd) {
 	auto style = CWindow(hWnd).GetExStyle();
 	CString text;
 
-	auto const [styles, count] = GetWindowStyleArray();
+	auto const [styles, count] = GetWindowStyleExArray();
 	for (int i = 0; i < count; i++) {
 		auto& item = styles[i];
 		if ((style & item.Value) == item.Value)
@@ -83,7 +83,15 @@ HICON WindowHelper::GetWindowOrProcessIcon(HWND hWnd) {
 		DWORD pid = 0;
 		::GetWindowThreadProcessId(hWnd, &pid);
 		if (pid) {
-			::ExtractIconEx(ProcessHelper::GetProcessImageName(pid, true), 0, nullptr, &hIcon, 1);
+			//
+			// the extracted icons are owned here (one per executable), as callers don't destroy the icons they get
+			//
+			static std::unordered_map<std::wstring, HICON> s_ProcessIcons;
+			std::wstring path(ProcessHelper::GetProcessImageName(pid, true));
+			if (auto it = s_ProcessIcons.find(path); it != s_ProcessIcons.end())
+				return it->second;
+			::ExtractIconEx(path.c_str(), 0, nullptr, &hIcon, 1);
+			s_ProcessIcons.insert({ std::move(path), hIcon });
 		}
 	}
 
@@ -99,6 +107,16 @@ bool WindowHelper::Flash(HWND hWnd) {
 }
 
 void WindowHelper::HighlightBorder(HWND hWnd, bool highlight) {
+	// a null window would mean drawing on the whole screen
+	if (!::IsWindow(hWnd))
+		return;
+
+	if (!highlight) {
+		// the whole window: the highlight is in window (not client) coordinates, which a region given to RedrawWindow is not
+		::RedrawWindow(hWnd, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW);
+		return;
+	}
+
 	CRect rc;
 	::GetWindowRect(hWnd, &rc);
 	rc.OffsetRect(-rc.left, -rc.top);
@@ -112,11 +130,6 @@ void WindowHelper::HighlightBorder(HWND hWnd, bool highlight) {
 	CRgn rgn;
 	rgn.CreateRectRgn(0, 0, 1, 1);
 	rgn.CombineRgn(rgn1, rgn2, RGN_DIFF);
-	if (!highlight) {
-		::RedrawWindow(hWnd, nullptr, rgn, RDW_INTERNALPAINT | RDW_INVALIDATE | RDW_UPDATENOW | RDW_FRAME);
-		return;
-	}
-
 	CWindowDC dc(hWnd);
 	CBrush b;
 	b.CreateSolidBrush(RGB(255, 0, 0));
@@ -145,6 +158,10 @@ CString WindowHelper::GetWindowClassAndTitle(HWND hWnd) {
 	if (!title.IsEmpty())
 		text.Format(L"%s (%s)", (PCWSTR)text, (PCWSTR)title);
 	return text;
+}
+
+void WindowHelper::PruneIconMap() {
+	std::erase_if(GetIconMap(), [](auto const& item) { return !::IsWindow(item.first); });
 }
 
 std::unordered_map<HWND, int>& WindowHelper::GetIconMap() {
@@ -180,6 +197,10 @@ bool WindowHelper::ThreadHasWindows(DWORD tid) {
 }
 
 int WindowHelper::ShowWindowProperties(HWND hWnd) {
+	// not a window: a destroyed one, or a tree node that stands for a group (like the message-only windows)
+	if (!::IsWindow(hWnd))
+		return 0;
+
 	CString text;
 	text.Format(L"Window 0x%X Properties", PtrToUlong(hWnd));
 	CPropertySheet sheet((PCWSTR)text);

@@ -51,6 +51,7 @@ private:
 	};
 
 	void InitTree();
+	void RemoveFromWindowMap(HTREEITEM hItem);
 	void UpdateUI();
 	CTreeItem AddNode(HWND hWnd, HTREEITEM hParent);
 	void AddChildWindows(HTREEITEM hParent);

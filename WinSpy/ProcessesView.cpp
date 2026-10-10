@@ -39,11 +39,15 @@ LRESULT CProcessesView::OnTimer(UINT /*uMsg*/, WPARAM id, LPARAM /*lParam*/, BOO
 }
 
 void CProcessesView::InitTree() {
+	WindowHelper::PruneIconMap();
 	m_Tree.LockWindowUpdate();
 	m_Tree.DeleteAllItems();
 	m_Processes.clear();
 	m_WindowMap.clear();
 	m_Threads.clear();
+	m_Selected = CTreeItem();
+	m_SelectedHwnd = nullptr;
+	m_hCurrentNode = CTreeItem();
 	m_TotalWindows = m_TotalVisibleWindows = m_TopLevelWindows = 0;
 
 	CString text;
@@ -187,47 +191,47 @@ LRESULT CProcessesView::OnTreeNodeRightClick(HTREEITEM hItem, CPoint const& pt) 
 }
 
 LRESULT CProcessesView::OnWindowShow(WORD, WORD, HWND, BOOL&) {
-	ATLASSERT(m_Selected);
-	m_SelectedHwnd.ShowWindow(SW_SHOW);
+	if (m_SelectedHwnd)
+		m_SelectedHwnd.ShowWindow(SW_SHOW);
 
 	return 0;
 }
 
 LRESULT CProcessesView::OnWindowHide(WORD, WORD, HWND, BOOL&) {
-	ATLASSERT(m_Selected);
-	m_SelectedHwnd.ShowWindow(SW_HIDE);
+	if (m_SelectedHwnd)
+		m_SelectedHwnd.ShowWindow(SW_HIDE);
 	return 0;
 }
 
 LRESULT CProcessesView::OnWindowMinimize(WORD, WORD, HWND, BOOL&) {
-	ATLASSERT(m_Selected);
-	m_SelectedHwnd.ShowWindow(SW_MINIMIZE);
+	if (m_SelectedHwnd)
+		m_SelectedHwnd.ShowWindow(SW_MINIMIZE);
 	return 0;
 }
 
 LRESULT CProcessesView::OnWindowMaximize(WORD, WORD, HWND, BOOL&) {
-	ATLASSERT(m_Selected);
-	m_SelectedHwnd.ShowWindow(SW_MAXIMIZE);
+	if (m_SelectedHwnd)
+		m_SelectedHwnd.ShowWindow(SW_MAXIMIZE);
 
 	return 0;
 }
 
 LRESULT CProcessesView::OnWindowRestore(WORD, WORD, HWND, BOOL&) {
-	ATLASSERT(m_Selected);
-	m_SelectedHwnd.ShowWindow(SW_RESTORE);
+	if (m_SelectedHwnd)
+		m_SelectedHwnd.ShowWindow(SW_RESTORE);
 	return 0;
 }
 
 LRESULT CProcessesView::OnWindowFlash(WORD, WORD, HWND, BOOL&) {
-	ATLASSERT(m_Selected);
-	WindowHelper::Flash((HWND)m_Selected.GetData());
+	if (m_SelectedHwnd)
+		WindowHelper::Flash(m_SelectedHwnd);
 
 	return 0;
 }
 
 LRESULT CProcessesView::OnWindowBringToFront(WORD, WORD, HWND, BOOL&) {
-	ATLASSERT(m_Selected);
-	m_SelectedHwnd.BringWindowToTop();
+	if (m_SelectedHwnd)
+		m_SelectedHwnd.BringWindowToTop();
 	return 0;
 }
 
@@ -247,7 +251,8 @@ LRESULT CProcessesView::OnTreeNodeDoubleClick(HTREEITEM hItem, CPoint const& pt)
 	auto data = m_Tree.GetItemData(hItem);
 	switch (static_cast<ItemType>(data)) {
 		case ItemType::Process:
-			ProcessHelper::ShowProcessProperties(m_Processes[hItem]);
+			if (auto it = m_Processes.find(hItem); it != m_Processes.end())
+				ProcessHelper::ShowProcessProperties(it->second);
 			break;
 
 		case ItemType::Thread:
@@ -262,40 +267,55 @@ LRESULT CProcessesView::OnTreeNodeDoubleClick(HTREEITEM hItem, CPoint const& pt)
 }
 
 LRESULT CProcessesView::OnWindowProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	ATLASSERT(m_SelectedHwnd);
-	WindowHelper::ShowWindowProperties(m_SelectedHwnd);
+	if (m_SelectedHwnd)
+		WindowHelper::ShowWindowProperties(m_SelectedHwnd);
 	return 0;
 }
 
 LRESULT CProcessesView::OnProcessProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	auto hItem = m_Tree.GetSelectedItem();
-	ProcessHelper::ShowProcessProperties(m_Processes[hItem]);
+	if (auto it = m_Processes.find(m_Tree.GetSelectedItem()); it != m_Processes.end())
+		ProcessHelper::ShowProcessProperties(it->second);
 	return 0;
 }
 
 void CProcessesView::ChangeSelection(HTREEITEM hItem) {
-	m_Selected = hItem;
-	m_Selected.m_pTreeView = &m_Tree;
+	m_Selected = CTreeItem(hItem, &m_Tree);
+	m_SelectedHwnd = nullptr;
+	if (!hItem)
+		return;
+
 	auto data = static_cast<ItemType>(m_Selected.GetData());
 	switch (data) {
 		case ItemType::Process:
-			m_WindowsView.UpdateListByProcess(m_Processes[m_Selected]);
+			if (auto it = m_Processes.find(hItem); it != m_Processes.end())
+				m_WindowsView.UpdateListByProcess(it->second);
 			break;
 
 		case ItemType::Thread:
-			m_WindowsView.UpdateListByThread(m_Threads[m_Selected]);
+			if (auto it = m_Threads.find(hItem); it != m_Threads.end())
+				m_WindowsView.UpdateListByThread(it->second);
 			break;
 
 		default:
 			auto hWnd = (HWND)m_Selected.GetData();
-			m_SelectedHwnd = hWnd;
-			if (!::IsWindow(hWnd))	// window is probably destroyed
+			if (!::IsWindow(hWnd)) {	// window is probably destroyed
+				RemoveFromWindowMap(hItem);
 				m_Selected.Delete();
+				m_Selected = CTreeItem();
+			}
 			else {
+				m_SelectedHwnd = hWnd;
 				m_WindowsView.UpdateList(hWnd);
 			}
 			break;
 	}
+}
+
+void CProcessesView::RemoveFromWindowMap(HTREEITEM hItem) {
+	// the node's window and its descendants'
+	m_WindowMap.erase((HWND)m_Tree.GetItemData(hItem));
+	for (auto child = m_Tree.GetChildItem(hItem); child; child = m_Tree.GetNextSiblingItem(child))
+		RemoveFromWindowMap(child);
 }
 
 LRESULT CProcessesView::OnToggleHiddenWindows(WORD, WORD, HWND, BOOL&) {

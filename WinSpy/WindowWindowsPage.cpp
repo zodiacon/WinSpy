@@ -19,13 +19,16 @@ void CWindowWindowsPage::UpdateData() {
     CString text;
     for (auto& item : windows) {
         if (!::IsWindow(item.win.m_hWnd)) {
+            // clear what the previous window (this page can move to another one) left
             SetDlgItemText(item.idHandle, L"(none)    ");
+            SetDlgItemText(item.idClass, L"");
+            SetDlgItemText(item.idText, L"");
             continue;
         }
         text.Format(L"<a>0x%zX</a>", (ULONG_PTR)item.win.m_hWnd);
         SetDlgItemText(item.idHandle, text);
-        if (::GetClassName(item.win, text.GetBufferSetLength(128), 128))
-            SetDlgItemText(item.idClass, text);
+        WCHAR className[128];
+        SetDlgItemText(item.idClass, ::GetClassName(item.win, className, _countof(className)) ? className : L"");
         item.win.GetWindowText(text);
         SetDlgItemText(item.idText, text);
     }

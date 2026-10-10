@@ -113,7 +113,6 @@ LRESULT CMainFrame::OnViewAllWindows(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*
 		pView->Create(m_view, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
 		m_view.AddPage(pView->m_hWnd, _T("Windows Tree"), 0, pView);
 	}
-	pView->OnActivate(true);
 
 	return 0;
 }
@@ -125,7 +124,6 @@ LRESULT CMainFrame::OnViewAllProcesses(WORD /*wNotifyCode*/, WORD /*wID*/, HWND 
 		pView->Create(m_view, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
 		m_view.AddPage(pView->m_hWnd, _T("Processes"), 1, pView);
 	}
-	pView->OnActivate(true);
 
 	return 0;
 }
@@ -210,7 +208,6 @@ LRESULT CMainFrame::OnViewAutomationTree(WORD, WORD, HWND, BOOL&) {
 	auto pView = new CAutomationTreeView(this);
 	pView->Create(m_view, rcDefault, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
 	m_view.AddPage(pView->m_hWnd, L"UI Automation", 2, pView);
-	pView->OnActivate(true);
 	return 0;
 }
 
@@ -220,14 +217,13 @@ CUpdateUIBase& CMainFrame::GetUIUpdate() {
 
 UINT CMainFrame::ShowPopupMenu(HMENU hMenu, const POINT& pt, DWORD flags) {
 	InitMenu(hMenu);
-	return (UINT)::TrackPopupMenu(hMenu, flags, pt.x, pt.y, 0, m_hWnd, nullptr);
+	return (UINT)::TrackPopupMenu(hMenu, 0, pt.x, pt.y, 0, m_hWnd, nullptr);
 }
 
 CMessagesView* CMainFrame::CreateMessagesView() {
 	auto pView = new CMessagesView(this);
 	pView->Create(m_view, rcDefault, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0);
 	m_view.AddPage(pView->m_hWnd, L"Messages", 2, pView);
-	pView->OnActivate(true);
 
 	return pView;
 }
@@ -300,12 +296,17 @@ LRESULT CMainFrame::OnToggleDarkMode(WORD, WORD, HWND, BOOL&) {
 }
 
 LRESULT CMainFrame::OnTabActivated(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/) {
-	if (m_ActivePage >= 0 && m_ActivePage < m_view.GetPageCount())
-		::SendMessage(m_view.GetPageHWND(m_ActivePage), TBVN_PAGEACTIVATED, 0, 0);
+	//
+	// the previous page is kept by its window, as page indices shift when pages are removed
+	// (a removed page's window is destroyed, so it's not told anything)
+	//
+	if (::IsWindow(m_hActivePage))
+		::SendMessage(m_hActivePage, TBVN_PAGEACTIVATED, 0, 0);
 
-	m_ActivePage = m_view.GetActivePage();
-	if (m_ActivePage < 0)
+	int page = m_view.GetActivePage();
+	m_hActivePage = page < 0 ? nullptr : m_view.GetPageHWND(page);
+	if (!m_hActivePage)
 		return 0;
 
-	return ::SendMessage(m_view.GetPageHWND(m_ActivePage), TBVN_PAGEACTIVATED, 1, 0);
+	return ::SendMessage(m_hActivePage, TBVN_PAGEACTIVATED, 1, 0);
 }

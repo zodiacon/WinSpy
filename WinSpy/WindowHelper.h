@@ -26,6 +26,8 @@ struct WindowHelper abstract final {
 	static void HighlightBorder(HWND hWnd, bool highlight = true);
 	static CString GetWindowClassAndTitle(HWND hWnd);
 	static std::unordered_map<HWND, int>& GetIconMap();
+	// forgets destroyed windows, as their handles can be reused by new ones
+	static void PruneIconMap();
 	static CImageList& GetImageList();
 	static WindowItem GetWindowInfo(HWND hWnd);
 	static bool ThreadHasWindows(DWORD tid);

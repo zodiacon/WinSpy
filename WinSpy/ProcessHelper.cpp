@@ -14,12 +14,15 @@ CString ProcessHelper::GetProcessImageName(DWORD pid, bool fullPath) {
 		WCHAR name[MAX_PATH];
 		DWORD size = _countof(name);
 		if (::QueryFullProcessImageName(hProcess, 0, name, &size)) {
-			result = fullPath ? name : ::wcsrchr(name, L'\\') + 1;
+			auto bs = fullPath ? nullptr : ::wcsrchr(name, L'\\');
+			result = bs ? bs + 1 : name;
 		}
 		::CloseHandle(hProcess);
 	}
-	else if (auto it = _names.find(pid); it != _names.end())
-		return it->second;
+	// the process can't be opened (or its path can't be read): the name it had when the processes were listed, if any
+	if (result.IsEmpty())
+		if (auto it = _names.find(pid); it != _names.end())
+			return it->second;
 
 	return result;
 }
@@ -32,6 +35,7 @@ ProcessesInfo ProcessHelper::EnumProcessesAndThreads(EnumProcessesOptions option
 	auto hSnapshot = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS | TH32CS_SNAPTHREAD, 0);
 	if (hSnapshot == INVALID_HANDLE_VALUE)
 		return info;
+	CHandle snapshot(hSnapshot);
 
 	PROCESSENTRY32 pe;
 	pe.dwSize = sizeof(pe);
@@ -48,8 +52,10 @@ ProcessesInfo ProcessHelper::EnumProcessesAndThreads(EnumProcessesOptions option
 		pi.ProcessName = pe.szExeFile;
 		auto hProcess = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pi.ProcessId);
 		if (hProcess) {
-			DWORD size = MAX_PATH;
-			::QueryFullProcessImageName(hProcess, 0, pi.FullPath.GetBufferSetLength(size), &size);
+			WCHAR path[MAX_PATH];
+			DWORD size = _countof(path);
+			if (::QueryFullProcessImageName(hProcess, 0, path, &size))
+				pi.FullPath = path;
 			::CloseHandle(hProcess);
 		}
 		processes.push_back(pi);
@@ -115,6 +121,7 @@ void ProcessHelper::EnumProcesses() {
 		_names.insert({ 0, L"(Idle)" });
 		return;
 	}
+	CHandle snapshot(hSnapshot);
 
 	PROCESSENTRY32 pe;
 	pe.dwSize = sizeof(pe);
@@ -122,13 +129,7 @@ void ProcessHelper::EnumProcesses() {
 	_names.reserve(512);
 
 	while (::Process32Next(hSnapshot, &pe)) {
-		auto hProcess = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pe.th32ProcessID);
-		if (!hProcess) {
-			_names.insert({ pe.th32ProcessID, pe.szExeFile });
-		}
-		else {
-			::CloseHandle(hProcess);
-		}
+		_names.insert({ pe.th32ProcessID, pe.szExeFile });
 	}
 }
 

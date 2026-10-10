@@ -18,7 +18,7 @@ struct HookConfig {
 };
 
 bool WINAPI AddHook(DWORD hookType, HookConfig const& config);
-bool WINAPI RemoveHook(DWORD tid);
+bool WINAPI RemoveHook(HWND callbackWnd);
 
 struct HookDataHeader {
 	DWORD HookType;

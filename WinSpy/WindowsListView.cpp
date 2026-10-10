@@ -59,27 +59,39 @@ LRESULT CWindowsListView::OnCreate(UINT, WPARAM, LPARAM, BOOL&) {
     return 0;
 }
 
+HWND CWindowsListView::GetSelectedListHwnd() const {
+	int index = m_List.GetNextItem(-1, LVNI_SELECTED);
+	return index >= 0 && index < (int)m_Items.size() ? m_Items[index].hWnd : nullptr;
+}
+
 LRESULT CWindowsListView::OnWindowShow(WORD, WORD, HWND, BOOL&) {
-	CWindow win(m_Items[m_List.GetSelectionMark()].hWnd);
+	CWindow win(GetSelectedListHwnd());
+	if (!win)
+		return 0;
 	win.ShowWindowAsync(SW_SHOW);
 
 	return 0;
 }
 
 LRESULT CWindowsListView::OnWindowHide(WORD, WORD, HWND, BOOL&) {
-	ATLASSERT(m_SelectedHwnd);
-	m_SelectedHwnd.ShowWindowAsync(SW_HIDE);
+	CWindow win(GetSelectedListHwnd());
+	if (win)
+		win.ShowWindowAsync(SW_HIDE);
 	return 0;
 }
 
 LRESULT CWindowsListView::OnWindowMinimize(WORD, WORD, HWND, BOOL&) {
-	CWindow win(m_Items[m_List.GetSelectionMark()].hWnd);
+	CWindow win(GetSelectedListHwnd());
+	if (!win)
+		return 0;
 	win.ShowWindowAsync(SW_MINIMIZE);
 	return 0;
 }
 
 LRESULT CWindowsListView::OnWindowMaximize(WORD, WORD, HWND, BOOL&) {
-	CWindow win(m_Items[m_List.GetSelectionMark()].hWnd);
+	CWindow win(GetSelectedListHwnd());
+	if (!win)
+		return 0;
 	win.ShowWindowAsync(SW_MAXIMIZE);
 
 	return 0;
@@ -175,12 +187,19 @@ int CWindowsListView::GetRowImage(HWND, int row, int col) const {
 	if (auto it = icons.find(h); it != icons.end()) {
 		return it->second;
 	}
+	//
+	// windows without an icon are remembered too, so they're not asked again (across processes) on every repaint
+	//
+	if (m_NoIcon.contains(h))
+		return 0;
+
 	auto hIcon = WindowHelper::GetWindowIcon(h);
 	if (hIcon) {
 		int image = WindowHelper::GetImageList().AddIcon(hIcon);
 		icons.insert({ h, image });
 		return image;
 	}
+	m_NoIcon.insert(h);
 	return 0;
 }
 
@@ -188,39 +207,61 @@ void CWindowsListView::DoSort(const SortInfo* si) {
 	if (si == nullptr)
 		return;
 
-	std::sort(m_Items.begin(), m_Items.end(), [&](const auto& h1, const auto& h2) -> bool {
-		switch (GetColumnManager(m_List)->GetColumnTag<DataItemType>(si->SortColumn)) {
-			case DataItemType::ClassName: return SortHelper::Sort(WindowHelper::GetWindowClassName(h1.hWnd), WindowHelper::GetWindowClassName(h2.hWnd), si->SortAscending);
-			case DataItemType::Text: return SortHelper::Sort(WindowHelper::GetWindowText(h1.hWnd), WindowHelper::GetWindowText(h2.hWnd), si->SortAscending);
-			case DataItemType::Handle: return SortHelper::Sort(h1.hWnd, h2.hWnd, si->SortAscending);
-			case DataItemType::FirstChildWindow: return SortHelper::Sort(::GetWindow(h1.hWnd, GW_CHILD), ::GetWindow(h2.hWnd, GW_CHILD), si->SortAscending);
-			case DataItemType::PrevWindow: return SortHelper::Sort(::GetWindow(h1.hWnd, GW_HWNDPREV), ::GetWindow(h2.hWnd, GW_HWNDPREV), si->SortAscending);
-			case DataItemType::NextWindow: return SortHelper::Sort(::GetWindow(h1.hWnd, GW_HWNDNEXT), ::GetWindow(h2.hWnd, GW_HWNDNEXT), si->SortAscending);
-			case DataItemType::OwnerWindow: return SortHelper::Sort(::GetWindow(h1.hWnd, GW_OWNER), ::GetWindow(h2.hWnd, GW_OWNER), si->SortAscending);
-			case DataItemType::ParentWindow: return SortHelper::Sort(::GetParent(h1.hWnd), ::GetParent(h2.hWnd), si->SortAscending);
-			case DataItemType::Style: return SortHelper::Sort(CWindow(h1.hWnd).GetStyle(), CWindow(h2.hWnd).GetStyle(), si->SortAscending);
-			case DataItemType::ExtendedStyle: return SortHelper::Sort(CWindow(h1.hWnd).GetExStyle(), CWindow(h2.hWnd).GetExStyle(), si->SortAscending);
-			case DataItemType::ThreadId: return SortHelper::Sort(h1.ThreadId, h2.ThreadId, si->SortAscending);
-			case DataItemType::ProcessId: return SortHelper::Sort(h1.ProcessId, h2.ProcessId, si->SortAscending);
-			case DataItemType::ProcessName: return SortHelper::Sort(h1.ProcessName, h2.ProcessName, si->SortAscending);
-			case DataItemType::ID: return SortHelper::Sort(WindowHelper::GetID(h1.hWnd), WindowHelper::GetID(h2.hWnd), si->SortAscending);
-			case DataItemType::UserData: return SortHelper::Sort(WindowHelper::GetUserData(h1.hWnd), WindowHelper::GetUserData(h2.hWnd), si->SortAscending);
+	//
+	// the keys are read once before sorting: a window can change (or be destroyed) during the sort,
+	// and the comparison must stay consistent
+	//
+	struct Key {
+		CString Text;
+		ULONG_PTR Value{ 0 };
+	};
+	auto type = GetColumnManager(m_List)->GetColumnTag<DataItemType>(si->SortColumn);
+	auto getKey = [type](WindowItem const& item) -> Key {
+		auto h = item.hWnd;
+		switch (type) {
+			case DataItemType::ClassName: return { WindowHelper::GetWindowClassName(h) };
+			case DataItemType::Text: return { WindowHelper::GetWindowText(h) };
+			case DataItemType::ProcessName: return { item.ProcessName };
+			case DataItemType::Handle: return { {}, (ULONG_PTR)h };
+			case DataItemType::FirstChildWindow: return { {}, (ULONG_PTR)::GetWindow(h, GW_CHILD) };
+			case DataItemType::PrevWindow: return { {}, (ULONG_PTR)::GetWindow(h, GW_HWNDPREV) };
+			case DataItemType::NextWindow: return { {}, (ULONG_PTR)::GetWindow(h, GW_HWNDNEXT) };
+			case DataItemType::OwnerWindow: return { {}, (ULONG_PTR)::GetWindow(h, GW_OWNER) };
+			case DataItemType::ParentWindow: return { {}, (ULONG_PTR)::GetAncestor(h, GA_PARENT) };
+			case DataItemType::Style: return { {}, (ULONG_PTR)CWindow(h).GetStyle() };
+			case DataItemType::ExtendedStyle: return { {}, (ULONG_PTR)CWindow(h).GetExStyle() };
+			case DataItemType::ThreadId: return { {}, item.ThreadId };
+			case DataItemType::ProcessId: return { {}, item.ProcessId };
+			case DataItemType::ID: return { {}, WindowHelper::GetID(h) };
+			case DataItemType::UserData: return { {}, WindowHelper::GetUserData(h) };
 		}
-		return false;
+		return {};
+	};
+	bool text = type == DataItemType::ClassName || type == DataItemType::Text || type == DataItemType::ProcessName;
+
+	std::vector<std::pair<Key, WindowItem>> items;
+	items.reserve(m_Items.size());
+	for (auto& item : m_Items)
+		items.push_back({ getKey(item), std::move(item) });
+
+	std::sort(items.begin(), items.end(), [&](const auto& i1, const auto& i2) {
+		return text ? SortHelper::Sort(i1.first.Text, i2.first.Text, si->SortAscending)
+			: SortHelper::Sort(i1.first.Value, i2.first.Value, si->SortAscending);
 		});
+
+	m_Items.clear();
+	for (auto& item : items)
+		m_Items.push_back(std::move(item.second));
 }
 
 bool CWindowsListView::OnRightClickList(HWND, int row, int col, CPoint const& pt) {
 	CMenu menu;
 	menu.LoadMenu(IDR_CONTEXT);
 	m_ContextMenuOpen = true;
-	auto cmd = m_pFrame->ShowPopupMenu(menu.GetSubMenu(0), pt, TPM_RETURNCMD);
+	// the chosen command goes to the frame (WM_COMMAND), which passes it to the view
+	m_pFrame->ShowPopupMenu(menu.GetSubMenu(0), pt);
 	m_ContextMenuOpen = false;
-	if (cmd) {
-		LRESULT result;
-		return ProcessWindowMessage(m_hWnd, WM_COMMAND, cmd, 0, result, 1);
-	}
-	return false;
+	return true;
 }
 
 bool CWindowsListView::IsSortable(HWND, int col) const {
@@ -263,6 +304,7 @@ void CWindowsListView::UpdateList(HWND hWnd) {
 
 	m_Items.clear();
 	m_SelectedHwnd = hWnd;
+	std::erase_if(m_NoIcon, [](auto h) { return !::IsWindow(h); });
 	if (hWnd == nullptr) {
 		//
 		// message only windows
@@ -319,18 +361,21 @@ void CWindowsListView::AddChildWindows(std::vector<WindowItem>& v, HWND hParent,
 	struct LocalInfo {
 		std::vector<WindowItem>& v;
 		CWindowsListView* pThis;
+		HWND hParent;
 		bool directOnly;
 	};
 
-	LocalInfo info{ v, this, directOnly };
+	LocalInfo info{ v, this, hParent, directOnly };
 
+	//
+	// EnumChildWindows goes through all the descendants (so no recursion is needed)
+	//
 	::EnumChildWindows(hParent, [](auto hWnd, auto param) {
 		auto info = reinterpret_cast<LocalInfo*>(param);
-		if (info->pThis->m_ShowHiddenWindows || ::IsWindowVisible(hWnd)) {
+		if (info->directOnly && ::GetAncestor(hWnd, GA_PARENT) != info->hParent)
+			return TRUE;
+		if (info->pThis->m_ShowHiddenWindows || ::IsWindowVisible(hWnd))
 			info->v.push_back(WindowHelper::GetWindowInfo(hWnd));
-			if (!info->directOnly)
-				info->pThis->AddChildWindows(info->v, hWnd, false);
-		}
 		return TRUE;
 		}, reinterpret_cast<LPARAM>(&info));
 }
@@ -388,20 +433,24 @@ LRESULT CWindowsListView::OnToggleChildWindows(WORD, WORD, HWND, BOOL&) {
 }
 
 LRESULT CWindowsListView::OnWindowRestore(WORD, WORD, HWND, BOOL&) {
-	CWindow win(m_Items[m_List.GetSelectionMark()].hWnd);
+	CWindow win(GetSelectedListHwnd());
+	if (!win)
+		return 0;
 	win.ShowWindowAsync(SW_RESTORE);
 	return 0;
 }
 
 LRESULT CWindowsListView::OnWindowBringToFront(WORD, WORD, HWND, BOOL&) {
-	CWindow win(m_Items[m_List.GetSelectionMark()].hWnd);
+	CWindow win(GetSelectedListHwnd());
+	if (!win)
+		return 0;
 	win.BringWindowToTop();
 	return 0;
 }
 
 LRESULT CWindowsListView::OnWindowProperties(WORD, WORD, HWND, BOOL&) {
-	auto& item = m_Items[m_List.GetSelectionMark()];
-	WindowHelper::ShowWindowProperties(item.hWnd);
+	if (auto hWnd = GetSelectedListHwnd())
+		WindowHelper::ShowWindowProperties(hWnd);
 	return LRESULT();
 }
 
@@ -411,8 +460,8 @@ LRESULT CWindowsListView::OnItemChanged(int, LPNMHDR, BOOL&) {
 }
 
 LRESULT CWindowsListView::OnWindowFlash(WORD, WORD, HWND, BOOL&) {
-	auto& item = m_Items[m_List.GetSelectionMark()];
-	WindowHelper::Flash(item.hWnd);
+	if (auto hWnd = GetSelectedListHwnd())
+		WindowHelper::Flash(hWnd);
 
 	return 0;
 }

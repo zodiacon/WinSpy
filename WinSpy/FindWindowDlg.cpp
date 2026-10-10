@@ -89,7 +89,8 @@ LRESULT CFindWindowDlg::OnSearch(WORD, WORD id, HWND, BOOL&) {
 		return 0;
 	}
 
-	auto hWnd = ::FindWindowEx(nullptr, nullptr, cls, text);
+	// an empty field matches any class/text only if it's passed as null
+	auto hWnd = ::FindWindowEx(nullptr, nullptr, cls.IsEmpty() ? nullptr : (PCWSTR)cls, text.IsEmpty() ? nullptr : (PCWSTR)text);
 	if (hWnd)
 		SelectWindow(hWnd);
 	else
@@ -112,8 +113,11 @@ LRESULT CFindWindowDlg::OnMouseUp(UINT, WPARAM, LPARAM, BOOL&) {
 	m_Capture = false;
 	m_WinDrag.ShowWindow(SW_SHOW);
 	SetCursor(AtlLoadSysCursor(IDC_ARROW));
-	if(m_hCursorWnd)
+	if (m_hCursorWnd) {
 		WindowHelper::HighlightBorder(m_hCursorWnd, false);
+		// so the next drag highlights this window again
+		m_hCursorWnd.Detach();
+	}
 	if (IsDlgButtonChecked(IDC_HIDE) == BST_CHECKED) {
 		::ShowWindow(m_pFrame->GetHwnd(), SW_SHOW);
 	}

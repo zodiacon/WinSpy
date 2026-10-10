@@ -54,6 +54,7 @@ LRESULT CWindowsView::OnRefreshAll(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hW
 }
 
 void CWindowsView::InitTree() {
+	WindowHelper::PruneIconMap();
 	m_TotalVisibleWindows = m_TotalWindows = m_TopLevelWindows = 0;
 	m_DesktopNode = nullptr;
 	HWND hDesktop = ::GetDesktopWindow();
@@ -260,47 +261,61 @@ LRESULT CWindowsView::OnNodeSelected(int, LPNMHDR hdr, BOOL&) {
 	return 0;
 }
 
+HWND CWindowsView::GetTargetWindow() const {
+	// the window commands act on the list's selected row when it has the focus
+	if (m_WindowsView && ::GetFocus() == m_WindowsView.m_hWndClient)
+		return m_WindowsView.GetSelectedListHwnd();
+	return m_SelectedHwnd;
+}
+
 LRESULT CWindowsView::OnWindowShow(WORD, WORD, HWND, BOOL&) {
-	if (m_SelectedHwnd)
-		m_SelectedHwnd.ShowWindowAsync(SW_SHOW);
+	CWindow target(GetTargetWindow());
+	if (target)
+		target.ShowWindowAsync(SW_SHOW);
 
 	return 0;
 }
 
 LRESULT CWindowsView::OnWindowHide(WORD, WORD, HWND, BOOL&) {
-	if (m_SelectedHwnd)
-		m_SelectedHwnd.ShowWindowAsync(SW_HIDE);
+	CWindow target(GetTargetWindow());
+	if (target)
+		target.ShowWindowAsync(SW_HIDE);
 	return 0;
 }
 
 LRESULT CWindowsView::OnWindowClose(WORD, WORD, HWND, BOOL&) {
-	if (m_SelectedHwnd)
-		m_SelectedHwnd.PostMessage(WM_CLOSE);
+	CWindow target(GetTargetWindow());
+	if (target)
+		target.PostMessage(WM_CLOSE);
 	return 0;
 }
 
 LRESULT CWindowsView::OnWindowMinimize(WORD, WORD, HWND, BOOL&) {
-	if (m_SelectedHwnd)
-		m_SelectedHwnd.ShowWindowAsync(SW_MINIMIZE);
+	CWindow target(GetTargetWindow());
+	if (target)
+		target.ShowWindowAsync(SW_MINIMIZE);
 	return 0;
 }
 
 LRESULT CWindowsView::OnWindowMaximize(WORD, WORD, HWND, BOOL&) {
-	if (m_SelectedHwnd)
-		m_SelectedHwnd.ShowWindowAsync(SW_MAXIMIZE);
+	CWindow target(GetTargetWindow());
+	if (target)
+		target.ShowWindowAsync(SW_MAXIMIZE);
 
 	return 0;
 }
 
 LRESULT CWindowsView::OnWindowRestore(WORD, WORD, HWND, BOOL&) {
-	if (m_SelectedHwnd)
-		m_SelectedHwnd.ShowWindowAsync(SW_RESTORE);
+	CWindow target(GetTargetWindow());
+	if (target)
+		target.ShowWindowAsync(SW_RESTORE);
 	return 0;
 }
 
 LRESULT CWindowsView::OnWindowBringToFront(WORD, WORD, HWND, BOOL&) {
-	if (m_SelectedHwnd)
-		m_SelectedHwnd.BringWindowToTop();
+	CWindow target(GetTargetWindow());
+	if (target)
+		target.BringWindowToTop();
 	return 0;
 }
 
@@ -342,14 +357,16 @@ LRESULT CWindowsView::OnTreeNodeRightClick(HTREEITEM hItem, CPoint const& pt) {
 }
 
 LRESULT CWindowsView::OnWindowFlash(WORD, WORD, HWND, BOOL&) {
-	if (m_SelectedHwnd)
-		WindowHelper::Flash(m_SelectedHwnd);
+	CWindow target(GetTargetWindow());
+	if (target)
+		WindowHelper::Flash(target);
 
 	return 0;
 }
 
 LRESULT CWindowsView::OnWindowHighlight(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if (m_SelectedHwnd) {
+	CWindow target(GetTargetWindow());
+	if (target) {
 		::TrySubmitThreadpoolCallback([](auto, auto p) {
 			auto hWnd = (HWND)p;
 			for (int i = 0; i < 3; i++) {
@@ -358,7 +375,7 @@ LRESULT CWindowsView::OnWindowHighlight(WORD /*wNotifyCode*/, WORD /*wID*/, HWND
 				WindowHelper::HighlightBorder(hWnd, false);
 				::Sleep(500);
 			}
-			}, m_SelectedHwnd, nullptr);
+			}, target, nullptr);
 	}
 	return 0;
 }
@@ -392,9 +409,10 @@ CTreeItem CWindowsView::AddMessageOnlyWindows() {
 }
 
 LRESULT CWindowsView::OnCaptureMessages(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/) {
-	if (m_SelectedHwnd) {
+	CWindow target(GetTargetWindow());
+	if (target) {
 		auto view = GetFrame()->CreateMessagesView();
-		if (!view->CaptureWindow(m_SelectedHwnd)) {
+		if (!view->CaptureWindow(target)) {
 			AtlMessageBox(m_hWnd, L"Failed to register hook", IDS_TITLE, MB_ICONERROR);
 			GetFrame()->CloseTab(view);
 		}

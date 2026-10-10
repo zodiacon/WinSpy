@@ -22,9 +22,9 @@ bool __stdcall HookHelper::AddHook(DWORD hookType, HookConfig const& config) {
     return pAddHook(hookType, config);
 }
 
-bool __stdcall HookHelper::RemoveHook(DWORD tid) {
+bool __stdcall HookHelper::RemoveHook(HWND callbackWnd) {
     if (!InitHookLib())
         return false;
 
-    return pRemoveHook(tid);
+    return pRemoveHook(callbackWnd);
 }

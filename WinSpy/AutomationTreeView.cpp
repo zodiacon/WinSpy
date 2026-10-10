@@ -194,7 +194,7 @@ void CAutomationTreeView::UpdateProperties(IUIAutomationElement* elem) {
 			{ UIA_IsEnabledPropertyId, L"Enabled" },
 			{ UIA_IsOffscreenPropertyId, L"Off Screen" },
 			{ UIA_IsPasswordPropertyId, L"Password" },
-			{ UIA_IsEnabledPropertyId, L"Editable" },
+			{ UIA_ValueIsReadOnlyPropertyId, L"Read Only" },
 			{ UIA_ItemTypePropertyId, L"Item Type" },
 			{ UIA_SizeOfSetPropertyId, L"Size of Set" },
 			{ UIA_VisualEffectsPropertyId, L"Visual Effects" },
@@ -233,7 +233,8 @@ std::wstring CAutomationTreeView::FormatValue(IUIAutomation* pUI, VARIANT const&
 		case VT_BOOL: return value.boolVal ? L"True" : L"False";
 		case VT_I4 | VT_ARRAY:
 		{
-			int* data, count;
+			CComHeapPtr<int> data;
+			int count;
 			if (S_OK == pUI->IntSafeArrayToNativeArray(value.parray, &data, &count)) {
 				std::wstring result(L"(");
 				for (int i = 0; i < count; i++) {
@@ -248,7 +249,7 @@ std::wstring CAutomationTreeView::FormatValue(IUIAutomation* pUI, VARIANT const&
 		}
 		case VT_R8 | VT_ARRAY:
 		{
-			RECT* rc;
+			CComHeapPtr<RECT> rc;
 			int count;
 			if (S_OK == pUI->SafeArrayToRectNativeArray(value.parray, &rc, &count) && count > 0) {
 				std::wstring result(L"(");

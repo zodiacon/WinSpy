@@ -56,6 +56,7 @@ protected:
 private:
 	void UpdateUI();
 	void Refresh();
+	HWND GetTargetWindow() const;
 	void InitTree();
 	void AddChildWindows(HTREEITEM hParent);
 	CTreeItem AddNode(HWND hWnd, HTREEITEM hParent);

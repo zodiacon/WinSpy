@@ -68,13 +68,13 @@ CString MessageDecoder::MouseKey(int key) {
 }
 
 CString MessageDecoder::SysCommandToString(DWORD cmd) {
-    switch (cmd) {
+    // the low four bits are used internally by Windows (e.g. SC_MOVE | HTCAPTION when dragging a caption)
+    switch (cmd & 0xFFF0) {
         CASE_STR(SC_CLOSE);
         CASE_STR(SC_CONTEXTHELP);
         CASE_STR(SC_DEFAULT);
         CASE_STR(SC_HOTKEY);
         CASE_STR(SC_HSCROLL);
-        CASE_STR(SCF_ISSECURE);
         CASE_STR(SC_KEYMENU);
         CASE_STR(SC_MAXIMIZE);
         CASE_STR(SC_MINIMIZE);

@@ -81,6 +81,6 @@ private:
 	LRESULT OnViewAutomationTree(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnToggleDarkMode(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
-	int m_ActivePage = -1;
+	HWND m_hActivePage{ nullptr };
 	CNativeCustomTabView m_view;
 };

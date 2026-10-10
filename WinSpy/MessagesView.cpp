@@ -14,10 +14,7 @@ bool CMessagesView::CaptureWindow(HWND hWnd) {
 	m_CaptureOptions = CaptureOptions::Window;
 
 	m_CaptureTid = ::GetWindowThreadProcessId(hWnd, nullptr);
-	if (m_hThread) {
-		::PostThreadMessage(::GetThreadId(m_hThread), WM_QUIT, 0, 0);
-		::CloseHandle(m_hThread);
-	}
+	StopCapture();
 
 	m_hThread = ::CreateThread(nullptr, 0, [](auto param) {
 		return ((CMessagesView*)param)->ProcessHook();
@@ -34,6 +31,21 @@ bool CMessagesView::CaptureWindow(HWND hWnd) {
 	config.Options = HookOptions::Window | HookOptions::ChildWindows;
 	config.ThreadId = m_CaptureTid;
 	return HookHelper::AddHook(WH_GETMESSAGE, config);
+}
+
+void CMessagesView::StopCapture() {
+	if (!m_hThread)
+		return;
+
+	//
+	// no new callbacks once the hook is gone; then wait for the callback thread to finish
+	// the one it may be in, as it uses this object
+	//
+	HookHelper::RemoveHook(m_CallbackWnd);
+	::PostThreadMessage(::GetThreadId(m_hThread), WM_QUIT, 0, 0);
+	::WaitForSingleObject(m_hThread, INFINITE);
+	::CloseHandle(m_hThread);
+	m_hThread = nullptr;
 }
 
 void CMessagesView::HookCallbackMsg(DWORD hookType, HookDataHeader* header) {
@@ -102,6 +114,8 @@ void CMessagesView::UpdateList() {
 DWORD CMessagesView::ProcessHook() {
 	m_CallbackWnd.Create(HWND_MESSAGE, nullptr, nullptr);
 	ATLASSERT(m_CallbackWnd);
+	// when running elevated, the hooked (lower integrity) processes send to this window
+	::ChangeWindowMessageFilterEx(m_CallbackWnd, WM_COPYDATA, MSGFLT_ALLOW, nullptr);
 
 	::SetEvent(m_hReadyEvent);
 
@@ -164,21 +178,24 @@ LRESULT CMessagesView::OnTimer(UINT, WPARAM id, LPARAM, BOOL&) {
 	return 0;
 }
 
-LRESULT CMessagesView::OnDestroy(UINT, WPARAM, LPARAM, BOOL&) {
-	if (m_hThread) {
-		::PostThreadMessage(::GetThreadId(m_hThread), WM_QUIT, 0, 0);
-		::CloseHandle(m_hThread);
-		HookHelper::RemoveHook(m_CaptureTid);
-	}
+LRESULT CMessagesView::OnDestroy(UINT, WPARAM, LPARAM, BOOL& bHandled) {
+	StopCapture();
 	if (m_hReadyEvent)
 		::CloseHandle(m_hReadyEvent);
 
-	return LRESULT();
+	// let CViewBase clean up as well
+	bHandled = FALSE;
+	return 0;
 }
 
 LRESULT CHookCallbackWnd::OnHookCallback(UINT msg, WPARAM wp, LPARAM lp, BOOL&) {
 	auto cds = reinterpret_cast<COPYDATASTRUCT*>(lp);
+	// any process can send this window WM_COPYDATA
+	if (!cds || !cds->lpData || cds->cbData < sizeof(HookDataHeader))
+		return FALSE;
 	auto header = reinterpret_cast<HookDataHeader*>(cds->lpData);
+	if (header->HookType == WH_GETMESSAGE && cds->cbData < sizeof(GetMessageData))
+		return FALSE;
 	m_pView->HookCallbackMsg(header->HookType, header);
 	return TRUE;
 }

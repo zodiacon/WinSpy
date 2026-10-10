@@ -4,6 +4,7 @@
 #include "Interfaces.h"
 #include "WindowHelper.h"
 #include "ProcessHelper.h"
+#include <unordered_set>
 
 class CWindowsListView : 
 	public CFrameWindowImpl<CWindowsListView, CWindow, CControlWinTraits>,
@@ -14,6 +15,7 @@ public:
 
 	CWindowsListView(IMainFrame* frame) : m_pFrame(frame) {}
 
+	HWND GetSelectedListHwnd() const;
 	CString GetColumnText(HWND, int row, int col) const;
 	int GetRowImage(HWND, int row, int col) const;
 	bool IsSortable(HWND, int col) const;
@@ -93,6 +95,7 @@ private:
 
 	CListViewCtrl m_List;
 	std::vector<WindowItem> m_Items;
+	mutable std::unordered_set<HWND> m_NoIcon;
 	DWORD m_TotalWindows, m_TotalVisibleWindows, m_TopLevelWindows;
 	CWindow m_SelectedHwnd;
 	IMainFrame* m_pFrame;

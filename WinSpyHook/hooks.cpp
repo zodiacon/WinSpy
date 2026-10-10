@@ -6,13 +6,16 @@ const unsigned MaxHooks = 8;
 struct HookEntry {
 	HHOOK hHook;
 	HWND CallbackWnd;
-	DWORD ThreadId;
+	LONG volatile ThreadId;
 	HWND TargetHwnd;
 	HookOptions Options;
 };
 
+//
+// a slot is free when its hHook is null; ThreadId is set last when adding and cleared first when removing,
+// so the hook procedures (which match on it) never see a half-built entry
+//
 #pragma data_seg(".shared")
-unsigned g_HookCount = 0;
 HookEntry g_HookMap[3][MaxHooks] {};
 #pragma data_seg()
 #pragma comment(linker, "/section:.shared,RWS")
@@ -25,19 +28,22 @@ bool IsNotify(HWND hTarget, HookEntry const& entry) {
 		return true;
 
 	//
-	// check if child window
+	// any descendant of the target, not just its direct children
 	//
-	return entry.TargetHwnd == ::GetAncestor(hTarget, GA_PARENT);
+	return (entry.Options & HookOptions::ChildWindows) == HookOptions::ChildWindows && ::IsChild(entry.TargetHwnd, hTarget);
 }
 
 LRESULT WINAPI HookFunc3(int code, WPARAM wParam, LPARAM lParam) {
-	if (code == HC_ACTION) {
+	//
+	// only messages that are taken off the queue; peeks (PM_NOREMOVE) would show the same message again
+	//
+	if (code == HC_ACTION && (wParam & PM_REMOVE)) {
 		auto msg = reinterpret_cast<MSG*>(lParam);
 		auto hWnd =  msg->hwnd;
 		auto tid = ::GetWindowThreadProcessId(hWnd, nullptr);
 		ATLTRACE(L"HookFunc3: hWnd: 0x%p TID: %u\n", hWnd, tid);
 		for (auto& hook : g_HookMap[0]) {
-			if (hook.ThreadId == tid) {
+			if (tid && (DWORD)hook.ThreadId == tid) {
 				if (IsNotify(hWnd, hook)) {
 					ATLTRACE(L"HookFunc3: Sending message to 0x%p (%u)\n", hook.CallbackWnd, WM_HOOKCALLBACK);
 					COPYDATASTRUCT cds;
@@ -47,7 +53,9 @@ LRESULT WINAPI HookFunc3(int code, WPARAM wParam, LPARAM lParam) {
 					data.wParam = wParam;
 					cds.cbData = sizeof(data);
 					cds.lpData = &data;
-					::SendMessage(hook.CallbackWnd, WM_COPYDATA, 0, reinterpret_cast<LPARAM>(&cds));
+					// this runs on the target's thread: don't let a stalled WinSpy hang it
+					::SendMessageTimeout(hook.CallbackWnd, WM_COPYDATA, 0, reinterpret_cast<LPARAM>(&cds),
+						SMTO_ABORTIFHUNG | SMTO_ERRORONEXIT, 200, nullptr);
 				}
 			}
 		}
@@ -66,18 +74,6 @@ LRESULT WINAPI HookFunc12(int code, WPARAM wParam, LPARAM lParam) {
 }
 
 bool WINAPI AddHook(DWORD hookType, HookConfig const& config) {
-	if (g_HookCount == MaxHooks)
-		return false;
-
-	extern HINSTANCE g_hInstDll;
-	CStringA name;
-	name.Format("HookFunc%u", hookType);
-	auto proc = (HOOKPROC)::GetProcAddress(g_hInstDll, name);
-	ATLASSERT(proc);
-	auto hHook = ::SetWindowsHookEx(hookType, proc, g_hInstDll, config.ThreadId);
-	if (!hHook)
-		return false;
-
 	auto index = -1;
 	switch (hookType) {
 		case WH_GETMESSAGE: index = 0; break;
@@ -90,23 +86,53 @@ bool WINAPI AddHook(DWORD hookType, HookConfig const& config) {
 	if (index < 0)
 		return false;
 
-	HookEntry entry{ hHook, config.CallbackWnd, config.ThreadId, config.TargetWnd, config.Options };
-	//std::lock_guard locker(g_Lock);
-	g_HookMap[index][g_HookCount++] = entry;
+	//
+	// claim a free slot (other WinSpy instances share this map)
+	//
+	auto const claimed = reinterpret_cast<HHOOK>(1);
+	HookEntry* slot = nullptr;
+	for (auto& hook : g_HookMap[index]) {
+		if (::InterlockedCompareExchangePointer((PVOID*)&hook.hHook, claimed, nullptr) == nullptr) {
+			slot = &hook;
+			break;
+		}
+	}
+	if (!slot)
+		return false;
+
+	extern HINSTANCE g_hInstDll;
+	CStringA name;
+	name.Format("HookFunc%u", hookType);
+	auto proc = (HOOKPROC)::GetProcAddress(g_hInstDll, name);
+	ATLASSERT(proc);
+	auto hHook = proc ? ::SetWindowsHookEx(hookType, proc, g_hInstDll, config.ThreadId) : nullptr;
+	if (!hHook) {
+		::InterlockedExchangePointer((PVOID*)&slot->hHook, nullptr);
+		return false;
+	}
+
+	slot->CallbackWnd = config.CallbackWnd;
+	slot->TargetHwnd = config.TargetWnd;
+	slot->Options = config.Options;
+	::InterlockedExchangePointer((PVOID*)&slot->hHook, hHook);
+	::InterlockedExchange(&slot->ThreadId, (LONG)config.ThreadId);
 	return true;
 }
 
-bool WINAPI RemoveHook(DWORD tid) {
-	//std::lock_guard locker(g_Lock);
-	for (int i = 0; i < _countof(g_HookMap); i++) {
-		for(auto& hook : g_HookMap[i]) {
-			if (hook.ThreadId == tid) {
+bool WINAPI RemoveHook(HWND callbackWnd) {
+	bool removed = false;
+	for (auto& row : g_HookMap) {
+		for (auto& hook : row) {
+			if (hook.ThreadId && hook.CallbackWnd == callbackWnd) {
+				::InterlockedExchange(&hook.ThreadId, 0);
 				::UnhookWindowsHookEx(hook.hHook);
-				hook.ThreadId = 0;
-				break;
+				hook.CallbackWnd = nullptr;
+				hook.TargetHwnd = nullptr;
+				hook.Options = HookOptions::None;
+				::InterlockedExchangePointer((PVOID*)&hook.hHook, nullptr);
+				removed = true;
 			}
 		}
 	}
-
-	return false;
+	return removed;
 }

@@ -24,6 +24,8 @@ int ImageIconCache::GetIcon(const CString& path, HICON* phIcon) const {
 		int index = _images.AddIcon(hIcon);
 		if (phIcon)
 			*phIcon = hIcon;
+		else
+			::DestroyIcon(hIcon);
 		_icons.insert({ wspath, index });
 		return index;
 	}
