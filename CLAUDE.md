@@ -65,7 +65,7 @@ The list pane remembers its mode (window, thread, process or all) so `Refresh` r
   - scales every list's columns (`ScaleColumns`), remakes the trees' and lists' font, and gives the controls their image lists again so row heights are recomputed.
 - **The views:** each `CViewBase` handles `WM_DPICHANGED_AFTERPARENT` by rebuilding its toolbar (images and buttons; a toolbar keeps its text sizes) and scaling its rebar bands, such as the search boxes.
 - **Saved values:** column layouts are saved at 96 DPI (a `96;` prefix; older layouts without it are taken as system-DPI pixels). The Fonts choice is stored at 96 DPI too.
-- **Not covered:** menu icons are a fixed 16 px (`WTLHelper::InitMenu`). The code targets Windows 10 (`_WIN32_WINNT 0x0A00` in `pch.h`).
+- **Menu icons:** `CMainFrame::InitMenu` passes `DpiScale(16)` as the icon size to `WTLHelper::InitMenu` (its `size` parameter defaults to 16), and runs again on a DPI change. The code targets Windows 10 (`_WIN32_WINNT 0x0A00` in `pch.h`).
 
 **Always On Top.** Windows ignores `SetWindowPos(HWND_TOPMOST)` from a process that was started without being brought to the foreground (by a script, say). This was verified with a plain Win32 window, so it isn't WTL's or WTLHelper's doing. That's why the saved setting is applied as `WS_EX_TOPMOST` when the frame is created (`Run` in `WinSpy.cpp`), which Windows always honors. The menu command uses `SetWindowPos`; that works because a click gives the process foreground rights.
 
@@ -75,7 +75,7 @@ The list pane remembers its mode (window, thread, process or all) so `Refresh` r
 - **Startup:** `WinMain` loads `AppSettings` (`HKCU\Software\WinSpy\Settings`, or `WinSpy.ini` next to the EXE) and calls `WTLHelper::InitDarkMode` before any window is created. `DarkMode` is -1 until the user chooses, which means follow the system.
 - **Toggle:** Options ▸ Dark Mode (`ID_OPTIONS_DARKMODE`) calls `WTLHelper::SwitchToMode`, which re-themes every child and sends `WTLHelper::ThemeChangedMessage` to all descendants.
 - **How it themes:** WTLHelper themes windows as they're created, using a thread hook, and detours `GetSysColor`/`GetSysColorBrush`/`FillRect`. That's why WinSpy links Detours, and why the linker warns about `detours.lib`. In custom drawing, use system colors or check `WTLHelper::IsDarkMode()`; don't hard-code light colors.
-- **Menus:** they are plain Win32 menus, not owner-drawn. Icons are set as item bitmaps by `CMainFrame::InitMenu` → `WTLHelper::InitMenu`. Those bitmaps are drawn on the current background, so `InitMenu` runs again after a mode switch, and on every context menu shown through `IMainFrame::ShowPopupMenu`. Show context menus through `ShowPopupMenu` so they get icons.
+- **Menus:** they are plain Win32 menus, not owner-drawn. Icons are set as item bitmaps by `CMainFrame::InitMenu` → `WTLHelper::InitMenu`. Those bitmaps are drawn on the current background, so `InitMenu` runs again after a mode switch, and on every context menu shown through `IMainFrame::ShowPopupMenu`. Show context menus through `ShowPopupMenu` so they get icons. `WTLHelper::InitMenu` keeps the bitmaps (by icon, size and background color) and shares them between menus, because destroying a menu doesn't free its item bitmaps; that's why an item's `hIcon` must live as long as the process.
 
 **Tree views** mix in `CTreeViewManager<T>` (`TreeViewManager.h`). It turns `NM_RCLICK`/`NM_DBLCLK` into `OnTreeNodeRightClick` / `OnTreeNodeDoubleClick` overridables. Chain its message map in the view.
 

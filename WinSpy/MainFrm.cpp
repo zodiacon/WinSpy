@@ -266,6 +266,8 @@ LRESULT CMainFrame::OnDpiChanged(UINT, WPARAM wParam, LPARAM lParam, BOOL&) {
 	m_view.SetFont(WindowHelper::GetUIFont());
 	::SendMessage(m_hWndStatusBar, WM_SETFONT, (WPARAM)WindowHelper::GetUIFont(), TRUE);
 	WindowHelper::ScaleColumns(m_view, oldDpi, dpi);
+	InitMenu(GetMenu());
+	DrawMenuBar();
 	CreateViewFont();
 	ApplyFont(m_view);
 
@@ -566,7 +568,8 @@ void CMainFrame::InitMenu(HMENU menu) {
 		{ ID_TREE_SENDTOBACK, IDI_WINDOW_SENDTOBACK },
 		{ ID_WINDOW_BRINGTOFRONT, IDI_SENDTOFRONT },
 	};
-	WTLHelper::InitMenu(menu, cmds, _countof(cmds));
+	// the icons as big as the window's DPI makes them
+	WTLHelper::InitMenu(menu, cmds, _countof(cmds), WindowHelper::DpiScale(16));
 }
 
 LRESULT CMainFrame::OnToggleDarkMode(WORD, WORD, HWND, BOOL&) {
