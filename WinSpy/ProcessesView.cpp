@@ -23,10 +23,13 @@ LRESULT CProcessesView::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPar
 	m_ShowNoTitleWindows = AppSettings::Get().ProcessesShowNoTitle() != 0;
 	InitTree();
 
+	WindowEvents::Subscribe(this);
+
 	return 0;
 }
 
 LRESULT CProcessesView::OnDestroy(UINT, WPARAM, LPARAM, BOOL& bHandled) {
+	WindowEvents::Unsubscribe(this);
 	AppSettings::Get().ProcessesSplitter(m_Splitter.GetSplitterPosPct());
 	bHandled = FALSE;
 	return 0;
@@ -40,44 +43,50 @@ void CProcessesView::OnActivate(bool active) {
 
 
 LRESULT CProcessesView::OnTimer(UINT /*uMsg*/, WPARAM id, LPARAM /*lParam*/, BOOL& /*bHandled*/) {
-	if (id == 3) {
-		KillTimer(3);
-		ChangeSelection(m_Tree.GetSelectedItem());
+	switch (id) {
+		case TimerKeyboardSelect:
+			KillTimer(id);
+			ChangeSelection(m_Tree.GetSelectedItem());
+			break;
+
+		case TimerEvents:
+			KillTimer(id);
+			ProcessWindowEvents();
+			break;
 	}
+	return 0;
+}
+
+LRESULT CProcessesView::OnRefresh(WORD, WORD, HWND, BOOL&) {
+	InitTree();
 	return 0;
 }
 
 void CProcessesView::InitTree() {
 	WindowHelper::PruneIconMap();
 	m_Tree.LockWindowUpdate();
+	m_Deleting = true;
 	m_Tree.DeleteAllItems();
+	m_Deleting = false;
 	m_Processes.clear();
 	m_WindowMap.clear();
 	m_Threads.clear();
+	m_ProcessNodes.clear();
+	m_ThreadNodes.clear();
 	m_Selected = CTreeItem();
 	m_SelectedHwnd = nullptr;
 	m_hCurrentNode = CTreeItem();
 	m_TotalWindows = m_TotalVisibleWindows = m_TopLevelWindows = 0;
 
-	CString text;
 	auto info = ProcessHelper::EnumProcessesAndThreads(
 		EnumProcessesOptions::UIThreadsOnly | EnumProcessesOptions::SkipProcessesWithNoUI | EnumProcessesOptions::IncludeMessageOnly);
 	for (auto& pi : info.Processes) {
-		auto icon = ImageIconCache::Get().GetIcon(pi.FullPath);
-		text.Format(L"%s (%u)", (PCWSTR)pi.ProcessName, pi.ProcessId);
-		if (!pi.Accessible)
-			text += L" - access denied";
-		auto node = m_Tree.InsertItem(text, icon, icon, TVI_ROOT, TVI_SORT);
-		node.SetData((DWORD_PTR)ItemType::Process);
-		m_Processes.insert({ node, pi });
+		auto node = AddProcessNode(pi);
+		int icon;
+		node.GetImage(icon, icon);
 
 		for (auto tid : pi.Threads) {
-			text.Format(L"Thread %u (0x%X)", tid, tid);
-			auto tnode = m_Tree.InsertItem(text, icon, icon, node, TVI_LAST);
-			if (!WindowHelper::ThreadHasWindows(tid))
-				tnode.SetState(TVIS_CUT, TVIS_CUT);
-			tnode.SetData((DWORD_PTR)ItemType::Thread);
-			m_Threads.insert({ tnode, tid });
+			auto tnode = AddThreadNode(node, pi.ProcessId, tid, icon);
 			struct LocalData {
 				CProcessesView* pThis;
 				HTREEITEM hParent;
@@ -102,6 +111,61 @@ void CProcessesView::InitTree() {
 	m_Tree.LockWindowUpdate(FALSE);
 }
 
+CTreeItem CProcessesView::AddProcessNode(ProcessInfo const& pi) {
+	auto icon = ImageIconCache::Get().GetIcon(pi.FullPath);
+	CString text;
+	text.Format(L"%s (%u)", (PCWSTR)pi.ProcessName, pi.ProcessId);
+	if (!pi.Accessible)
+		text += L" - access denied";
+	auto node = m_Tree.InsertItem(text, icon, icon, TVI_ROOT, TVI_SORT);
+	node.SetData((DWORD_PTR)ItemType::Process);
+	m_Processes.insert({ node, pi });
+	m_ProcessNodes.insert({ pi.ProcessId, node });
+	return node;
+}
+
+CTreeItem CProcessesView::AddThreadNode(HTREEITEM hProcess, DWORD pid, DWORD tid, int icon) {
+	CString text;
+	text.Format(L"Thread %u (0x%X)", tid, tid);
+	auto node = m_Tree.InsertItem(text, icon, icon, hProcess, TVI_LAST);
+	if (!WindowHelper::ThreadHasWindows(tid))
+		node.SetState(TVIS_CUT, TVIS_CUT);
+	node.SetData((DWORD_PTR)ItemType::Thread);
+	m_Threads.insert({ node, tid });
+	m_ThreadNodes.insert({ tid, { node, pid } });
+	// the process knows its UI threads (for the list of its windows)
+	if (auto it = m_Processes.find(hProcess); it != m_Processes.end() && std::find(it->second.Threads.begin(), it->second.Threads.end(), tid) == it->second.Threads.end())
+		it->second.Threads.push_back(tid);
+	return node;
+}
+
+HTREEITEM CProcessesView::EnsureThreadNode(DWORD pid, DWORD tid) {
+	if (auto it = m_ThreadNodes.find(tid); it != m_ThreadNodes.end())
+		return it->second.Node;
+
+	HTREEITEM hProcess;
+	if (auto it = m_ProcessNodes.find(pid); it != m_ProcessNodes.end())
+		hProcess = it->second;
+	else {
+		ProcessInfo pi;
+		pi.ProcessId = pid;
+		pi.ProcessName = ProcessHelper::GetProcessImageName(pid);
+		pi.FullPath = ProcessHelper::GetProcessImageName(pid, true);
+		auto hProcessHandle = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+		pi.Accessible = hProcessHandle != nullptr;
+		if (hProcessHandle)
+			::CloseHandle(hProcessHandle);
+		hProcess = AddProcessNode(pi);
+	}
+	int icon;
+	CTreeItem(hProcess, &m_Tree).GetImage(icon, icon);
+	return AddThreadNode(hProcess, pid, tid, icon);
+}
+
+bool CProcessesView::PassesFilter(HWND hWnd) const {
+	return (m_ShowHiddenWindows || ::IsWindowVisible(hWnd)) && (m_ShowNoTitleWindows || ::GetWindowTextLength(hWnd) > 0);
+}
+
 CTreeItem CProcessesView::AddNode(HWND hWnd, HTREEITEM hParent) {
 	CString text, name;
 	CWindow win(hWnd);
@@ -111,11 +175,9 @@ CTreeItem CProcessesView::AddNode(HWND hWnd, HTREEITEM hParent) {
 
 	m_TopLevelWindows++;
 
-	if (!m_ShowHiddenWindows && !win.IsWindowVisible())
+	if (!PassesFilter(hWnd))
 		return nullptr;
 	win.GetWindowText(name);
-	if (!m_ShowNoTitleWindows && name.IsEmpty())
-		return nullptr;
 
 	if (name.GetLength() > 64)
 		name = name.Left(64) + L"...";
@@ -205,7 +267,7 @@ LRESULT CProcessesView::OnNodeSelected(int, LPNMHDR hdr, BOOL&) {
 	auto tv = (NMTREEVIEW*)hdr;
 	if (tv->action == TVC_BYKEYBOARD) {
 		// short delay before update in case the user moves quickly through the tree
-		SetTimer(3, 250, nullptr);
+		SetTimer(TimerKeyboardSelect, 250, nullptr);
 	}
 	else {
 		ChangeSelection(tv->itemNew.hItem);
@@ -315,7 +377,6 @@ void CProcessesView::ChangeSelection(HTREEITEM hItem) {
 		default:
 			auto hWnd = (HWND)m_Selected.GetData();
 			if (!::IsWindow(hWnd)) {	// window is probably destroyed
-				RemoveFromWindowMap(hItem);
 				m_Selected.Delete();
 				m_Selected = CTreeItem();
 			}
@@ -327,11 +388,175 @@ void CProcessesView::ChangeSelection(HTREEITEM hItem) {
 	}
 }
 
-void CProcessesView::RemoveFromWindowMap(HTREEITEM hItem) {
-	// the node's window and its descendants'
-	m_WindowMap.erase((HWND)m_Tree.GetItemData(hItem));
-	for (auto child = m_Tree.GetChildItem(hItem); child; child = m_Tree.GetNextSiblingItem(child))
-		RemoveFromWindowMap(child);
+LRESULT CProcessesView::OnNodeDeleted(int, LPNMHDR hdr, BOOL&) {
+	// the maps follow the tree (except when it's cleared, and they with it)
+	if (m_Deleting)
+		return 0;
+
+	auto& item = reinterpret_cast<NMTREEVIEW*>(hdr)->itemOld;
+	auto hItem = item.hItem;
+	if (auto it = m_Processes.find(hItem); it != m_Processes.end()) {
+		m_ProcessNodes.erase(it->second.ProcessId);
+		m_Processes.erase(it);
+	}
+	else if (auto it = m_Threads.find(hItem); it != m_Threads.end()) {
+		auto tid = it->second;
+		if (auto tn = m_ThreadNodes.find(tid); tn != m_ThreadNodes.end()) {
+			// the process doesn't count it among its UI threads anymore
+			if (auto pn = m_ProcessNodes.find(tn->second.ProcessId); pn != m_ProcessNodes.end())
+				if (auto pi = m_Processes.find(pn->second); pi != m_Processes.end())
+					std::erase(pi->second.Threads, tid);
+			m_ThreadNodes.erase(tn);
+		}
+		m_Threads.erase(it);
+	}
+	else if (auto hWnd = (HWND)item.lParam; hWnd) {
+		if (auto it = m_WindowMap.find(hWnd); it != m_WindowMap.end() && it->second == hItem)
+			m_WindowMap.erase(it);
+	}
+	return 0;
+}
+
+void CProcessesView::OnWindowEvent(DWORD event, HWND hWnd) {
+	if (event == EVENT_OBJECT_DESTROY)
+		m_EventsDestroyed.insert(hWnd);
+	else
+		m_EventsChanged.insert(hWnd);
+	// handled together a little later, as windows come and go in bursts (the first event of a batch sets the timer)
+	if (m_EventsDestroyed.size() + m_EventsChanged.size() == 1)
+		SetTimer(TimerEvents, 250);
+}
+
+DWORD CProcessesView::GetNodeThread(HTREEITEM hItem) const {
+	for (; hItem; hItem = m_Tree.GetParentItem(hItem))
+		if (auto it = m_Threads.find(hItem); it != m_Threads.end())
+			return it->second;
+	return 0;
+}
+
+void CProcessesView::ProcessWindowEvents() {
+	auto destroyed = std::move(m_EventsDestroyed);
+	auto changed = std::move(m_EventsChanged);
+	m_EventsDestroyed.clear();
+	m_EventsChanged.clear();
+
+	// does the list show this window? (a selected window's children, or a selected thread's or process's windows)
+	DWORD selectedTid = 0, selectedPid = 0;
+	if (!m_SelectedHwnd && m_Selected) {
+		auto type = static_cast<ItemType>(m_Selected.GetData());
+		if (type == ItemType::Thread)
+			selectedTid = GetSelectedThread();
+		else if (auto pi = GetSelectedProcess(); type == ItemType::Process && pi)
+			selectedPid = pi->ProcessId;
+	}
+	bool listChanged = false;
+	auto inList = [&](HWND hWnd) {
+		if (m_WindowsView.IsListed(hWnd))
+			return true;
+		if (!::IsWindow(hWnd))
+			return false;
+		if (m_SelectedHwnd)
+			return ::GetAncestor(hWnd, GA_PARENT) == m_SelectedHwnd.m_hWnd;
+		DWORD pid;
+		auto tid = ::GetWindowThreadProcessId(hWnd, &pid);
+		return (selectedTid && tid == selectedTid) || (selectedPid && pid == selectedPid);
+	};
+
+	// the threads that lost windows
+	std::unordered_set<DWORD> threads;
+	for (auto hWnd : destroyed) {
+		listChanged = listChanged || inList(hWnd);
+		if (auto it = m_WindowMap.find(hWnd); it != m_WindowMap.end()) {
+			threads.insert(GetNodeThread(it->second));
+			m_Tree.DeleteItem(it->second);
+		}
+	}
+	for (auto hWnd : changed) {
+		if (destroyed.contains(hWnd))
+			continue;
+		listChanged = listChanged || inList(hWnd);
+		UpdateWindowNode(hWnd, threads);
+	}
+	for (auto tid : threads)
+		if (tid)
+			RemoveThreadIfEmpty(tid);
+
+	if (listChanged)
+		m_WindowsView.Refresh();
+}
+
+void CProcessesView::UpdateWindowNode(HWND hWnd, std::unordered_set<DWORD>& threads) {
+	auto it = m_WindowMap.find(hWnd);
+	if (!::IsWindow(hWnd)) {
+		if (it != m_WindowMap.end()) {
+			threads.insert(GetNodeThread(it->second));
+			m_Tree.DeleteItem(it->second);
+		}
+		return;
+	}
+
+	auto hParent = ::GetAncestor(hWnd, GA_PARENT);
+	bool topLevel = hParent == ::GetDesktopWindow();
+	if (it != m_WindowMap.end()) {
+		CTreeItem node(it->second, &m_Tree);
+		// a top-level window is under its thread's node, a child window under its parent's
+		auto parentNode = node.GetParent();
+		bool inPlace = topLevel ? m_Threads.contains(parentNode) : (HWND)parentNode.GetData() == hParent;
+		if (inPlace && PassesFilter(hWnd)) {
+			CString name, text;
+			CWindow(hWnd).GetWindowText(name);
+			if (name.GetLength() > 64)
+				name = name.Left(64) + L"...";
+			if (!name.IsEmpty())
+				name = L"[" + name + L"]";
+			text.Format(L"0x%zX (%s) %s", (DWORD_PTR)hWnd, (PCWSTR)WindowHelper::GetWindowClassName(hWnd), (PCWSTR)name);
+			node.SetText(text);
+			node.SetState(::IsWindowVisible(hWnd) ? 0 : TVIS_CUT, TVIS_CUT);
+			return;
+		}
+		threads.insert(GetNodeThread(node));
+		node.Delete();
+		if (inPlace)
+			return;		// left out by the View filters
+	}
+
+	if (topLevel) {
+		// under its thread (and process), which may be new
+		DWORD pid;
+		auto tid = ::GetWindowThreadProcessId(hWnd, &pid);
+		if (tid)
+			AddNode(hWnd, EnsureThreadNode(pid, tid));
+		return;
+	}
+
+	// a child window: under its parent's node, if that node's children are there
+	auto parent = m_WindowMap.find(hParent);
+	if (parent == m_WindowMap.end())
+		return;
+	CTreeItem parentNode(parent->second, &m_Tree);
+	auto child = parentNode.GetChild();
+	if (child && child.GetData() == 0)
+		return;		// added when the node is expanded
+	if (!child) {
+		// its first child: now it gets a "plus" button
+		parentNode.AddTail(L"*", 0);
+		return;
+	}
+	AddNode(hWnd, parentNode);
+}
+
+void CProcessesView::RemoveThreadIfEmpty(DWORD tid) {
+	auto it = m_ThreadNodes.find(tid);
+	if (it == m_ThreadNodes.end())
+		return;
+	CTreeItem thread(it->second.Node, &m_Tree);
+	if (thread.GetChild() || WindowHelper::ThreadHasWindows(tid))
+		return;		// it still has windows (maybe left out by the View filters)
+
+	auto process = thread.GetParent();
+	thread.Delete();
+	if (process && !process.GetChild())
+		process.Delete();
 }
 
 LRESULT CProcessesView::OnToggleHiddenWindows(WORD, WORD, HWND, BOOL&) {

@@ -195,7 +195,7 @@ namespace {
 			rid >= SECURITY_MANDATORY_MEDIUM_RID ? L"Medium" : rid >= SECURITY_MANDATORY_LOW_RID ? L"Low" : L"Untrusted";
 	}
 
-	void AddTokenProperties(HANDLE hProcess, CPropertiesDlg::Properties& props) {
+	void AddTokenProperties(HANDLE hProcess, PropertyList& props) {
 		HANDLE hToken;
 		if (!::OpenProcessToken(hProcess, TOKEN_QUERY, &hToken))
 			return;
@@ -220,8 +220,8 @@ namespace {
 	}
 }
 
-void ProcessHelper::ShowProcessProperties(ProcessInfo const& pi, HWND hParent) {
-	CPropertiesDlg::Properties props;
+PropertyList ProcessHelper::GetProcessProperties(ProcessInfo const& pi) {
+	PropertyList props;
 	CString text;
 
 	props.push_back({ L"Name", pi.ProcessName });
@@ -255,21 +255,28 @@ void ProcessHelper::ShowProcessProperties(ProcessInfo const& pi, HWND hParent) {
 		props.push_back({ L"Details", L"Access denied" });
 	}
 
-	int windows = 0;
-	for (auto tid : pi.Threads)
-		::EnumThreadWindows(tid, [](auto, auto p) { (*(int*)p)++; return TRUE; }, (LPARAM)&windows);
-	text.Format(L"%u", (DWORD)pi.Threads.size());
-	props.push_back({ L"UI Threads", text });
-	text.Format(L"%d", windows);
-	props.push_back({ L"Top-Level Windows", text });
+	// (known when the processes were listed with their UI threads)
+	if (!pi.Threads.empty()) {
+		int windows = 0;
+		for (auto tid : pi.Threads)
+			::EnumThreadWindows(tid, [](auto, auto p) { (*(int*)p)++; return TRUE; }, (LPARAM)&windows);
+		text.Format(L"%u", (DWORD)pi.Threads.size());
+		props.push_back({ L"UI Threads", text });
+		text.Format(L"%d", windows);
+		props.push_back({ L"Top-Level Windows", text });
+	}
+	return props;
+}
 
-	text.Format(L"Process %s (%u)", (PCWSTR)pi.ProcessName, pi.ProcessId);
-	CPropertiesDlg dlg(text, std::move(props));
+void ProcessHelper::ShowProcessProperties(ProcessInfo const& pi, HWND hParent) {
+	CString title;
+	title.Format(L"Process %s (%u)", (PCWSTR)pi.ProcessName, pi.ProcessId);
+	CPropertiesDlg dlg(title, GetProcessProperties(pi));
 	dlg.DoModal(hParent);
 }
 
-void ProcessHelper::ShowThreadProperties(DWORD tid, HWND hParent) {
-	CPropertiesDlg::Properties props;
+PropertyList ProcessHelper::GetThreadProperties(DWORD tid) {
+	PropertyList props;
 	CString text;
 
 	text.Format(L"%u (0x%X)", tid, tid);
@@ -325,9 +332,13 @@ void ProcessHelper::ShowThreadProperties(DWORD tid, HWND hParent) {
 				state += (state.IsEmpty() ? L"" : L", ") + CString(f.name);
 		props.push_back({ L"GUI State", state.IsEmpty() ? CString(L"None") : state });
 	}
+	return props;
+}
 
-	text.Format(L"Thread %u", tid);
-	CPropertiesDlg dlg(text, std::move(props));
+void ProcessHelper::ShowThreadProperties(DWORD tid, HWND hParent) {
+	CString title;
+	title.Format(L"Thread %u", tid);
+	CPropertiesDlg dlg(title, GetThreadProperties(tid));
 	dlg.DoModal(hParent);
 }
 

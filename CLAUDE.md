@@ -31,7 +31,7 @@ The solution doesn't declare a project dependency between WinSpy and WinSpyHook,
 - `OnActivate(bool)` on tab switch (`TBVN_PAGEACTIVATED`);
 - self-deletion in `OnFinalMessage`, so views are heap-allocated and owned by their HWND.
 
-Views talk back to the frame only through the `IMainFrame` interface (`Interfaces.h`), which includes `CaptureMessages` and `LocateInWindowsTree`. `CMainFrame` forwards any command it doesn't handle to the active view (`OnCommandToActiveView`), so view-specific menu and toolbar commands are handled in the view's own message map. Add tabs with `CMainFrame::AddView`, which applies the Options ▸ Fonts font to the tab's trees and lists. Edit ▸ Copy is handled by the frame for whichever tree or list has the focus.
+Views talk back to the frame only through the `IMainFrame` interface (`Interfaces.h`), which includes `CaptureMessages`, `LocateInWindowsTree` and `LocateInAutomationTree`. `CMainFrame` forwards any command it doesn't handle to the active view (`OnCommandToActiveView`), so view-specific menu and toolbar commands are handled in the view's own message map. Add tabs with `CMainFrame::AddView`, which applies the Options ▸ Fonts font to the tab's trees and lists. Edit ▸ Copy is handled by the frame for whichever tree or list has the focus.
 
 **Window commands.** Show, Hide, Close, Flash, Highlight, Send to Back, Messages, Properties, Locate in Tree and the like all go through `WindowCommands::Execute` (`WindowCommands.*`). Each view only decides which window is the target:
 - `CWindowsView` uses `GetTargetWindow`: the list's selected row when the list has the focus, otherwise the tree's window.
@@ -44,8 +44,16 @@ The list pane remembers its mode (window, thread, process or all) so `Refresh` r
 - `CWindowsView` batches the events (a short timer) and updates, adds or removes tree nodes. A collapsed node whose children haven't been added yet just gets its "+" placeholder.
 - The list pane is refreshed only when the events touch what it shows. Nothing polls, so changes that raise no event (such as styles) show up on View ▸ Refresh or when the tab is activated again.
 - `CAllWindowsView` refreshes on top-level window events.
+- `CProcessesView` does the same for its process → thread → window tree. A new top-level window gets its thread and process nodes made if needed (`EnsureThreadNode`). A thread goes when its last window goes, and its process goes when its last thread does (the same rule as the initial build: UI threads only). Its maps (`m_Processes`, `m_Threads`, `m_ProcessNodes`, `m_ThreadNodes`, `m_WindowMap`) are kept in step by `TVN_DELETEITEM`.
 
 **Tree search.** The search box (Ctrl+F) rebuilds the tree with only the matching windows (class, title or handle) plus their ancestors, all expanded, without lazy placeholders. WinSpy's own windows are left out of the results. Events then only update or remove nodes; they don't add new matches.
+
+**Window properties sheet** (`WindowHelper::ShowWindowProperties`):
+- **Pages:** General and Windows (`WindowGeneralPage.*`, `WindowWindowsPage.*`), plus Styles (`CWindowStylesPage`, in `WindowGeneralPage.*`). The rest are `CPropertyListPage`s (`PropertiesDlg.*`) filled by provider functions: `WindowHelper::GetClassProperties`/`GetWindowProps`/`GetScrollProperties` and `ProcessHelper::GetProcessProperties`/`GetThreadProperties`. The standalone process and thread dialogs reuse the same providers.
+- **Resizing:** the sheet is WTLHelper's `CResizablePropertySheetImpl`, combined with `CIconPropertySheetImpl` for full-color tab icons. Its size is remembered (`PropertiesSize`). Each page lays itself out with WTL's `CDynamicDialogLayout`, from its `AFX_DIALOG_LAYOUT` resource in `WinSpy.rc`: move-X, move-Y, size-X and size-Y percentages per control, in the template's control order. Adding or reordering controls in a page template means updating its layout resource to match.
+- **Live refresh:** pages refresh every second while showing, only updating what changed. The Styles page reloads only when the user has no unapplied edits.
+- **Following window links:** when the Windows page follows a link to another window, it sends `WM_PAGE_WINDOW_CHANGED` (LPARAM: the window) to every page.
+- **Style lists:** the shared style-array table for control-specific styles is `WindowHelper::GetControlStyleArray`.
 
 **Settings.** `AppSettings` is saved by `WinMain` after the message loop ends, not in the frame's `WM_DESTROY`. The views store their state (splitter positions, column layouts via `WindowHelper::Get/SetColumnsLayout`) in their own `WM_DESTROY`, which runs after the frame's. Toggles are saved when changed, and the window placement in `CMainFrame::OnDestroy`.
 
@@ -53,7 +61,7 @@ The list pane remembers its mode (window, thread, process or all) so `Refresh` r
 
 **Always On Top.** Windows ignores `SetWindowPos(HWND_TOPMOST)` from a process that was started without being brought to the foreground (by a script, say). This was verified with a plain Win32 window, so it isn't WTL's or WTLHelper's doing. That's why the saved setting is applied as `WS_EX_TOPMOST` when the frame is created (`Run` in `WinSpy.cpp`), which Windows always honors. The menu command uses `SetWindowPos`; that works because a click gives the process foreground rights.
 
-**Locate under the cursor.** Ctrl+Alt+F12 is a global hot key (`RegisterHotKey`, `CMainFrame::OnHotKey`) that locates the window under the mouse in a windows tree.
+**Locate under the cursor.** Ctrl+Alt+F12 is a global hot key (`RegisterHotKey`, `CMainFrame::OnHotKey`) that locates the window under the mouse in a windows tree. When the active tab is a UI Automation tree, it locates the element under the mouse there instead.
 
 **Dark mode** works the same way as in AstroStudio, through WTLHelper's DarkMode library:
 - **Startup:** `WinMain` loads `AppSettings` (`HKCU\Software\WinSpy\Settings`, or `WinSpy.ini` next to the EXE) and calls `WTLHelper::InitDarkMode` before any window is created. `DarkMode` is -1 until the user chooses, which means follow the system.
@@ -79,6 +87,10 @@ The list pane remembers its mode (window, thread, process or all) so `Refresh` r
 - **Loading:** the EXE loads the DLL dynamically through `HookHelper` (`LoadLibrary("WinSpyHook.dll")`).
 - **Bitness:** hooks only inject into processes with the same bitness as the DLL.
 
-**UI Automation.** `CAutomationTreeView` builds its tree with `IUIAutomation`/`IUIAutomationTreeWalker`, and fills child elements lazily as nodes expand.
+**UI Automation.** `CAutomationTreeView` builds its tree with `IUIAutomation` and the raw view `IUIAutomationTreeWalker`, and fills child elements lazily as nodes expand.
+- **Locating:** `WM_LOCATE_ELEMENT` (`Interfaces.h`) selects an element by window (Locate in Automation Tree, a window command, through `IMainFrame::LocateInAutomationTree`) or by screen point (Ctrl+Alt+F12 when this tab is the active one). It walks the element's ancestors from the root and enumerates each level's children if needed. Expanding a node by code notifies only the first time, so it doesn't rely on `TVN_ITEMEXPANDING`. A level whose children were enumerated before the element existed is enumerated again.
+- **Properties:** the list shows the element's properties, its supported patterns, and their state (value, toggle, expand/collapse, selection, range, scroll, window, default action).
+- **Actions:** the toolbar and the tree's context menu run pattern actions on the selected element (Invoke, Toggle, Expand/Collapse, Select, Set Value, Default Action, Set Focus, Scroll Into View). They are enabled by the patterns found when it was selected (`ElementPatterns`).
+- **Window commands:** Highlight draws a flashing frame around the element's bounding rectangle (`WindowHelper::HighlightRect`, a click-through layered window). The other window commands act on the element's window, or its nearest ancestor's that has one.
 
 **Helpers.** Most Win32 querying and formatting is done in static helper "classes" (`struct X final` with only static members): `WindowHelper`, `ProcessHelper`, `FormatHelper`, `SecurityHelper`, plus `MessageDecoder` for decoding messages. Put new utility code in these helpers, not in the views. `IconHelper` comes from WTLHelper. Don't add a WinSpy class with the same name as a WTLHelper one, because it causes LNK2005 errors.

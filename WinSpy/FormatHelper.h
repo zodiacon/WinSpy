@@ -1,5 +1,8 @@
 #pragma once
 
+// named values, as properties lists show them
+using PropertyList = std::vector<std::pair<CString, CString>>;
+
 struct FormatHelper {
 	static CString FormatHWndOrNone(HWND hWnd);
 	static CString RectToString(CRect const& rc);

@@ -58,6 +58,7 @@ private:
 	}
 	bool CaptureMessages(HWND hWnd, DWORD threadId = 0, DWORD processId = 0) override;
 	void LocateInWindowsTree(HWND hWnd) override;
+	void LocateInAutomationTree(HWND hWnd) override;
 	void CloseTab(CWindow* win) override;
 
 	void InitToolBar(CToolBarCtrl& tb);
@@ -99,6 +100,7 @@ private:
 	LRESULT OnDpiChanged(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 
 	// Ctrl+Alt+F12, anywhere: the window under the mouse cursor is located in a windows tree
+	// (or the element under it, when a UI Automation tab is the active one)
 	enum { HotKeyLocate = 1 };
 
 	HWND m_hActivePage{ nullptr };

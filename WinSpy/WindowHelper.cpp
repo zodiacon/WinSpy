@@ -5,7 +5,76 @@
 #include "FormatHelper.h"
 #include "WindowGeneralPage.h"
 #include "WindowWindowsPage.h"
+#include "PropertiesDlg.h"
+#include "AppSettings.h"
+#include <ResizablePropertySheet.h>
+#include <IconPropertySheet.h>
+
+namespace {
+	// the window properties: resizable, with full color tab icons
+	class CWindowPropertiesSheet :
+		public CIconPropertySheetImpl<CWindowPropertiesSheet, CResizablePropertySheetImpl<CWindowPropertiesSheet>> {
+	public:
+		using CIconPropertySheetImpl::CIconPropertySheetImpl;
+	};
+
+	// a red frame around a rectangle: a topmost window with a hole (the region), that the mouse goes through;
+	// it flashes a few times, then destroys itself
+	using CHighlightTraits = CWinTraits<WS_POPUP, WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE | WS_EX_LAYERED | WS_EX_TRANSPARENT>;
+	class CHighlightFrame : public CWindowImpl<CHighlightFrame, CWindow, CHighlightTraits> {
+	public:
+		DECLARE_WND_CLASS_EX(L"WinSpyHighlightFrame", 0, -1)
+
+		bool Show(RECT const& rc) {
+			CRect rcWindow(rc);
+			int width = ::MulDiv(3, ::GetDpiForSystem(), USER_DEFAULT_SCREEN_DPI);
+			rcWindow.InflateRect(width, width);
+			if (!Create(nullptr, rcWindow))
+				return false;
+
+			SetLayeredWindowAttributes(m_hWnd, 0, 255, LWA_ALPHA);
+			CRgn outer, inner;
+			outer.CreateRectRgn(0, 0, rcWindow.Width(), rcWindow.Height());
+			inner.CreateRectRgn(width, width, rcWindow.Width() - width, rcWindow.Height() - width);
+			outer.CombineRgn(inner, RGN_DIFF);
+			SetWindowRgn(outer.Detach(), FALSE);
+			ShowWindow(SW_SHOWNOACTIVATE);
+			SetTimer(1, 500);
+			return true;
+		}
+
+		BEGIN_MSG_MAP(CHighlightFrame)
+			MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
+			MESSAGE_HANDLER(WM_TIMER, OnTimer)
+		END_MSG_MAP()
+
+	private:
+		void OnFinalMessage(HWND) override {
+			delete this;
+		}
+
+		LRESULT OnEraseBkgnd(UINT, WPARAM wParam, LPARAM, BOOL&) {
+			CDCHandle dc((HDC)wParam);
+			CRect rc;
+			GetClientRect(&rc);
+			dc.FillSolidRect(&rc, RGB(255, 0, 0));
+			return 1;
+		}
+
+		LRESULT OnTimer(UINT, WPARAM, LPARAM, BOOL&) {
+			// shown, hidden, shown... three times
+			if (++m_Ticks == 6)
+				DestroyWindow();
+			else
+				ShowWindow(m_Ticks % 2 ? SW_HIDE : SW_SHOWNOACTIVATE);
+			return 0;
+		}
+
+		int m_Ticks{ 0 };
+	};
+}
 #include <dwmapi.h>
+#include <Psapi.h>
 
 #pragma comment(lib, "dwmapi.lib")
 
@@ -201,6 +270,12 @@ void WindowHelper::HighlightWindow(HWND hWnd) {
 		}, hWnd, nullptr);
 }
 
+void WindowHelper::HighlightRect(RECT const& rc) {
+	auto frame = new CHighlightFrame;
+	if (!frame->Show(rc))
+		delete frame;
+}
+
 void WindowHelper::HighlightBorder(HWND hWnd, bool highlight) {
 	// a null window would mean drawing on the whole screen
 	if (!::IsWindow(hWnd))
@@ -292,6 +367,175 @@ bool WindowHelper::ThreadHasWindows(DWORD tid) {
 	return hasWindows;
 }
 
+std::pair<StyleItem const*, int> WindowHelper::GetControlStyleArray(HWND hWnd, PCWSTR* defaultStyle) {
+	static const struct {
+		PCWSTR className;
+		std::pair<StyleItem const*, int> items;
+		PCWSTR def = L"";
+	} controls[] = {
+		{ WC_LISTVIEW, GetListViewStyleArray(), L"LVS_ALIGNTOP" },
+		{ WC_TREEVIEW, GetTreeViewStyleArray() },
+		{ WC_TABCONTROL, GetTabCtrlStyleArray(), L"TCS_TABS" },
+		{ WC_LISTBOX, GetListBoxStyleArray() },
+		{ WC_COMBOBOX, GetComboBoxStyleArray() },
+		{ WC_EDIT, GetEditStyleArray(), L"ES_LEFT" },
+		{ WC_BUTTON, GetButtonStyleArray(), L"BS_TEXT" },
+		{ WC_HEADER, GetHeaderStyleArray(), L"HDS_HORZ" },
+		{ WC_STATIC, GetStaticStyleArray(), L"SS_LEFT" },
+		{ TOOLTIPS_CLASS, GetToolTipStyleArray() },
+		{ STATUSCLASSNAME, GetStatusBarStyleArray() },
+		{ TOOLBARCLASSNAME, GetToolBarStyleArray() },
+		{ REBARCLASSNAME, GetRebarStyleArray() },
+		{ WC_SCROLLBAR, GetScrollBarStyleArray(), L"SBS_HORZ" },
+	};
+
+	WCHAR name[64];
+	if (::GetClassName(hWnd, name, _countof(name))) {
+		// ATL's superclasses are named "ATL:<class>"
+		auto bare = _wcsnicmp(name, L"ATL:", 4) == 0 ? name + 4 : name;
+		for (auto& item : controls) {
+			if (_wcsicmp(bare, item.className) == 0) {
+				if (defaultStyle)
+					*defaultStyle = item.def;
+				return item.items;
+			}
+		}
+	}
+	if (defaultStyle)
+		*defaultStyle = nullptr;
+	return { nullptr, 0 };
+}
+
+namespace {
+	CString Hex(ULONG_PTR value) {
+		CString text;
+		if (value)
+			text.Format(L"0x%zX", value);
+		else
+			text = L"(None)";
+		return text;
+	}
+
+	CString SystemColorName(int index) {
+		static PCWSTR const names[] = {
+			L"COLOR_SCROLLBAR", L"COLOR_BACKGROUND", L"COLOR_ACTIVECAPTION", L"COLOR_INACTIVECAPTION", L"COLOR_MENU",
+			L"COLOR_WINDOW", L"COLOR_WINDOWFRAME", L"COLOR_MENUTEXT", L"COLOR_WINDOWTEXT", L"COLOR_CAPTIONTEXT",
+			L"COLOR_ACTIVEBORDER", L"COLOR_INACTIVEBORDER", L"COLOR_APPWORKSPACE", L"COLOR_HIGHLIGHT", L"COLOR_HIGHLIGHTTEXT",
+			L"COLOR_BTNFACE", L"COLOR_BTNSHADOW", L"COLOR_GRAYTEXT", L"COLOR_BTNTEXT", L"COLOR_INACTIVECAPTIONTEXT",
+			L"COLOR_BTNHIGHLIGHT", L"COLOR_3DDKSHADOW", L"COLOR_3DLIGHT", L"COLOR_INFOTEXT", L"COLOR_INFOBK",
+			L"(25)", L"COLOR_HOTLIGHT", L"COLOR_GRADIENTACTIVECAPTION", L"COLOR_GRADIENTINACTIVECAPTION",
+			L"COLOR_MENUHILIGHT", L"COLOR_MENUBAR",
+		};
+		return index >= 0 && index < _countof(names) ? CString(names[index]) : CString();
+	}
+
+	CString ModuleName(HWND hWnd, HMODULE hModule) {
+		DWORD pid;
+		::GetWindowThreadProcessId(hWnd, &pid);
+		auto hProcess = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_VM_READ, FALSE, pid);
+		if (!hProcess)
+			return L"";
+		WCHAR path[MAX_PATH];
+		auto len = ::GetModuleFileNameEx(hProcess, hModule, path, _countof(path));
+		::CloseHandle(hProcess);
+		return len ? CString(path) : CString();
+	}
+}
+
+PropertyList WindowHelper::GetClassProperties(HWND hWnd) {
+	PropertyList props;
+	CString text;
+
+	props.push_back({ L"Class Name", GetWindowClassName(hWnd) });
+	text.Format(L"0x%04X", (DWORD)::GetClassLongPtr(hWnd, GCW_ATOM));
+	props.push_back({ L"Atom", text });
+	text.Format(L"0x%08X ", (DWORD)::GetClassLongPtr(hWnd, GCL_STYLE));
+	props.push_back({ L"Style", text + ClassStyleToString(hWnd) });
+
+	auto classProc = ::GetClassLongPtr(hWnd, GCLP_WNDPROC);
+	auto windowProc = ::GetWindowLongPtr(hWnd, GWLP_WNDPROC);
+	props.push_back({ L"Class Window Procedure", Hex(classProc) });
+	// Windows doesn't give a window procedure of another process's window
+	if (windowProc == 0)
+		props.push_back({ L"Window Procedure", L"(Not available for another process's window)" });
+	else
+		props.push_back({ L"Window Procedure", Hex(windowProc) + (windowProc != classProc ? L" (subclassed)" : L"") });
+
+	auto hModule = (HMODULE)::GetClassLongPtr(hWnd, GCLP_HMODULE);
+	auto module = ModuleName(hWnd, hModule);
+	props.push_back({ L"Module", Hex((ULONG_PTR)hModule) + (module.IsEmpty() ? CString() : L" " + module) });
+
+	text.Format(L"%u", (DWORD)::GetClassLongPtr(hWnd, GCL_CBCLSEXTRA));
+	props.push_back({ L"Class Extra Bytes", text });
+	text.Format(L"%u", (DWORD)::GetClassLongPtr(hWnd, GCL_CBWNDEXTRA));
+	props.push_back({ L"Window Extra Bytes", text });
+
+	props.push_back({ L"Icon", Hex(::GetClassLongPtr(hWnd, GCLP_HICON)) });
+	props.push_back({ L"Small Icon", Hex(::GetClassLongPtr(hWnd, GCLP_HICONSM)) });
+	props.push_back({ L"Cursor", Hex(::GetClassLongPtr(hWnd, GCLP_HCURSOR)) });
+
+	// a brush, or a system color index plus one
+	auto brush = ::GetClassLongPtr(hWnd, GCLP_HBRBACKGROUND);
+	auto color = SystemColorName((int)brush - 1);
+	props.push_back({ L"Background Brush", brush > 0 && brush <= COLOR_MENUBAR + 1 ? color + L" + 1" : Hex(brush) });
+	return props;
+}
+
+PropertyList WindowHelper::GetWindowProps(HWND hWnd) {
+	PropertyList props;
+	::EnumPropsEx(hWnd, [](HWND, LPWSTR name, HANDLE data, ULONG_PTR param) -> BOOL {
+		CString key, value;
+		// an atom without a string, or a string
+		if (IS_INTRESOURCE(name))
+			key.Format(L"#%u", (UINT)(ULONG_PTR)name);
+		else
+			key = name;
+		value.Format(L"0x%zX", (ULONG_PTR)data);
+		reinterpret_cast<PropertyList*>(param)->push_back({ key, value });
+		return TRUE;
+		}, reinterpret_cast<LPARAM>(&props));
+	std::sort(props.begin(), props.end(), [](auto& p1, auto& p2) { return p1.first.CompareNoCase(p2.first) < 0; });
+	return props;
+}
+
+PropertyList WindowHelper::GetScrollProperties(HWND hWnd) {
+	PropertyList props;
+	CString text;
+
+	auto add = [&](PCWSTR name, int bar, LONG objectId) {
+		SCROLLBARINFO sbi{ sizeof(sbi) };
+		if (::GetScrollBarInfo(hWnd, objectId, &sbi)) {
+			auto state = sbi.rgstate[0];
+			text = (state & STATE_SYSTEM_INVISIBLE) ? L"Hidden" : (state & STATE_SYSTEM_UNAVAILABLE) ? L"Disabled" : L"Visible";
+		}
+		else {
+			text = L"(None)";
+		}
+		props.push_back({ name, text });
+
+		SCROLLINFO si{ sizeof(si), SIF_ALL };
+		if (!::GetScrollInfo(hWnd, bar, &si))
+			return;
+		CString prefix(name);
+		text.Format(L"%d - %d", si.nMin, si.nMax);
+		props.push_back({ prefix + L" Range", text });
+		text.Format(L"%u", si.nPage);
+		props.push_back({ prefix + L" Page", text });
+		text.Format(L"%d", si.nPos);
+		props.push_back({ prefix + L" Position", text });
+		text.Format(L"%d", si.nTrackPos);
+		props.push_back({ prefix + L" Track Position", text });
+	};
+
+	if (_wcsicmp(GetWindowClassName(hWnd), WC_SCROLLBAR) == 0)
+		add(L"Scroll Bar Control", SB_CTL, OBJID_CLIENT);
+	else {
+		add(L"Horizontal", SB_HORZ, OBJID_HSCROLL);
+		add(L"Vertical", SB_VERT, OBJID_VSCROLL);
+	}
+	return props;
+}
+
 int WindowHelper::ShowWindowProperties(HWND hWnd) {
 	// not a window: a destroyed one, or a tree node that stands for a group (like the message-only windows)
 	if (!::IsWindow(hWnd))
@@ -299,13 +543,35 @@ int WindowHelper::ShowWindowProperties(HWND hWnd) {
 
 	CString text;
 	text.Format(L"Window 0x%X Properties", PtrToUlong(hWnd));
-	CPropertySheet sheet((PCWSTR)text);
+	CWindowPropertiesSheet sheet((PCWSTR)text);
 	sheet.m_psh.dwFlags |= PSH_NOAPPLYNOW | PSH_NOCONTEXTHELP;
+	// the size it last had
+	sheet.SetSize(AppSettings::Get().PropertiesSize());
 	CWindowGeneralPage general(hWnd);
+	CWindowStylesPage styles(hWnd);
 	CWindowWindowsPage windows(hWnd);
+	CPropertyListPage classPage(L"Class", IDI_WINDOW, hWnd, GetClassProperties, false);
+	CPropertyListPage props(L"Properties", IDI_WINPROP, hWnd, GetWindowProps);
+	CPropertyListPage scroll(L"Scroll", IDI_WINDOW, hWnd, GetScrollProperties);
+	CPropertyListPage process(L"Process", IDI_PROCESS_INFO, hWnd, [](HWND h) {
+		ProcessInfo pi;
+		::GetWindowThreadProcessId(h, &pi.ProcessId);
+		pi.ProcessName = ProcessHelper::GetProcessImageName(pi.ProcessId);
+		return ProcessHelper::GetProcessProperties(pi);
+		}, false);
+	CPropertyListPage thread(L"Thread", IDI_PROCESSES, hWnd, [](HWND h) {
+		return ProcessHelper::GetThreadProperties(::GetWindowThreadProcessId(h, nullptr));
+		});
 	sheet.AddPage(general);
+	sheet.AddPage(styles);
 	sheet.AddPage(windows);
+	sheet.AddPage(classPage);
+	sheet.AddPage(props);
+	sheet.AddPage(scroll);
+	sheet.AddPage(process);
+	sheet.AddPage(thread);
 	sheet.DoModal();
+	AppSettings::Get().PropertiesSize(sheet.GetSize());
 
 	return 0;
 }

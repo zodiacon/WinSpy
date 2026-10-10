@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FormatHelper.h"
+
 struct WindowItem {
 	HWND hWnd;
 	DWORD ThreadId;
@@ -25,6 +27,8 @@ struct WindowHelper final {
 	static bool Flash(HWND hWnd);
 	// flashes a red border around the window a few times (without blocking)
 	static void HighlightWindow(HWND hWnd);
+	// the same around a rectangle on the screen (a UI Automation element's, say); the calling thread must pump messages
+	static void HighlightRect(RECT const& rc);
 	// a size in pixels at 96 DPI, for the system DPI (icons, image lists and such are made once, at that DPI)
 	static int DpiScale(int size);
 	// a list view's column widths and order, as text (for the settings)
@@ -49,6 +53,13 @@ struct WindowHelper final {
 	static ULONG_PTR GetUserData(HWND hWnd);
 
 	static std::pair<StyleItem const*, int> GetWindowStyleArray();
+	// the styles of the control the window is (list view, button...), if it's one; empty otherwise.
+	// defaultStyle: the name of the style that is 0, if there's one
+	static std::pair<StyleItem const*, int> GetControlStyleArray(HWND hWnd, PCWSTR* defaultStyle = nullptr);
+	// for the properties pages
+	static PropertyList GetClassProperties(HWND hWnd);
+	static PropertyList GetWindowProps(HWND hWnd);
+	static PropertyList GetScrollProperties(HWND hWnd);
 	static std::pair<StyleItem const*, int> GetListViewStyleArray();
 	static std::pair<StyleItem const*, int> GetTreeViewStyleArray();
 	static std::pair<StyleItem const*, int> GetTabCtrlStyleArray();

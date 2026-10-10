@@ -14,6 +14,7 @@ struct AppSettings : Settings {
 		SETTING(ViewFont, LOGFONT{}, SettingType::Binary);		// the trees' and lists' font (empty face: the default one)
 		SETTING_STRING(MessageFilter, L"");		// the Messages view's filter (MessageFilter::ToString); empty: everything
 		SETTING(MainWindowPlacement, WINDOWPLACEMENT{}, SettingType::Binary);
+		SETTING(PropertiesSize, SIZE{}, SettingType::Binary);		// the window properties sheet's
 		// the splitters, in percent of the view's width
 		SETTING(WindowsSplitter, 35, SettingType::Int32);
 		SETTING(ProcessesSplitter, 35, SettingType::Int32);
@@ -35,6 +36,7 @@ struct AppSettings : Settings {
 	DEF_SETTING(ViewFont, LOGFONT)
 	DEF_SETTING_STRING(MessageFilter)
 	DEF_SETTING(MainWindowPlacement, WINDOWPLACEMENT)
+	DEF_SETTING(PropertiesSize, SIZE)
 	DEF_SETTING(WindowsSplitter, int)
 	DEF_SETTING(ProcessesSplitter, int)
 	DEF_SETTING(AutomationSplitter, int)

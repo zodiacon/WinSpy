@@ -3,7 +3,10 @@
 #include "WindowWindowsPage.h"
 #include "FormatHelper.h"
 
-const UINT WM_UPDATE = WM_USER + 300;
+#include "PropertiesDlg.h"
+
+// (WM_PAGE_WINDOW_CHANGED)
+const UINT WM_UPDATE = WM_PAGE_WINDOW_CHANGED;
 
 void CWindowWindowsPage::UpdateData() {
     const struct {
@@ -34,8 +37,38 @@ void CWindowWindowsPage::UpdateData() {
     }
 }
 
+CString CWindowWindowsPage::GetSnapshot() const {
+    CString text;
+    text.Format(L"%p %p %p %p", m_Win.GetParent().m_hWnd, m_Win.GetWindow(GW_HWNDNEXT).m_hWnd,
+        m_Win.GetWindow(GW_HWNDPREV).m_hWnd, m_Win.GetWindow(GW_CHILD).m_hWnd);
+    return text;
+}
+
+int CWindowWindowsPage::OnSetActive() {
+    SetTimer(1, 1000);
+    return 0;
+}
+
+BOOL CWindowWindowsPage::OnKillActive() {
+    KillTimer(1);
+    return FALSE;
+}
+
+LRESULT CWindowWindowsPage::OnTimer(UINT, WPARAM id, LPARAM, BOOL&) {
+    if (id == 1 && m_Win.IsWindow()) {
+        if (auto snapshot = GetSnapshot(); snapshot != m_Snapshot) {
+            m_Snapshot = snapshot;
+            UpdateData();
+        }
+    }
+    return 0;
+}
+
 LRESULT CWindowWindowsPage::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
     UpdateData();
+    m_Snapshot = GetSnapshot();
+    // the controls follow the page's size (the sheet is resizable; the layout is in the resources)
+    InitDynamicLayout(false, false);
 
     return 0;
 }
@@ -48,6 +81,7 @@ LRESULT CWindowWindowsPage::OnClickHandle(int, LPNMHDR hdr, BOOL&) {
     m_Win.Detach();
     m_Win.Attach(hWnd);
     UpdateData();
+    m_Snapshot = GetSnapshot();
     GetParent().SendMessageToDescendants(WM_UPDATE, 0, reinterpret_cast<LPARAM>(hWnd));
     return 0;
 }

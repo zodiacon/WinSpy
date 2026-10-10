@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FormatHelper.h"
+
 struct ProcessInfo {
 	DWORD ProcessId;
 	std::vector<DWORD> Threads;
@@ -24,6 +26,8 @@ struct ProcessesInfo {
 struct ProcessHelper {
 	static CString GetProcessImageName(DWORD pid, bool fullPath = false);
 	static ProcessesInfo EnumProcessesAndThreads(EnumProcessesOptions options);
+	static PropertyList GetProcessProperties(ProcessInfo const& pi);
+	static PropertyList GetThreadProperties(DWORD tid);
 	static void ShowProcessProperties(ProcessInfo const& pi, HWND hParent);
 	static void ShowThreadProperties(DWORD tid, HWND hParent);
 	static bool Terminate(DWORD pid);

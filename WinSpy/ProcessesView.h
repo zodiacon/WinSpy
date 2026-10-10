@@ -8,7 +8,8 @@
 
 class CProcessesView : 
 	public CViewBase<CProcessesView>,
-	public CTreeViewManager<CProcessesView> {
+	public CTreeViewManager<CProcessesView>,
+	public IWindowEventSink {
 public:
 	CProcessesView(IMainFrame* frame) : CViewBase(frame), m_WindowsView(frame) {}
 
@@ -22,7 +23,8 @@ protected:
 		MESSAGE_HANDLER(WM_CREATE, OnCreate)
 		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
 		NOTIFY_CODE_HANDLER(TVN_ITEMEXPANDING, OnNodeExpanding)
-		//NOTIFY_CODE_HANDLER(TVN_DELETEITEM, OnNodeDeleted)
+		NOTIFY_CODE_HANDLER(TVN_DELETEITEM, OnNodeDeleted)
+		COMMAND_ID_HANDLER(ID_VIEW_REFRESH, OnRefresh)
 		COMMAND_ID_HANDLER(ID_VIEW_HIDDENWINDOWS, OnToggleHiddenWindows)
 		COMMAND_ID_HANDLER(ID_VIEW_EMPTYTITLEWINDOWS, OnToggleEmptyTitleWindows)
 		NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnNodeSelected)
@@ -53,10 +55,24 @@ private:
 		Window
 	};
 
+	// IWindowEventSink
+	void OnWindowEvent(DWORD event, HWND hWnd) override;
+
 	void InitTree();
-	void RemoveFromWindowMap(HTREEITEM hItem);
 	void UpdateUI();
+	CTreeItem AddProcessNode(ProcessInfo const& pi);
+	CTreeItem AddThreadNode(HTREEITEM hProcess, DWORD pid, DWORD tid, int icon);
+	// the thread's node, made (with its process's node) if it's not there
+	HTREEITEM EnsureThreadNode(DWORD pid, DWORD tid);
 	CTreeItem AddNode(HWND hWnd, HTREEITEM hParent);
+	bool PassesFilter(HWND hWnd) const;
+	// the thread a window's node is under
+	DWORD GetNodeThread(HTREEITEM hItem) const;
+	// the changes the window events told about since the last time
+	void ProcessWindowEvents();
+	void UpdateWindowNode(HWND hWnd, std::unordered_set<DWORD>& threads);
+	// a thread whose windows are all gone goes, and its process with it if it was the last
+	void RemoveThreadIfEmpty(DWORD tid);
 	void AddChildWindows(HTREEITEM hParent);
 	BOOL AddChildNode(HWND hChild);
 	void ChangeSelection(HTREEITEM hItem);
@@ -79,13 +95,23 @@ private:
 	ProcessInfo const* GetSelectedProcess() const;
 	DWORD GetSelectedThread() const;
 
+	enum { TimerKeyboardSelect = 3, TimerEvents = 4 };
+
 	CWindowsListView m_WindowsView;
 	CSplitterWindow m_Splitter;
 	CTreeViewCtrlEx m_Tree;
 
+	struct ThreadNode {
+		HTREEITEM Node;
+		DWORD ProcessId;
+	};
 	std::unordered_map<HTREEITEM, ProcessInfo> m_Processes;
 	std::unordered_map<HTREEITEM, DWORD> m_Threads;
+	std::unordered_map<DWORD, HTREEITEM> m_ProcessNodes;	// by process ID
+	std::unordered_map<DWORD, ThreadNode> m_ThreadNodes;	// by thread ID
 	std::unordered_map<HWND, HTREEITEM> m_WindowMap;
+	std::unordered_set<HWND> m_EventsDestroyed, m_EventsChanged;
+	bool m_Deleting{ false };		// the whole tree is being cleared
 	CTreeItem m_hCurrentNode;
 	CTreeItem m_Selected;
 	CWindow m_SelectedHwnd;

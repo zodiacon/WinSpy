@@ -120,14 +120,29 @@
 #define IDC_PRESET                      1033
 #define IDC_RESET                       1034
 #define IDC_COPY                        1035
+#define IDC_APPLY                       1036
+#define IDD_PROPLIST                    233
+#define IDD_PROPSTYLES                  234
+#define IDD_SETVALUE                    235
+#define IDC_VALUE                       1037
+#define ID_WINDOW_LOCATEINAUTOMATION    32812
+#define ID_AUTOMATION_INVOKE            32813
+#define ID_AUTOMATION_TOGGLE            32814
+#define ID_AUTOMATION_EXPAND            32815
+#define ID_AUTOMATION_COLLAPSE          32816
+#define ID_AUTOMATION_SELECT            32817
+#define ID_AUTOMATION_SETVALUE          32818
+#define ID_AUTOMATION_DEFAULTACTION     32819
+#define ID_AUTOMATION_SETFOCUS          32820
+#define ID_AUTOMATION_SCROLLINTOVIEW    32821
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        233
-#define _APS_NEXT_COMMAND_VALUE         32812
-#define _APS_NEXT_CONTROL_VALUE         1036
+#define _APS_NEXT_RESOURCE_VALUE        236
+#define _APS_NEXT_COMMAND_VALUE         32822
+#define _APS_NEXT_CONTROL_VALUE         1038
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -83,6 +83,7 @@ BEGIN
         MENUITEM "&Messages...",                ID_WINDOW_MESSAGES
         MENUITEM SEPARATOR
         MENUITEM "Locate in &Tree",             ID_WINDOW_LOCATEINTREE
+        MENUITEM "Locate in A&utomation Tree",  ID_WINDOW_LOCATEINAUTOMATION
         POPUP "&Action"
         BEGIN
             MENUITEM "&Show",                       ID_WINDOW_SHOW
@@ -132,6 +133,8 @@ BEGIN
         MENUITEM "&Flash",                      ID_STATE_FLASH
         MENUITEM "&Messages...",                ID_WINDOW_MESSAGES
         MENUITEM SEPARATOR
+        MENUITEM "Locate in A&utomation Tree",  ID_WINDOW_LOCATEINAUTOMATION
+        MENUITEM SEPARATOR
         MENUITEM "&Properties...",              ID_WINDOW_PROPERTIES
     END
     POPUP "list"
@@ -154,6 +157,7 @@ BEGIN
         MENUITEM "&Properties...",              ID_WINDOW_PROPERTIES
         MENUITEM SEPARATOR
         MENUITEM "Locate in &Tree",             ID_WINDOW_LOCATEINTREE
+        MENUITEM "Locate in A&utomation Tree",  ID_WINDOW_LOCATEINAUTOMATION
     END
     POPUP "process"
     BEGIN
@@ -168,6 +172,24 @@ BEGIN
         MENUITEM "&Properties...",              ID_THREAD_PROPERTIES
         MENUITEM SEPARATOR
         MENUITEM "&Messages...",                ID_WINDOW_MESSAGES
+    END
+    POPUP "element"
+    BEGIN
+        MENUITEM "&Invoke",                     ID_AUTOMATION_INVOKE
+        MENUITEM "&Toggle",                     ID_AUTOMATION_TOGGLE
+        MENUITEM "&Expand",                     ID_AUTOMATION_EXPAND
+        MENUITEM "C&ollapse",                   ID_AUTOMATION_COLLAPSE
+        MENUITEM "&Select",                     ID_AUTOMATION_SELECT
+        MENUITEM "Set &Value...",               ID_AUTOMATION_SETVALUE
+        MENUITEM "&Default Action",             ID_AUTOMATION_DEFAULTACTION
+        MENUITEM SEPARATOR
+        MENUITEM "Set &Focus",                  ID_AUTOMATION_SETFOCUS
+        MENUITEM "Scroll Into Vie&w",           ID_AUTOMATION_SCROLLINTOVIEW
+        MENUITEM "&Highlight",                  ID_WINDOW_HIGHLIGHT
+        MENUITEM SEPARATOR
+        MENUITEM "Locate Window in &Tree",      ID_WINDOW_LOCATEINTREE
+        MENUITEM "&Messages...",                ID_WINDOW_MESSAGES
+        MENUITEM "Window &Properties...",       ID_WINDOW_PROPERTIES
     END
 END
 
@@ -339,6 +361,41 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,238,193,50,14
 END
 
+IDD_SETVALUE DIALOGEX 0, 0, 260, 62
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Set Value"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "&Value:",IDC_STATIC,7,9,24,8
+    EDITTEXT        IDC_VALUE,34,7,219,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,149,41,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,203,41,50,14
+END
+
+IDD_PROPLIST DIALOGEX 0, 0, 433, 243
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Properties"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,7,7,419,229
+END
+
+IDD_PROPSTYLES DIALOGEX 0, 0, 433, 243
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Styles"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "Style:",IDC_STATIC,7,10,20,8
+    EDITTEXT        IDC_STYLE,32,7,70,14,ES_AUTOHSCROLL | ES_READONLY
+    CONTROL         "",IDC_STYLES,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP,7,26,206,186
+    LTEXT           "Extended Style:",IDC_STATIC,220,10,52,8
+    EDITTEXT        IDC_STYLEEX,276,7,70,14,ES_AUTOHSCROLL | ES_READONLY
+    CONTROL         "",IDC_STYLESEX,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP,220,26,206,186
+    LTEXT           "Check or clear styles, then Apply. Some styles only take effect when the window is redrawn or created.",IDC_STATIC,7,218,300,18
+    PUSHBUTTON      "&Apply",IDC_APPLY,322,220,50,14,WS_DISABLED
+    PUSHBUTTON      "&Revert",IDC_RESET,376,220,50,14,WS_DISABLED
+END
+
 IDD_PROPWINDOWS DIALOGEX 0, 0, 401, 247
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Windows"
@@ -443,8 +500,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,5,0,0
- PRODUCTVERSION 0,5,0,0
+ FILEVERSION 0,6,0,0
+ PRODUCTVERSION 0,6,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -461,12 +518,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Scorpio Software"
             VALUE "FileDescription", "WinSpy - UI Windows Properties and Messages"
-            VALUE "FileVersion", "0.5.0.0"
+            VALUE "FileVersion", "0.6.0.0"
             VALUE "InternalName", "WinSpy"
             VALUE "LegalCopyright", "©2021-2026 Pavel Yosifovich"
             VALUE "OriginalFilename", "WinSpy.exe"
             VALUE "ProductName", "WinSpy"
-            VALUE "ProductVersion", "0.5.0.0"
+            VALUE "ProductVersion", "0.6.0.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -509,12 +566,91 @@ END
 
 IDD_WINPROP AFX_DIALOG_LAYOUT
 BEGIN
-    0
+    0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 100, 0,
+    0, 0, 0, 0,
+    0, 0, 100, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 100, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 33, 100,
+    33, 0, 0, 0,
+    33, 0, 0, 0,
+    33, 0, 33, 100,
+    100, 0, 0, 0,
+    100, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    66, 0, 0, 0,
+    66, 0, 0, 0,
+    66, 0, 34, 100
 END
 
 IDD_PROPWINDOWS AFX_DIALOG_LAYOUT
 BEGIN
-    0
+    0,
+    0, 0, 100, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 100, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 100, 0,
+    0, 0, 100, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 100, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 100, 0,
+    0, 0, 100, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 100, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 100, 0,
+    0, 0, 100, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 100, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 100, 0
+END
+
+IDD_PROPSTYLES AFX_DIALOG_LAYOUT
+BEGIN
+    0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 50, 100,
+    50, 0, 0, 0,
+    50, 0, 0, 0,
+    50, 0, 50, 100,
+    0, 100, 100, 0,
+    100, 100, 0, 0,
+    100, 100, 0, 0
+END
+
+IDD_PROPLIST AFX_DIALOG_LAYOUT
+BEGIN
+    0,
+    0, 0, 100, 100
 END
 
 

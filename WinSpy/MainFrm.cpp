@@ -64,7 +64,7 @@ LRESULT CMainFrame::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/
 	CReBarCtrl rb(m_hWndToolBar);
 	rb.LockBands(true);
 
-	CreateSimpleStatusBar(L"Ready - Ctrl+Alt+F12 anywhere locates the window under the mouse cursor");
+	CreateSimpleStatusBar(L"Ready - Ctrl+Alt+F12 anywhere locates the window (or UI Automation element) under the mouse cursor");
 	// (another program may have the keys already; WinSpy works without them)
 	::RegisterHotKey(m_hWnd, HotKeyLocate, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, VK_F12);
 
@@ -357,6 +357,15 @@ LRESULT CMainFrame::OnHotKey(UINT, WPARAM id, LPARAM, BOOL&) {
 	if (IsIconic())
 		ShowWindow(SW_RESTORE);
 	::SetForegroundWindow(m_hWnd);
+
+	// the active tab may be a UI Automation tree, which locates the element (and highlights it)
+	if (auto page = m_view.GetActivePage(); page >= 0) {
+		auto result = (LocateResult)::SendMessage(m_view.GetPageHWND(page), WM_LOCATE_ELEMENT, LocateElementByPoint, (LPARAM)&pt);
+		if (result == LocateResult::NotInTree)
+			AtlMessageBox(m_hWnd, L"The element under the cursor is not in the tree.", IDS_TITLE, MB_ICONINFORMATION);
+		if (result != LocateResult::NotHandled)
+			return 0;
+	}
 	WindowHelper::HighlightWindow(hWnd);
 	LocateInWindowsTree(hWnd);
 	return 0;
@@ -434,6 +443,25 @@ void CMainFrame::LocateInWindowsTree(HWND hWnd) {
 	SendMessage(WM_COMMAND, ID_VIEW_ALLWINDOWS);
 	if (auto page = m_view.GetActivePage(); page >= 0 && (LocateResult)::SendMessage(m_view.GetPageHWND(page), WM_LOCATE_WINDOW, 0, (LPARAM)hWnd) == LocateResult::NotInTree)
 		AtlMessageBox(m_hWnd, L"The window is not in the tree (it may be hidden or have no title - see the View menu).", IDS_TITLE, MB_ICONINFORMATION);
+}
+
+void CMainFrame::LocateInAutomationTree(HWND hWnd) {
+	// a UI Automation tree tab: the active one if it is one, otherwise the first; a new one if there is none
+	int count = m_view.GetPageCount(), active = m_view.GetActivePage();
+	auto result = LocateResult::NotHandled;
+	for (int n = 0; n < count && result == LocateResult::NotHandled; n++) {
+		int page = active < 0 ? n : (active + n) % count;
+		result = (LocateResult)::SendMessage(m_view.GetPageHWND(page), WM_LOCATE_ELEMENT, LocateElementByWindow, (LPARAM)hWnd);
+		if (result == LocateResult::Found && page != active)
+			m_view.SetActivePage(page);
+	}
+	if (result == LocateResult::NotHandled) {
+		SendMessage(WM_COMMAND, ID_VIEW_AUTOMATIONTREE);
+		if (auto page = m_view.GetActivePage(); page >= 0)
+			result = (LocateResult)::SendMessage(m_view.GetPageHWND(page), WM_LOCATE_ELEMENT, LocateElementByWindow, (LPARAM)hWnd);
+	}
+	if (result == LocateResult::NotInTree)
+		AtlMessageBox(m_hWnd, L"The window's element is not in the UI Automation tree.", IDS_TITLE, MB_ICONINFORMATION);
 }
 
 void CMainFrame::CloseTab(CWindow* win) {

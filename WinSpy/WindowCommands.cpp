@@ -19,6 +19,7 @@ bool WindowCommands::IsWindowCommand(UINT id) {
 		case ID_WINDOW_MESSAGES:
 		case ID_WINDOW_PROPERTIES:
 		case ID_WINDOW_LOCATEINTREE:
+		case ID_WINDOW_LOCATEINAUTOMATION:
 			return true;
 	}
 	return false;
@@ -45,5 +46,6 @@ void WindowCommands::Execute(UINT id, HWND hWnd, IMainFrame* frame) {
 		case ID_WINDOW_MESSAGES: frame->CaptureMessages(hWnd); break;
 		case ID_WINDOW_PROPERTIES: WindowHelper::ShowWindowProperties(hWnd); break;
 		case ID_WINDOW_LOCATEINTREE: frame->LocateInWindowsTree(hWnd); break;
+		case ID_WINDOW_LOCATEINAUTOMATION: frame->LocateInAutomationTree(hWnd); break;
 	}
 }

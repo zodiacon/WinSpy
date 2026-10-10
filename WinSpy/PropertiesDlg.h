@@ -2,6 +2,8 @@
 
 #include "resource.h"
 #include "DialogHelper.h"
+#include "FormatHelper.h"
+#include <functional>
 
 //
 // a list of properties (name, value) - for processes and threads
@@ -13,7 +15,7 @@ class CPropertiesDlg :
 public:
 	enum { IDD = IDD_PROPERTIES };
 
-	using Properties = std::vector<std::pair<CString, CString>>;
+	using Properties = PropertyList;
 
 	CPropertiesDlg(CString title, Properties properties) : m_Title(std::move(title)), m_Properties(std::move(properties)) {}
 
@@ -38,4 +40,49 @@ private:
 
 	CString m_Title;
 	Properties m_Properties;
+};
+
+// sent by the Windows page to the other pages when it moves to another window (LPARAM: the window)
+const UINT WM_PAGE_WINDOW_CHANGED = WM_USER + 300;
+
+//
+// a page of a window's properties (name, value), made by a function; refreshed while it's showing if 'live'
+//
+class CPropertyListPage :
+	public CPropertyPageImpl<CPropertyListPage>,
+	public CDynamicDialogLayout<CPropertyListPage> {
+public:
+	enum { IDD = IDD_PROPLIST };
+
+	using Provider = std::function<PropertyList(HWND)>;
+
+	CPropertyListPage(PCWSTR title, UINT icon, HWND hWnd, Provider provider, bool live = true);
+
+	int OnSetActive();
+	BOOL OnKillActive();
+
+	BEGIN_MSG_MAP(CPropertyListPage)
+		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+		MESSAGE_HANDLER(WM_TIMER, OnTimer)
+		MESSAGE_HANDLER(WM_SIZE, OnSize)
+		MESSAGE_HANDLER(WM_PAGE_WINDOW_CHANGED, OnWindowChanged)
+		CHAIN_MSG_MAP(CPropertyPageImpl<CPropertyListPage>)
+		CHAIN_MSG_MAP(CDynamicDialogLayout<CPropertyListPage>)
+	END_MSG_MAP()
+
+private:
+	// shows what the provider says now, changing only what changed (no flicker, the scroll position kept)
+	void Refresh();
+
+	LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	LRESULT OnTimer(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	LRESULT OnSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	LRESULT OnWindowChanged(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+
+	CString m_Title;
+	CWindow m_Win;
+	Provider m_Provider;
+	PropertyList m_Properties;
+	CListViewCtrl m_List;
+	bool m_Live;
 };
